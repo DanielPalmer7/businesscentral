@@ -1,0 +1,13 @@
+﻿{
+    "branchId":  "5e70ced0-ba68-47d0-ac83-a0b92ab5d164",
+    "dockerImage":  "navinsider.azurecr.io/dynamics-nav:11.0.21229.0",
+    "navVersion":  "11.0.21229.0",
+    "navSolution":  "W1",
+    "projectName":  "W1",
+    "storeAllObjects":  "true",
+    "uidOffset":  "50100",
+    "licenseFile":  "Kappi.flf",
+    "objectProperties":  "true",
+    "datetimeCulture":  "is-IS",
+    "targetPlatform":  "Dynamics365"
+}
