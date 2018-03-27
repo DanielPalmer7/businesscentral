@@ -10,8 +10,8 @@
     "help":  "http://objects4nav.com/glsourcenames",
     "url":  "http://objects4nav.com",
     "logo":  "Images\\Logo250x250.png",
-    "platform":  "11.0.0.0",
-    "application":  "11.0.0.0",
+    "platform":  "12.0.0.0",
+    "application":  "12.0.0.0",
     "capabilities":  [
 
                      ],
