@@ -613,15 +613,15 @@
           <note from="Developer" annotates="general" priority="2" />
           <note from="Xliff Generator" annotates="general" priority="3">PageExtension:pageextension70009201 - Control:O4N Source Name</note>
         </trans-unit>
-        <trans-unit id="PageExtension 934504585 - Action 4191120867 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve">
+        <trans-unit id="PageExtension 934504585 - Action 3094365984 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve">
           <source>Source Card</source>
           <note from="Developer" annotates="general" priority="2" />
-          <note from="Xliff Generator" annotates="general" priority="3">PageExtension:pageextension70009201 - Action:SourceCard</note>
+          <note from="Xliff Generator" annotates="general" priority="3">PageExtension:pageextension70009201 - Action:O4N SourceCard</note>
         </trans-unit>
-        <trans-unit id="PageExtension 934504585 - Action 4191120867 - Property 1295455071" size-unit="char" translate="yes" xml:space="preserve">
+        <trans-unit id="PageExtension 934504585 - Action 3094365984 - Property 1295455071" size-unit="char" translate="yes" xml:space="preserve">
           <source>Show the card for the master record defined as the source for this entry</source>
           <note from="Developer" annotates="general" priority="2" />
-          <note from="Xliff Generator" annotates="general" priority="3">PageExtension:pageextension70009201 - Action:SourceCard</note>
+          <note from="Xliff Generator" annotates="general" priority="3">PageExtension:pageextension70009201 - Action:O4N SourceCard</note>
         </trans-unit>
         <trans-unit id="TableExtension 209641987 - Field 384633921 - Property 2879900210" size-unit="char" translate="yes" xml:space="preserve">
           <source>Source Name</source>

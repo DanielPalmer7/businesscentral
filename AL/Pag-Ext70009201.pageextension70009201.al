@@ -31,7 +31,7 @@
   {
     addafter("Value Entries")
     {
-      action(SourceCard)
+      action("O4N SourceCard")
       {
         AccessByPermission=TableData "O4N GL SN"=R;
         ApplicationArea=Basic,Suite;
