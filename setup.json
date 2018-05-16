@@ -1,6 +1,6 @@
 {
   "branchId": "479e77f3-031a-49fe-bb6a-314464c6a9a8",
-  "dockerImage":  "navinsider.azurecr.io/dynamics-nav:12.0.21229.0",
+  "dockerImage":  "microsoft/bcsandbox",
   "navVersion":  "12.0.21229.0",
   "navSolution": "W1",
   "projectName": "GLSOURCENAMES",
