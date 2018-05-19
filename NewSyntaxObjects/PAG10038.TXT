@@ -1,0 +1,1364 @@
+OBJECT Page 10038 Sales Order Stats.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161715.67T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Sales Order Statistics;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    LinksAllowed=false;
+    SourceTable="Sales Header";
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 SalesSetup.GET;
+                 AllowInvDisc := not (SalesSetup."Calc. Inv. Discount" and CustInvDiscRecExists("Invoice Disc. Code"));
+                 AllowVATDifference :=
+                   SalesSetup."Allow VAT Difference" and
+                   not ("Document Type" in ["Document Type"::Quote,"Document Type"::"Blanket Order"]);
+                 VATLinesFormIsEditable := AllowVATDifference or AllowInvDisc or ("Tax Area Code" <> '');
+                 CurrPage.EDITABLE := VATLinesFormIsEditable;
+                 TaxArea.GET("Tax Area Code");
+               END;
+
+    OnAfterGetRecord=VAR
+                       SalesLine@1000 : Record "Sales Line";
+                       TempSalesLine@1001 : TEMPORARY Record "Sales Line";
+                       SalesPostPrepmt@1002 : Codeunit "Sales-Post Prepayments";
+                       TempSalesTaxAmtLine@1020000 : TEMPORARY Record "Sales Tax Amount Line";
+                       PrevPrintOrder@1020001 : Integer;
+                       PrevTaxPercent@1020002 : Decimal;
+                     BEGIN
+                       CurrPage.CAPTION(STRSUBSTNO(Text000,"Document Type"));
+
+                       if PrevNo = "No." then
+                         exit;
+                       PrevNo := "No.";
+                       FILTERGROUP(2);
+                       SETRANGE("No.",PrevNo);
+                       FILTERGROUP(0);
+
+                       ClearObjects(SalesLine,TotalSalesLine,TotalSalesLineLCY,BreakdownLabel,BreakdownAmt);
+
+                       SalesLine.RESET;
+
+                       for i := 1 to 3 do begin
+                         TempSalesLine.DELETEALL;
+                         CLEAR(TempSalesLine);
+                         CLEAR(SalesPost);
+                         SalesPost.GetSalesLines(Rec,TempSalesLine,i - 1);
+                         CLEAR(SalesPost);
+                         SalesTaxCalculate.StartSalesTaxCalculation;
+                         TempSalesLine.SETFILTER(Type,'>0');
+                         TempSalesLine.SETFILTER(Quantity,'<>0');
+                         if TempSalesLine.FIND('-') then
+                           repeat
+                             SalesTaxCalculate.AddSalesLine(TempSalesLine);
+                           until TempSalesLine.NEXT = 0;
+                         TempSalesLine.RESET;
+                         OnBeforeCalculateSalesTaxSalesOrderStats(
+                           Rec,TempSalesLine,i,TempSalesTaxLine1,TempSalesTaxLine2,TempSalesTaxLine3,TempSalesTaxAmtLine,SalesTaxCalculationOverridden);
+                         if not SalesTaxCalculationOverridden then
+                           case i of
+                             1:
+                               begin
+                                 TempSalesTaxLine1.DELETEALL;
+                                 SalesTaxCalculate.EndSalesTaxCalculation("Posting Date");
+                                 SalesTaxCalculate.GetSalesTaxAmountLineTable(TempSalesTaxLine1);
+                               end;
+                             2:
+                               begin
+                                 TempSalesTaxLine2.DELETEALL;
+                                 SalesTaxCalculate.EndSalesTaxCalculation("Posting Date");
+                                 SalesTaxCalculate.GetSalesTaxAmountLineTable(TempSalesTaxLine2);
+                               end;
+                             3:
+                               begin
+                                 TempSalesTaxLine3.DELETEALL;
+                                 SalesTaxCalculate.EndSalesTaxCalculation("Posting Date");
+                                 SalesTaxCalculate.GetSalesTaxAmountLineTable(TempSalesTaxLine3);
+                               end;
+                           end;
+
+                         if Status = Status::Open then
+                           SalesTaxCalculate.DistTaxOverSalesLines(TempSalesLine);
+                         SalesPost.SumSalesLinesTemp(
+                           Rec,TempSalesLine,i - 1,TotalSalesLine[i],TotalSalesLineLCY[i],
+                           VATAmount[i],VATAmountText[i],ProfitLCY[i],ProfitPct[i],TotalAdjCostLCY[i]);
+                         if i = 3 then
+                           TotalAdjCostLCY[i] := TotalSalesLineLCY[i]."Unit Cost (LCY)";
+
+                         AdjProfitLCY[i] := TotalSalesLineLCY[i].Amount - TotalAdjCostLCY[i];
+                         if TotalSalesLineLCY[i].Amount <> 0 then
+                           AdjProfitPct[i] := ROUND(AdjProfitLCY[i] / TotalSalesLineLCY[i].Amount * 100,0.1);
+                         TotalAmount1[i] := TotalSalesLine[i].Amount;
+                         TotalAmount2[i] := TotalAmount1[i];
+                         VATAmount[i] := 0;
+
+                         if not SalesTaxCalculationOverridden then
+                           SalesTaxCalculate.GetSummarizedSalesTaxTable(TempSalesTaxAmtLine);
+                         BrkIdx := 0;
+                         PrevPrintOrder := 0;
+                         PrevTaxPercent := 0;
+                         if TaxArea."Country/Region" = TaxArea."Country/Region"::CA then
+                           BreakdownTitle := Text1020010
+                         else
+                           BreakdownTitle := Text1020011;
+                         with TempSalesTaxAmtLine do begin
+                           RESET;
+                           SETCURRENTKEY("Print Order","Tax Area Code for Key","Tax Jurisdiction Code");
+                           if FIND('-') then
+                             repeat
+                               if ("Print Order" = 0) or
+                                  ("Print Order" <> PrevPrintOrder) or
+                                  ("Tax %" <> PrevTaxPercent)
+                               then begin
+                                 BrkIdx := BrkIdx + 1;
+                                 if BrkIdx > ARRAYLEN(BreakdownAmt,2) then begin
+                                   BrkIdx := BrkIdx - 1;
+                                   BreakdownLabel[i,BrkIdx] := Text1020012;
+                                 end else
+                                   BreakdownLabel[i,BrkIdx] := STRSUBSTNO("Print Description","Tax %");
+                               end;
+                               BreakdownAmt[i,BrkIdx] := BreakdownAmt[i,BrkIdx] + "Tax Amount";
+                               VATAmount[i] := VATAmount[i] + "Tax Amount";
+                             until NEXT = 0;
+                           TotalAmount2[i] := TotalAmount2[i] + VATAmount[i];
+                         end;
+                       end;
+                       TempSalesLine.DELETEALL;
+                       CLEAR(TempSalesLine);
+                       SalesPostPrepmt.GetSalesLines(Rec,0,TempSalesLine);
+                       SalesPostPrepmt.SumPrepmt(
+                         Rec,TempSalesLine,TempVATAmountLine4,PrepmtTotalAmount,PrepmtVATAmount,PrepmtVATAmountText);
+                       PrepmtInvPct :=
+                         Pct(TotalSalesLine[1]."Prepmt. Amt. Inv.",PrepmtTotalAmount);
+                       PrepmtDeductedPct :=
+                         Pct(TotalSalesLine[1]."Prepmt Amt Deducted",TotalSalesLine[1]."Prepmt. Amt. Inv.");
+                       if "Prices Including VAT" then begin
+                         PrepmtTotalAmount2 := PrepmtTotalAmount;
+                         PrepmtTotalAmount := PrepmtTotalAmount + PrepmtVATAmount;
+                       end else
+                         PrepmtTotalAmount2 := PrepmtTotalAmount + PrepmtVATAmount;
+
+                       if Cust.GET("Bill-to Customer No.") then
+                         Cust.CALCFIELDS("Balance (LCY)")
+                       else
+                         CLEAR(Cust);
+                       case true of
+                         Cust."Credit Limit (LCY)" = 0:
+                           CreditLimitLCYExpendedPct := 0;
+                         Cust."Balance (LCY)" / Cust."Credit Limit (LCY)" < 0:
+                           CreditLimitLCYExpendedPct := 0;
+                         Cust."Balance (LCY)" / Cust."Credit Limit (LCY)" > 1:
+                           CreditLimitLCYExpendedPct := 10000;
+                         else
+                           CreditLimitLCYExpendedPct := ROUND(Cust."Balance (LCY)" / Cust."Credit Limit (LCY)" * 10000,1);
+                       end;
+
+                       TempSalesTaxLine1.MODIFYALL(Modified,false);
+                       TempSalesTaxLine2.MODIFYALL(Modified,false);
+                       TempSalesTaxLine3.MODIFYALL(Modified,false);
+                       // TempSalesTaxLine4.MODIFYALL(Modified,FALSE);
+
+                       PrevTab := -1;
+                     END;
+
+    OnQueryClosePage=BEGIN
+                       GetVATSpecification(PrevTab);
+                       if TempSalesTaxLine1.GetAnyLineModified or TempSalesTaxLine2.GetAnyLineModified then
+                         UpdateTaxOnSalesLines;
+                       exit(true);
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=General;
+                CaptionML=ENU=General }
+
+    { 39  ;2   ;Field     ;
+                Name="TotalSalesLine[1].""Line Amount""";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLine[1]."Line Amount";
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text002,false);
+                Editable=FALSE }
+
+    { 30  ;2   ;Field     ;
+                Name="TotalSalesLine[1].""Inv. Discount Amount""";
+                CaptionML=ENU=Inv. Discount Amount;
+                ToolTipML=ENU=Specifies the invoice discount amount for the entire document. If the Calc. Inv. Discount field in the Sales & Receivables Setup window is selected, the discount is automatically calculated.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLine[1]."Inv. Discount Amount";
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             UpdateInvDiscAmount(1);
+                           END;
+                            }
+
+    { 20  ;2   ;Field     ;
+                Name="TotalAmount1[1]";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAmount1[1];
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text001,false);
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             UpdateTotalAmount(1);
+                           END;
+                            }
+
+    { 16  ;2   ;Field     ;
+                Name=TaxAmount;
+                CaptionML=ENU=Tax Amount;
+                ToolTipML=ENU=Specifies the tax amount.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=VATAmount[1];
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                Editable=FALSE }
+
+    { 10  ;2   ;Field     ;
+                Name="TotalAmount2[1]";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAmount2[1];
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text001,true);
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             TotalAmount21OnAfterValidate;
+                           END;
+                            }
+
+    { 7   ;2   ;Field     ;
+                Name="TotalSalesLineLCY[1].Amount";
+                CaptionML=ENU=Sales ($);
+                ToolTipML=ENU=Specifies the sales amount.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLineLCY[1].Amount;
+                AutoFormatType=1;
+                Editable=FALSE }
+
+    { 32  ;2   ;Field     ;
+                Name="ProfitLCY[1]";
+                CaptionML=ENU=Profit ($);
+                ToolTipML=ENU="Specifies the profit expressed as an amount.  ";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=ProfitLCY[1];
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 46  ;2   ;Field     ;
+                Name="AdjProfitLCY[1]";
+                CaptionML=ENU=Adjusted Profit ($);
+                ToolTipML=ENU=Specifies the difference between the amounts in the Amount and Cost fields on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=AdjProfitLCY[1];
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 24  ;2   ;Field     ;
+                Name="ProfitPct[1]";
+                CaptionML=ENU=Original Profit %;
+                ToolTipML=ENU=Specifies the profit, expressed as a percentage, that was associated with the sales order when it was originally posted.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=1:1;
+                SourceExpr=ProfitPct[1];
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 52  ;2   ;Field     ;
+                Name="AdjProfitPct[1]";
+                CaptionML=ENU=Adjusted Profit %;
+                ToolTipML=ENU=Specifies the adjusted profit of the sales order expressed as a percentage.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=1:1;
+                SourceExpr=AdjProfitPct[1];
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 22  ;2   ;Field     ;
+                Name="TotalSalesLine[1].Quantity";
+                CaptionML=ENU=Quantity;
+                ToolTipML=ENU=Specifies the item quantity.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[1].Quantity;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 8   ;2   ;Field     ;
+                Name="TotalSalesLine[1].""Units per Parcel""";
+                CaptionML=ENU=Parcels;
+                ToolTipML=ENU=Specifies the number of parcels on the document.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[1]."Units per Parcel";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 18  ;2   ;Field     ;
+                Name="TotalSalesLine[1].""Net Weight""";
+                CaptionML=ENU=Net Weight;
+                ToolTipML=ENU=Specifies the net weight of items on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[1]."Net Weight";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 11  ;2   ;Field     ;
+                Name="TotalSalesLine[1].""Gross Weight""";
+                CaptionML=ENU=Gross Weight;
+                ToolTipML=ENU=Specifies the gross weight of items on the document.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[1]."Gross Weight";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 2   ;2   ;Field     ;
+                Name="TotalSalesLine[1].""Unit Volume""";
+                CaptionML=ENU=Volume;
+                ToolTipML=ENU=Specifies the volume of the items in the sales order.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[1]."Unit Volume";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 37  ;2   ;Field     ;
+                Name="TotalSalesLineLCY[1].""Unit Cost (LCY)""";
+                CaptionML=ENU=Original Cost ($);
+                ToolTipML=ENU=Specifies the original cost of the items on the sales document.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLineLCY[1]."Unit Cost (LCY)";
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 35  ;2   ;Field     ;
+                Name="TotalAdjCostLCY[1]";
+                CaptionML=ENU=Adjusted Cost ($);
+                ToolTipML=ENU=Specifies the adjusted cost of the items on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAdjCostLCY[1];
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 120 ;2   ;Field     ;
+                Name="TotalAdjCostLCY[1] - TotalSalesLineLCY[1].""Unit Cost (LCY)""";
+                CaptionML=ENU=Cost Adjmt. Amount ($);
+                ToolTipML=ENU=Specifies the adjusted cost of the sales order based on the total adjusted cost, total sales, and unit cost.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAdjCostLCY[1] - TotalSalesLineLCY[1]."Unit Cost (LCY)";
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE;
+                OnLookup=BEGIN
+                           LookupAdjmtValueEntries(0);
+                         END;
+                          }
+
+    { 1020003;2;Field     ;
+                Name=BreakdownTitle;
+                ApplicationArea=#Basic,#Suite;
+                CaptionClass=FORMAT(BreakdownTitle);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1020008;2;Field     ;
+                Name=BreakdownAmt2;
+                CaptionML=ENU=BreakdownAmt;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[1,1];
+                CaptionClass=FORMAT(BreakdownLabel[1,1]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1020009;2;Field     ;
+                Name=BreakdownAmt3;
+                CaptionML=ENU=BreakdownAmt;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[1,2];
+                CaptionClass=FORMAT(BreakdownLabel[1,2]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1020010;2;Field     ;
+                Name=BreakdownAm4;
+                CaptionML=ENU=BreakdownAm;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[1,3];
+                CaptionClass=FORMAT(BreakdownLabel[1,3]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1020011;2;Field     ;
+                Name=BreakdownAm5;
+                CaptionML=ENU=BreakdownAm;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[1,4];
+                CaptionClass=FORMAT(BreakdownLabel[1,4]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 119 ;2   ;Field     ;
+                Name=NoOfVATLines_General;
+                DrillDown=true;
+                CaptionML=ENU=No. of Tax Lines;
+                ToolTipML=ENU=Specifies the number of sales tax lines on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TempSalesTaxLine1.COUNT;
+                Importance=Additional;
+                OnDrillDown=BEGIN
+                              VATLinesDrillDown(TempSalesTaxLine1,false,ActiveTab::General);
+                              UpdateHeaderInfo(1,TempSalesTaxLine1);
+                            END;
+                             }
+
+    { 1905885101;1;Group  ;
+                Name=Invoicing;
+                CaptionML=ENU=Invoicing }
+
+    { 71  ;2   ;Field     ;
+                Name="TotalSalesLine[2].""Line Amount""";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLine[2]."Line Amount";
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text002,false);
+                Editable=FALSE }
+
+    { 51  ;2   ;Field     ;
+                Name="TotalSalesLine[2].""Inv. Discount Amount""";
+                CaptionML=ENU=Inv. Discount Amount;
+                ToolTipML=ENU=Specifies the invoice discount amount for the entire sales document. If the Calc. Inv. Discount field in the Sales & Receivables Setup window is selected, the discount is automatically calculated.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLine[2]."Inv. Discount Amount";
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             UpdateInvDiscAmount(2);
+                           END;
+                            }
+
+    { 50  ;2   ;Field     ;
+                Name="TotalAmount1[2]";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAmount1[2];
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text001,false);
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             UpdateTotalAmount(2);
+                           END;
+                            }
+
+    { 49  ;2   ;Field     ;
+                Name="VATAmount[2]";
+                CaptionML=ENU=Tax Amount;
+                ToolTipML=ENU=Specifies the tax amount.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=VATAmount[2];
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                Editable=FALSE }
+
+    { 48  ;2   ;Field     ;
+                Name="TotalAmount2[2]";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAmount2[2];
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text001,true);
+                Editable=FALSE }
+
+    { 69  ;2   ;Field     ;
+                Name="TotalSalesLineLCY[2].Amount";
+                CaptionML=ENU=Sales ($);
+                ToolTipML=ENU=Specifies the sales amount.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLineLCY[2].Amount;
+                AutoFormatType=1;
+                Editable=FALSE }
+
+    { 67  ;2   ;Field     ;
+                Name="ProfitLCY[2]";
+                CaptionML=ENU=Original Profit ($);
+                ToolTipML=ENU=Specifies the profit, expressed as an amount in local currency, which was associated with the sales order when it was originally posted.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=ProfitLCY[2];
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 75  ;2   ;Field     ;
+                Name="AdjProfitLCY[2]";
+                CaptionML=ENU=Adjusted Profit ($);
+                ToolTipML=ENU=Specifies the difference between the amounts in the Amount and Cost fields on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=AdjProfitLCY[2];
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 66  ;2   ;Field     ;
+                Name="ProfitPct[2]";
+                CaptionML=ENU=Original Profit %;
+                ToolTipML=ENU=Specifies the profit, expressed as a percentage, that was associated with the sales order when it was originally posted.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=1:1;
+                SourceExpr=ProfitPct[2];
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 79  ;2   ;Field     ;
+                Name="AdjProfitPct[2]";
+                CaptionML=ENU=Adjusted Profit %;
+                ToolTipML=ENU=Specifies the adjusted profit of the sales order expressed as a percentage.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=1:1;
+                SourceExpr=AdjProfitPct[2];
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 65  ;2   ;Field     ;
+                Name="TotalSalesLine[2].Quantity";
+                CaptionML=ENU=Quantity;
+                ToolTipML=ENU=Specifies the item quantity.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[2].Quantity;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 62  ;2   ;Field     ;
+                Name="TotalSalesLine[2].""Units per Parcel""";
+                CaptionML=ENU=Parcels;
+                ToolTipML=ENU=Specifies the number of parcels on the document.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[2]."Units per Parcel";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 64  ;2   ;Field     ;
+                Name="TotalSalesLine[2].""Net Weight""";
+                CaptionML=ENU=Net Weight;
+                ToolTipML=ENU=Specifies the net weight of items on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[2]."Net Weight";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 63  ;2   ;Field     ;
+                Name="TotalSalesLine[2].""Gross Weight""";
+                CaptionML=ENU=Gross Weight;
+                ToolTipML=ENU=Specifies the gross weight of items on the document.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[2]."Gross Weight";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 61  ;2   ;Field     ;
+                Name="TotalSalesLine[2].""Unit Volume""";
+                CaptionML=ENU=Volume;
+                ToolTipML=ENU=Specifies the volume of the items in the sales order.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[2]."Unit Volume";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 68  ;2   ;Field     ;
+                Name="TotalSalesLineLCY[2].""Unit Cost (LCY)""";
+                CaptionML=ENU=Original Cost ($);
+                ToolTipML=ENU=Specifies the original cost of the items on the sales document.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLineLCY[2]."Unit Cost (LCY)";
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 17  ;2   ;Field     ;
+                Name="TotalAdjCostLCY[2]";
+                CaptionML=ENU=Adjusted Cost ($);
+                ToolTipML=ENU=Specifies the adjusted cost of the items on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAdjCostLCY[2];
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 122 ;2   ;Field     ;
+                Name="TotalAdjCostLCY[2] - TotalSalesLineLCY[2].""Unit Cost (LCY)""";
+                CaptionML=ENU=Cost Adjmt. Amount ($);
+                ToolTipML=ENU=Specifies the adjusted cost of the sales order based on the total adjusted cost, total sales, and unit cost.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAdjCostLCY[2] - TotalSalesLineLCY[2]."Unit Cost (LCY)";
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE;
+                OnLookup=BEGIN
+                           LookupAdjmtValueEntries(1);
+                         END;
+                          }
+
+    { 1020013;2;Field     ;
+                Name=BreakdownTitle2;
+                ApplicationArea=#Basic,#Suite;
+                CaptionClass=FORMAT(BreakdownTitle);
+                Importance=Additional }
+
+    { 1020012;2;Field     ;
+                Name=BreakdownAmt6;
+                CaptionML=ENU=BreakdownAmt;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[2,1];
+                CaptionClass=FORMAT(BreakdownLabel[2,1]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1020016;2;Field     ;
+                Name=BreakdownAmt7;
+                CaptionML=ENU=BreakdownAmt;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[2,2];
+                CaptionClass=FORMAT(BreakdownLabel[2,2]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1020018;2;Field     ;
+                Name=BreakdownAmt8;
+                CaptionML=ENU=BreakdownAmt;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[2,3];
+                CaptionClass=FORMAT(BreakdownLabel[2,3]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1020020;2;Field     ;
+                Name=BreakdownAmt9;
+                CaptionML=ENU=BreakdownAmt;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[2,4];
+                CaptionClass=FORMAT(BreakdownLabel[2,4]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1480020;2;Field     ;
+                Name=NoOfVATLines_Invoicing;
+                DrillDown=true;
+                CaptionML=ENU=No. of Tax Lines;
+                ToolTipML=ENU=Specifies the number of sales tax lines on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TempSalesTaxLine2.COUNT;
+                Importance=Additional;
+                OnDrillDown=BEGIN
+                              VATLinesDrillDown(TempSalesTaxLine2,true,ActiveTab::Invoicing);
+                              UpdateHeaderInfo(2,TempSalesTaxLine2);
+                            END;
+                             }
+
+    { 1906801201;1;Group  ;
+                Name=Shipping;
+                CaptionML=ENU=Shipping }
+
+    { 105 ;2   ;Field     ;
+                Name="TotalSalesLine[3].""Line Amount""";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLine[3]."Line Amount";
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text002,false);
+                Editable=FALSE }
+
+    { 83  ;2   ;Field     ;
+                Name="TotalSalesLine[3].""Inv. Discount Amount""";
+                CaptionML=ENU=Inv. Discount Amount;
+                ToolTipML=ENU=Specifies the invoice discount amount for the entire sales document. If the Calc. Inv. Discount field in the Sales & Receivables Setup window is selected, the discount is automatically calculated.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLine[3]."Inv. Discount Amount";
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                Editable=FALSE }
+
+    { 82  ;2   ;Field     ;
+                Name="TotalAmount1[3]";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAmount1[3];
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text001,false);
+                Editable=FALSE }
+
+    { 81  ;2   ;Field     ;
+                Name="VATAmount[3]";
+                CaptionML=ENU=Tax Amount;
+                ToolTipML=ENU=Specifies the tax amount.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=VATAmount[3];
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                Editable=FALSE }
+
+    { 80  ;2   ;Field     ;
+                Name="TotalAmount2[3]";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAmount2[3];
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text001,true);
+                Editable=FALSE }
+
+    { 103 ;2   ;Field     ;
+                Name="TotalSalesLineLCY[3].Amount";
+                CaptionML=ENU=Sales ($);
+                ToolTipML=ENU=Specifies the sales amount.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLineLCY[3].Amount;
+                AutoFormatType=1;
+                Editable=FALSE }
+
+    { 102 ;2   ;Field     ;
+                Name="TotalSalesLineLCY[3].""Unit Cost (LCY)""";
+                CaptionML=ENU=Cost ($);
+                ToolTipML=ENU=Specifies the cost of the sales order, rounded according to the Amount Rounding Precision field in the Currencies window.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalSalesLineLCY[3]."Unit Cost (LCY)";
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 101 ;2   ;Field     ;
+                Name="ProfitLCY[3]";
+                CaptionML=ENU=Profit ($);
+                ToolTipML=ENU="Specifies the profit expressed as an amount.  ";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=ProfitLCY[3];
+                AutoFormatType=1;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 100 ;2   ;Field     ;
+                Name="ProfitPct[3]";
+                CaptionML=ENU=Profit %;
+                ToolTipML=ENU="Specifies the profit expressed as a percentage.  ";
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=1:1;
+                SourceExpr=ProfitPct[3];
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 99  ;2   ;Field     ;
+                Name="TotalSalesLine[3].Quantity";
+                CaptionML=ENU=Quantity;
+                ToolTipML=ENU=Specifies the item quantity.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[3].Quantity;
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 94  ;2   ;Field     ;
+                Name="TotalSalesLine[3].""Units per Parcel""";
+                CaptionML=ENU=Parcels;
+                ToolTipML=ENU=Specifies the number of parcels on the document.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[3]."Units per Parcel";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 98  ;2   ;Field     ;
+                Name="TotalSalesLine[3].""Net Weight""";
+                CaptionML=ENU=Net Weight;
+                ToolTipML=ENU=Specifies the net weight of items on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[3]."Net Weight";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 97  ;2   ;Field     ;
+                Name="TotalSalesLine[3].""Gross Weight""";
+                CaptionML=ENU=Gross Weight;
+                ToolTipML=ENU=Specifies the gross weight of items on the document.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[3]."Gross Weight";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 93  ;2   ;Field     ;
+                Name="TotalSalesLine[3].""Unit Volume""";
+                CaptionML=ENU=Volume;
+                ToolTipML=ENU=Specifies the volume of the items in the sales order.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalSalesLine[3]."Unit Volume";
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1020021;2;Field     ;
+                Name=BreakdownTitle3;
+                ApplicationArea=#Basic,#Suite;
+                CaptionClass=FORMAT(BreakdownTitle);
+                Importance=Additional }
+
+    { 1020024;2;Field     ;
+                Name=BreakdownAmt10;
+                CaptionML=ENU=BreakdownAmt;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[3,1];
+                CaptionClass=FORMAT(BreakdownLabel[3,1]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1020025;2;Field     ;
+                Name=BreakdownAmt11;
+                CaptionML=ENU=BreakdownAmt;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[3,2];
+                CaptionClass=FORMAT(BreakdownLabel[3,2]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1020027;2;Field     ;
+                Name=BreakdownAmt12;
+                CaptionML=ENU=BreakdownAmt;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[3,3];
+                CaptionClass=FORMAT(BreakdownLabel[3,3]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1020029;2;Field     ;
+                Name=BreakdownAmt13;
+                CaptionML=ENU=BreakdownAmt;
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[3,4];
+                CaptionClass=FORMAT(BreakdownLabel[3,4]);
+                Importance=Additional;
+                Editable=FALSE }
+
+    { 1480022;2;Field     ;
+                Name=NoOfVATLines_Shipping;
+                DrillDown=true;
+                CaptionML=ENU=No. of Tax Lines;
+                ToolTipML=ENU=Specifies the number of sales tax lines on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TempSalesTaxLine3.COUNT;
+                Importance=Additional;
+                OnDrillDown=BEGIN
+                              VATLinesDrillDown(TempSalesTaxLine3,false,ActiveTab::Shipping);
+                              UpdateHeaderInfo(3,TempSalesTaxLine3);
+                            END;
+                             }
+
+    { 1900201301;1;Group  ;
+                Name=Prepayment;
+                CaptionML=ENU=Prepayment }
+
+    { 1480017;2;Field     ;
+                Name=PrepmtTotalAmount;
+                ApplicationArea=#Prepayments;
+                SourceExpr=PrepmtTotalAmount;
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text006,false);
+                ImplicitType=Decimal }
+
+    { 1480015;2;Field     ;
+                Name=PrepmtVATAmount;
+                CaptionML=ENU=Prepayment Amount Invoiced;
+                ToolTipML=ENU=Specifies the total prepayment amount that has been invoiced for the sales order.;
+                ApplicationArea=#Prepayments;
+                SourceExpr=PrepmtVATAmount;
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=FORMAT(PrepmtVATAmountText);
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 1480013;2;Field     ;
+                Name=PrepmtTotalAmount2;
+                ApplicationArea=#Prepayments;
+                SourceExpr=PrepmtTotalAmount2;
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text006,true);
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 1480008;2;Field     ;
+                Name="TotalSalesLine[1].""Prepmt. Amt. Inv.""";
+                ApplicationArea=#Prepayments;
+                SourceExpr=TotalSalesLine[1]."Prepmt. Amt. Inv.";
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text007,false);
+                Editable=FALSE }
+
+    { 1480009;2;Field     ;
+                Name=PrepmtInvPct;
+                ExtendedDatatype=Ratio;
+                CaptionML=ENU=Invoiced % of Prepayment Amt.;
+                ToolTipML=ENU=Specifies the Invoiced Percentage of Prepayment Amt.;
+                ApplicationArea=#Prepayments;
+                SourceExpr=PrepmtInvPct;
+                ImplicitType=Decimal }
+
+    { 1480006;2;Field     ;
+                Name="TotalSalesLine[1].""Prepmt Amt Deducted""";
+                ApplicationArea=#Prepayments;
+                SourceExpr=TotalSalesLine[1]."Prepmt Amt Deducted";
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text008,false);
+                Editable=FALSE }
+
+    { 1480007;2;Field     ;
+                Name=PrepmtDeductedPct;
+                ExtendedDatatype=Ratio;
+                CaptionML=ENU=Deducted % of Prepayment Amt. to Deduct;
+                ToolTipML=ENU=Specifies the Deducted Percentage of Prepayment Amt. to Deduct.;
+                ApplicationArea=#Prepayments;
+                SourceExpr=PrepmtDeductedPct;
+                ImplicitType=Decimal }
+
+    { 1480005;2;Field     ;
+                Name="TotalSalesLine[1].""Prepmt Amt to Deduct""";
+                ApplicationArea=#Prepayments;
+                SourceExpr=TotalSalesLine[1]."Prepmt Amt to Deduct";
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                CaptionClass=GetCaptionClass(Text009,false);
+                Editable=FALSE }
+
+    { 1400001;2;Field     ;
+                Name=NoOfVATLines_Prepayment;
+                DrillDown=true;
+                CaptionML=ENU=No. of Tax Lines;
+                ToolTipML=ENU=Specifies the number of sales tax lines on the sales order.;
+                SourceExpr=TempSalesTaxLine1.COUNT;
+                OnDrillDown=BEGIN
+                              VATLinesDrillDown(TempSalesTaxLine1,false,ActiveTab::Prepayment);
+                              UpdateHeaderInfo(1,TempSalesTaxLine1);
+                            END;
+                             }
+
+    { 1903289601;1;Group  ;
+                Name=Customer;
+                CaptionML=ENU=Customer }
+
+    { 1480003;2;Field     ;
+                Name="Cust.""Balance (LCY)""";
+                CaptionML=ENU=Balance ($);
+                ToolTipML=ENU="Specifies the customer's balance. ";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Cust."Balance (LCY)";
+                AutoFormatType=1;
+                Editable=FALSE }
+
+    { 1480000;2;Field     ;
+                Name="Cust.""Credit Limit (LCY)""";
+                CaptionML=ENU=Credit Limit ($);
+                ToolTipML=ENU=Specifies the customer's credit limit.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Cust."Credit Limit (LCY)";
+                AutoFormatType=1;
+                Editable=FALSE }
+
+    { 1480002;2;Field     ;
+                Name=CreditLimitLCYExpendedPct;
+                ExtendedDatatype=Ratio;
+                CaptionML=ENU=Expended % of Credit Limit ($);
+                ToolTipML=ENU=Specifies how must of the customer's credit is used, expressed as a percentage of the credit limit.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CreditLimitLCYExpendedPct;
+                ImplicitType=Decimal }
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'ENU=Sales %1 Statistics';
+      Text001@1001 : TextConst 'ENU=Total';
+      Text002@1002 : TextConst 'ENU=Amount';
+      Text003@1003 : TextConst 'ENU=%1 must not be 0.';
+      Text004@1004 : TextConst 'ENU=%1 must not be greater than %2.';
+      Text005@1005 : TextConst 'ENU=You cannot change the invoice discount because there is a %1 record for %2 %3.';
+      TotalSalesLine@1006 : ARRAY [3] OF Record "Sales Line";
+      TotalSalesLineLCY@1007 : ARRAY [3] OF Record "Sales Line";
+      Cust@1008 : Record Customer;
+      TempSalesTaxLine1@1020001 : TEMPORARY Record "Sales Tax Amount Line";
+      TempSalesTaxLine2@1020002 : TEMPORARY Record "Sales Tax Amount Line";
+      TempSalesTaxLine3@1020003 : TEMPORARY Record "Sales Tax Amount Line";
+      TempVATAmountLine4@1034 : TEMPORARY Record "VAT Amount Line";
+      SalesSetup@1012 : Record "Sales & Receivables Setup";
+      SalesTaxDifference@1020004 : Record "Sales Tax Amount Difference";
+      TaxArea@1020005 : Record "Tax Area";
+      SalesPost@1013 : Codeunit "Sales-Post";
+      SalesTaxCalculate@1020000 : Codeunit "Sales Tax Calculate";
+      VATLinesForm@1020013 : Page "Sales Tax Lines Subform Dyn";
+      TotalAmount1@1014 : ARRAY [3] OF Decimal;
+      TotalAmount2@1015 : ARRAY [3] OF Decimal;
+      VATAmount@1016 : ARRAY [3] OF Decimal;
+      PrepmtTotalAmount@1037 : Decimal;
+      PrepmtVATAmount@1038 : Decimal;
+      PrepmtTotalAmount2@1040 : Decimal;
+      VATAmountText@1017 : ARRAY [3] OF Text[30];
+      PrepmtVATAmountText@1039 : Text[30];
+      ProfitLCY@1018 : ARRAY [3] OF Decimal;
+      ProfitPct@1019 : ARRAY [3] OF Decimal;
+      AdjProfitLCY@1031 : ARRAY [3] OF Decimal;
+      AdjProfitPct@1030 : ARRAY [3] OF Decimal;
+      TotalAdjCostLCY@1029 : ARRAY [3] OF Decimal;
+      CreditLimitLCYExpendedPct@1020 : Decimal;
+      PrepmtInvPct@1036 : Decimal;
+      PrepmtDeductedPct@1035 : Decimal;
+      i@1021 : Integer;
+      PrevNo@1022 : Code[20];
+      ActiveTab@1023 : 'General,Invoicing,Shipping,Prepayment';
+      PrevTab@1024 : 'General,Invoicing,Shipping,Prepayment';
+      VATLinesFormIsEditable@1026 : Boolean;
+      AllowInvDisc@1027 : Boolean;
+      AllowVATDifference@1028 : Boolean;
+      Text006@1033 : TextConst 'ENU=Prepmt. Amount';
+      Text007@1041 : TextConst 'ENU=Prepmt. Amt. Invoiced';
+      Text008@1042 : TextConst 'ENU=Prepmt. Amt. Deducted';
+      Text009@1043 : TextConst 'ENU=Prepmt. Amt. to Deduct';
+      BreakdownTitle@1020006 : Text[35];
+      BreakdownLabel@1020007 : ARRAY [3,4] OF Text[30];
+      BreakdownAmt@1020008 : ARRAY [3,4] OF Decimal;
+      BrkIdx@1020009 : Integer;
+      Text1020010@1020010 : TextConst 'ENU=Tax Breakdown:';
+      Text1020011@1020011 : TextConst 'ENU=Sales Tax Breakdown:';
+      Text1020012@1020012 : TextConst 'ENU=Other Taxes';
+      SalesTaxCalculationOverridden@1020014 : Boolean;
+
+    LOCAL PROCEDURE UpdateHeaderInfo@5(IndexNo@1000 : Integer;VAR SalesTaxAmountLine@1001 : TEMPORARY Record "Sales Tax Amount Line");
+    VAR
+      CurrExchRate@1002 : Record "Currency Exchange Rate";
+      UseDate@1003 : Date;
+    BEGIN
+      if SalesTaxCalculationOverridden then
+        exit;
+
+      TotalSalesLine[IndexNo]."Inv. Discount Amount" := SalesTaxAmountLine.GetTotalInvDiscAmount;
+      TotalAmount1[IndexNo] :=
+        TotalSalesLine[IndexNo]."Line Amount" - TotalSalesLine[IndexNo]."Inv. Discount Amount";
+      VATAmount[IndexNo] := SalesTaxAmountLine.GetTotalTaxAmountFCY;
+      if "Prices Including VAT" then
+        TotalAmount2[IndexNo] := TotalSalesLine[IndexNo].Amount
+      else
+        TotalAmount2[IndexNo] := TotalAmount1[IndexNo] + VATAmount[IndexNo];
+
+      if "Prices Including VAT" then
+        TotalSalesLineLCY[IndexNo].Amount := TotalAmount2[IndexNo]
+      else
+        TotalSalesLineLCY[IndexNo].Amount := TotalAmount1[IndexNo];
+      if "Currency Code" <> '' then
+        if ("Document Type" in ["Document Type"::"Blanket Order","Document Type"::Quote]) and
+           ("Posting Date" = 0D)
+        then
+          UseDate := WORKDATE
+        else
+          UseDate := "Posting Date";
+
+      TotalSalesLineLCY[IndexNo].Amount :=
+        CurrExchRate.ExchangeAmtFCYToLCY(
+          UseDate,"Currency Code",TotalSalesLineLCY[IndexNo].Amount,"Currency Factor");
+
+      ProfitLCY[IndexNo] := TotalSalesLineLCY[IndexNo].Amount - TotalSalesLineLCY[IndexNo]."Unit Cost (LCY)";
+      if TotalSalesLineLCY[IndexNo].Amount = 0 then
+        ProfitPct[IndexNo] := 0
+      else
+        ProfitPct[IndexNo] := ROUND(100 * ProfitLCY[IndexNo] / TotalSalesLineLCY[IndexNo].Amount,0.01);
+
+      AdjProfitLCY[IndexNo] := TotalSalesLineLCY[IndexNo].Amount - TotalAdjCostLCY[IndexNo];
+      if TotalSalesLineLCY[IndexNo].Amount = 0 then
+        AdjProfitPct[IndexNo] := 0
+      else
+        AdjProfitPct[IndexNo] := ROUND(100 * AdjProfitLCY[IndexNo] / TotalSalesLineLCY[IndexNo].Amount,0.01);
+    END;
+
+    LOCAL PROCEDURE GetVATSpecification@21(StatisticsTab@1000 : 'General,Invoicing,Shipping');
+    BEGIN
+      case StatisticsTab of
+        StatisticsTab::General:
+          begin
+            VATLinesForm.GetTempTaxAmountLine(TempSalesTaxLine1);
+            UpdateHeaderInfo(1,TempSalesTaxLine1);
+          end;
+        StatisticsTab::Invoicing:
+          begin
+            VATLinesForm.GetTempTaxAmountLine(TempSalesTaxLine2);
+            UpdateHeaderInfo(2,TempSalesTaxLine2);
+          end;
+        StatisticsTab::Shipping:
+          VATLinesForm.GetTempTaxAmountLine(TempSalesTaxLine3);
+      end;
+    END;
+
+    LOCAL PROCEDURE SetEditableForVATLinesForm@11(StatisticsTab@1000 : 'General,Invoicing,Shipping,Prepayment');
+    VAR
+      PermissionManager@1020000 : Codeunit "Permission Manager";
+    BEGIN
+      case StatisticsTab of
+        StatisticsTab::General,StatisticsTab::Invoicing:
+          if Status = Status::Open then begin
+            if PermissionManager.SoftwareAsAService then
+              VATLinesForm.EDITABLE := VATLinesFormIsEditable
+            else
+              VATLinesForm.EDITABLE := false;
+          end else
+            VATLinesForm.EDITABLE := VATLinesFormIsEditable;
+        StatisticsTab::Shipping:
+          VATLinesForm.EDITABLE := false;
+        StatisticsTab::Prepayment:
+          VATLinesForm.EDITABLE := VATLinesFormIsEditable;
+      end;
+    END;
+
+    LOCAL PROCEDURE UpdateTotalAmount@16(IndexNo@1000 : Integer);
+    VAR
+      SaveTotalAmount@1001 : Decimal;
+    BEGIN
+      CheckAllowInvDisc;
+      if "Prices Including VAT" then begin
+        SaveTotalAmount := TotalAmount1[IndexNo];
+        UpdateInvDiscAmount(IndexNo);
+        TotalAmount1[IndexNo] := SaveTotalAmount;
+      end;
+
+      with TotalSalesLine[IndexNo] do
+        "Inv. Discount Amount" := "Line Amount" - TotalAmount1[IndexNo];
+      UpdateInvDiscAmount(IndexNo);
+    END;
+
+    LOCAL PROCEDURE UpdateInvDiscAmount@3(ModifiedIndexNo@1000 : Integer);
+    VAR
+      PartialInvoicing@1001 : Boolean;
+      MaxIndexNo@1002 : Integer;
+      IndexNo@1003 : ARRAY [2] OF Integer;
+      i@1004 : Integer;
+      InvDiscBaseAmount@1005 : Decimal;
+    BEGIN
+      CheckAllowInvDisc;
+      if not (ModifiedIndexNo in [1,2]) then
+        exit;
+
+      if ModifiedIndexNo = 1 then
+        InvDiscBaseAmount := TempSalesTaxLine1.GetTotalInvDiscBaseAmount(false,"Currency Code")
+      else
+        InvDiscBaseAmount := TempSalesTaxLine2.GetTotalInvDiscBaseAmount(false,"Currency Code");
+
+      if InvDiscBaseAmount = 0 then
+        ERROR(Text003,TempSalesTaxLine2.FIELDCAPTION("Inv. Disc. Base Amount"));
+
+      if TotalSalesLine[ModifiedIndexNo]."Inv. Discount Amount" / InvDiscBaseAmount > 1 then
+        ERROR(
+          Text004,
+          TotalSalesLine[ModifiedIndexNo].FIELDCAPTION("Inv. Discount Amount"),
+          TempSalesTaxLine2.FIELDCAPTION("Inv. Disc. Base Amount"));
+
+      PartialInvoicing := (TotalSalesLine[1]."Line Amount" <> TotalSalesLine[2]."Line Amount");
+
+      IndexNo[1] := ModifiedIndexNo;
+      IndexNo[2] := 3 - ModifiedIndexNo;
+      if (ModifiedIndexNo = 2) and PartialInvoicing then
+        MaxIndexNo := 1
+      else
+        MaxIndexNo := 2;
+
+      if not PartialInvoicing then
+        if ModifiedIndexNo = 1 then
+          TotalSalesLine[2]."Inv. Discount Amount" := TotalSalesLine[1]."Inv. Discount Amount"
+        else
+          TotalSalesLine[1]."Inv. Discount Amount" := TotalSalesLine[2]."Inv. Discount Amount";
+
+      for i := 1 to MaxIndexNo do
+        with TotalSalesLine[IndexNo[i]] do begin
+          if (i = 1) or not PartialInvoicing then
+            if IndexNo[i] = 1 then begin
+              TempSalesTaxLine1.SetInvoiceDiscountAmount(
+                "Inv. Discount Amount","Currency Code","Prices Including VAT","VAT Base Discount %");
+            end else
+              TempSalesTaxLine2.SetInvoiceDiscountAmount(
+                "Inv. Discount Amount","Currency Code","Prices Including VAT","VAT Base Discount %");
+
+          if (i = 2) and PartialInvoicing then
+            if IndexNo[i] = 1 then begin
+              InvDiscBaseAmount := TempSalesTaxLine2.GetTotalInvDiscBaseAmount(false,"Currency Code");
+              if InvDiscBaseAmount = 0 then
+                TempSalesTaxLine1.SetInvoiceDiscountPercent(
+                  0,"Currency Code","Prices Including VAT",false,"VAT Base Discount %")
+              else
+                TempSalesTaxLine1.SetInvoiceDiscountPercent(
+                  100 * TempSalesTaxLine2.GetTotalInvDiscAmount / InvDiscBaseAmount,
+                  "Currency Code","Prices Including VAT",false,"VAT Base Discount %");
+            end else begin
+              InvDiscBaseAmount := TempSalesTaxLine1.GetTotalInvDiscBaseAmount(false,"Currency Code");
+              if InvDiscBaseAmount = 0 then
+                TempSalesTaxLine2.SetInvoiceDiscountPercent(
+                  0,"Currency Code","Prices Including VAT",false,"VAT Base Discount %")
+              else
+                TempSalesTaxLine2.SetInvoiceDiscountPercent(
+                  100 * TempSalesTaxLine1.GetTotalInvDiscAmount / InvDiscBaseAmount,
+                  "Currency Code","Prices Including VAT",false,"VAT Base Discount %");
+            end;
+        end;
+
+      UpdateHeaderInfo(1,TempSalesTaxLine1);
+      UpdateHeaderInfo(2,TempSalesTaxLine2);
+
+      if ModifiedIndexNo = 1 then
+        VATLinesForm.SetTempTaxAmountLine(TempSalesTaxLine1)
+      else
+        VATLinesForm.SetTempTaxAmountLine(TempSalesTaxLine2);
+
+      "Invoice Discount Calculation" := "Invoice Discount Calculation"::Amount;
+      "Invoice Discount Value" := TotalSalesLine[1]."Inv. Discount Amount";
+      MODIFY;
+
+      UpdateTaxOnSalesLines;
+    END;
+
+    LOCAL PROCEDURE GetCaptionClass@2(FieldCaption@1000 : Text[100];ReverseCaption@1001 : Boolean) : Text[80];
+    BEGIN
+      if "Prices Including VAT" xor ReverseCaption then
+        exit('2,1,' + FieldCaption);
+      exit('2,0,' + FieldCaption);
+    END;
+
+    LOCAL PROCEDURE UpdateTaxOnSalesLines@1();
+    VAR
+      SalesLine@1000 : Record "Sales Line";
+    BEGIN
+      GetVATSpecification(ActiveTab);
+
+      SalesLine.RESET;
+      SalesLine.SETRANGE("Document Type","Document Type");
+      SalesLine.SETRANGE("Document No.","No.");
+      SalesLine.FINDFIRST;
+
+      if TempSalesTaxLine1.GetAnyLineModified then begin
+        SalesTaxCalculate.StartSalesTaxCalculation;
+        SalesTaxCalculate.PutSalesTaxAmountLineTable(
+          TempSalesTaxLine1,
+          SalesTaxDifference."Document Product Area"::Sales,
+          "Document Type","No.");
+        SalesTaxCalculate.DistTaxOverSalesLines(SalesLine);
+        SalesTaxCalculate.SaveTaxDifferences;
+      end;
+      if TempSalesTaxLine2.GetAnyLineModified then begin
+        SalesTaxCalculate.StartSalesTaxCalculation;
+        SalesTaxCalculate.PutSalesTaxAmountLineTable(
+          TempSalesTaxLine2,
+          SalesTaxDifference."Document Product Area"::Sales,
+          "Document Type","No.");
+        SalesTaxCalculate.DistTaxOverSalesLines(SalesLine);
+        SalesTaxCalculate.SaveTaxDifferences;
+      end;
+
+      PrevNo := '';
+    END;
+
+    LOCAL PROCEDURE CustInvDiscRecExists@4(InvDiscCode@1000 : Code[20]) : Boolean;
+    VAR
+      CustInvDisc@1001 : Record "Cust. Invoice Disc.";
+    BEGIN
+      CustInvDisc.SETRANGE(Code,InvDiscCode);
+      exit(CustInvDisc.FINDFIRST);
+    END;
+
+    LOCAL PROCEDURE CheckAllowInvDisc@8();
+    VAR
+      CustInvDisc@1000 : Record "Cust. Invoice Disc.";
+    BEGIN
+      if not AllowInvDisc then
+        ERROR(
+          Text005,
+          CustInvDisc.TABLECAPTION,FIELDCAPTION("Invoice Disc. Code"),"Invoice Disc. Code");
+    END;
+
+    LOCAL PROCEDURE Pct@6(Numerator@1001 : Decimal;Denominator@1000 : Decimal) : Decimal;
+    BEGIN
+      if Denominator = 0 then
+        exit(0);
+      exit(ROUND(Numerator / Denominator * 10000,1));
+    END;
+
+    [External]
+    PROCEDURE VATLinesDrillDown@7(VAR VATLinesToDrillDown@1000 : Record "Sales Tax Amount Line";ThisTabAllowsVATEditing@1001 : Boolean;ActiveTab@1002 : 'General,Invoicing,Shipping,Prepayment');
+    BEGIN
+      CLEAR(VATLinesForm);
+      VATLinesForm.SetTempTaxAmountLine(VATLinesToDrillDown);
+      VATLinesForm.InitGlobals(
+        "Currency Code",AllowVATDifference,AllowVATDifference and ThisTabAllowsVATEditing,
+        "Prices Including VAT",AllowInvDisc,"VAT Base Discount %");
+      SetEditableForVATLinesForm(ActiveTab);
+      VATLinesForm.RUNMODAL;
+      VATLinesForm.GetTempTaxAmountLine(VATLinesToDrillDown);
+    END;
+
+    LOCAL PROCEDURE TotalAmount21OnAfterValidate@19074760();
+    BEGIN
+      with TotalSalesLine[1] do begin
+        if "Prices Including VAT" then
+          "Inv. Discount Amount" := "Line Amount" - "Amount Including VAT"
+        else
+          "Inv. Discount Amount" := "Line Amount" - Amount;
+      end;
+      UpdateInvDiscAmount(1);
+    END;
+
+    LOCAL PROCEDURE ClearObjects@1020001(VAR SalesLine@1020000 : Record "Sales Line";VAR TotalSalesLine@1020001 : ARRAY [3] OF Record "Sales Line";VAR TotalSalesLineLCY@1020002 : ARRAY [3] OF Record "Sales Line";BreakdownLabel@1020003 : ARRAY [3,4] OF Text[30];BreakdownAmt@1020004 : ARRAY [3,4] OF Decimal);
+    BEGIN
+      CLEAR(SalesLine);
+      CLEAR(TotalSalesLine);
+      CLEAR(TotalSalesLineLCY);
+      CLEAR(BreakdownLabel);
+      CLEAR(BreakdownAmt);
+    END;
+
+    [Integration]
+    [External]
+    LOCAL PROCEDURE OnBeforeCalculateSalesTaxSalesOrderStats@1020000(VAR SalesHeader@1020000 : Record "Sales Header";VAR SalesLine@1020001 : Record "Sales Line";VAR i@1020002 : Integer;VAR SalesTaxAmountLine1@1020003 : Record "Sales Tax Amount Line";VAR SalesTaxAmountLine2@1020004 : Record "Sales Tax Amount Line";VAR SalesTaxAmountLine3@1020005 : Record "Sales Tax Amount Line";VAR SalesTaxAmountLine4@1020006 : Record "Sales Tax Amount Line";VAR SalesTaxCalculationOverridden@1020007 : Boolean);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,60 @@
+OBJECT Page 9195 Experience Tiers
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161644.453T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Experience Tiers;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable="Experience Tier Buffer";
+    PageType=List;
+    SourceTableTemporary=true;
+    OnQueryClosePage=VAR
+                       ExperienceTierSetup@1000 : Record "Experience Tier Setup";
+                       ApplicationAreaMgmt@1001 : Codeunit "Application Area Mgmt.";
+                     BEGIN
+                       if CloseAction = ACTION::LookupOK then
+                         if ("Experience Tier" = ExperienceTierSetup.FIELDNAME(Premium)) and (not ApplicationAreaMgmt.IsPremiumEnabled) then begin
+                           MESSAGE(PremiumSubscriptionNeededMsg);
+                           ERROR('');
+                         end;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 4   ;2   ;Field     ;
+                Name="Experience Tier";
+                ToolTipML=ENU=Specifies the scope of the application functionality for which fields and actions are shown. Fields and action for non-selected application areas are hidden to simplify the user interface.;
+                ApplicationArea=#All;
+                SourceExpr="Experience Tier";
+                Editable=FALSE;
+                ImplicitType=Text30 }
+
+  }
+  CODE
+  {
+    VAR
+      PremiumSubscriptionNeededMsg@1000 : TextConst 'ENU=To use the Premium experience, you must first buy the Premium subscription.';
+
+    BEGIN
+    END.
+  }
+}
+

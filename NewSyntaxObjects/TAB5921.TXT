@@ -1,0 +1,36 @@
+OBJECT Table 5921 Fault Area/Symptom Code
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160207.230T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Fault Area/Symptom Code;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Type                ;Option        ;CaptionML=ENU=Type;
+                                                   OptionCaptionML=ENU=,Fault Area,Symptom Code;
+                                                   OptionString=,"Fault Area","Symptom Code" }
+    { 2   ;   ;Code                ;Code10        ;CaptionML=ENU=Code }
+    { 3   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Type,Code                               ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

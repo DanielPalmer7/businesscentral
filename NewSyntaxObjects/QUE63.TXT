@@ -1,0 +1,39 @@
+OBJECT Query 63 Power BI Vendor Ledger Entries
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161751.920T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Power BI Vendor Ledger Entries;
+  }
+  ELEMENTS
+  {
+    { 1   ;    ;DataItem;Vendor_Ledger_Entry ;
+               DataItemTable="Vendor Ledger Entry" }
+
+    { 2   ;1   ;Column  ;Entry_No            ;
+               DataSource=Entry No. }
+
+    { 3   ;1   ;Column  ;Due_Date            ;
+               DataSource=Due Date }
+
+    { 4   ;1   ;Column  ;Remaining_Amt_LCY   ;
+               DataSource=Remaining Amt. (LCY) }
+
+    { 5   ;1   ;Column  ;Open                ;
+               DataSource=Open }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

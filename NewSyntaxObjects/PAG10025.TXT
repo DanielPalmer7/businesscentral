@@ -1,0 +1,224 @@
+OBJECT Page 10025 Customer Order Status
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161713.690T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Customer Order Status;
+    SourceTable=Customer;
+    PageType=Document;
+    OnOpenPage=BEGIN
+                 CurrPage.CommentSubform.PAGE.EDITABLE(false);
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      Name=ActionContainer1900000003;
+                      ActionContainerType=RelatedInformation }
+      { 15      ;1   ;ActionGroup;
+                      Name="&Customer";
+                      CaptionML=ENU=&Customer;
+                      Image=Customer }
+      { 27      ;2   ;Action    ;
+                      Name=Card;
+                      ShortCutKey=Shift+F7;
+                      CaptionML=ENU=Card;
+                      ToolTipML=ENU=Open the card for the customer.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "Customer Card";
+                      RunPageLink="No."=FIELD("No.");
+                      Image=EditLines }
+      { 17      ;2   ;Action    ;
+                      Name="Ledger E&ntries";
+                      ShortCutKey=Ctrl+F7;
+                      CaptionML=ENU=Ledger E&ntries;
+                      ToolTipML=ENU=View the history of transactions that have been posted for the selected record.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "Customer Ledger Entries";
+                      RunPageView=SORTING("Customer No.","Posting Date");
+                      RunPageLink="Customer No."=FIELD("No.") }
+      { 1020000 ;2   ;Action    ;
+                      Name=Dimensions;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=ENU=Dimensions;
+                      ToolTipML=ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Default Dimensions";
+                      RunPageLink="Table ID"=CONST(18),
+                                  "No."=FIELD("No.");
+                      Image=Dimensions }
+      { 18      ;2   ;Action    ;
+                      Name="Bank Accounts";
+                      CaptionML=ENU=Bank Accounts;
+                      ToolTipML=ENU=View or set up the customer's bank accounts. You can set up any number of bank accounts for each customer.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "Customer Bank Account List";
+                      RunPageLink="Customer No."=FIELD("No.");
+                      Image=BankAccount }
+      { 19      ;2   ;Action    ;
+                      Name="Ship-&to Addresses";
+                      CaptionML=ENU=Ship-&to Addresses;
+                      ToolTipML=ENU=View or edit the alternate address where the customer wants the item delivered if different from its regular address.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "Ship-to Address List";
+                      RunPageLink="Customer No."=FIELD("No.");
+                      Image=ShipAddress }
+      { 20      ;2   ;Action    ;
+                      Name="C&ontact";
+                      CaptionML=ENU=C&ontact;
+                      ToolTipML=ENU=Open the card for the contact person at the customer.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunPageView=SORTING(Field5008);
+                      RunPageLink=Field5008=FIELD("No.");
+                      Image=ContactPerson;
+                      OnAction=BEGIN
+                                 ShowContact;
+                               END;
+                                }
+      { 21      ;2   ;Separator ;
+                      Name=Separator21 }
+      { 22      ;2   ;Action    ;
+                      Name=Statistics;
+                      ShortCutKey=F7;
+                      CaptionML=ENU=Statistics;
+                      ToolTipML=ENU=View statistical information, such as the value of posted entries, for the record.;
+                      RunObject=Page "Customer Statistics";
+                      RunPageLink="No."=FIELD("No."),
+                                  "Date Filter"=FIELD("Date Filter"),
+                                  "Global Dimension 1 Filter"=FIELD("Global Dimension 1 Filter"),
+                                  "Global Dimension 2 Filter"=FIELD("Global Dimension 2 Filter");
+                      Promoted=true;
+                      Image=Statistics;
+                      PromotedCategory=Process }
+      { 23      ;2   ;Action    ;
+                      Name="Statistics by C&urrencies";
+                      CaptionML=ENU=Statistics by C&urrencies;
+                      ToolTipML=ENU=View the customer's statistics for each currency for which there are transactions.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Cust. Stats. by Curr. Lines";
+                      RunPageLink="Customer Filter"=FIELD("No."),
+                                  "Global Dimension 1 Filter"=FIELD("Global Dimension 1 Filter"),
+                                  "Global Dimension 2 Filter"=FIELD("Global Dimension 2 Filter"),
+                                  "Date Filter"=FIELD("Date Filter");
+                      Image=Currencies }
+      { 24      ;2   ;Action    ;
+                      Name="Entry Statistics";
+                      CaptionML=ENU=Entry Statistics;
+                      ToolTipML=ENU=View statistics for customer ledger entries.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "Customer Entry Statistics";
+                      RunPageLink="No."=FIELD("No."),
+                                  "Date Filter"=FIELD("Date Filter"),
+                                  "Global Dimension 1 Filter"=FIELD("Global Dimension 1 Filter"),
+                                  "Global Dimension 2 Filter"=FIELD("Global Dimension 2 Filter");
+                      Image=EntryStatistics }
+      { 25      ;2   ;Action    ;
+                      Name="S&ales";
+                      CaptionML=ENU=S&ales;
+                      ToolTipML=ENU=View your sales to the customer by different periods.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Customer Sales";
+                      RunPageLink="No."=FIELD("No."),
+                                  "Global Dimension 1 Filter"=FIELD("Global Dimension 1 Filter"),
+                                  "Global Dimension 2 Filter"=FIELD("Global Dimension 2 Filter");
+                      Image=Sales }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Lines;
+                CaptionML=ENU=Lines }
+
+    { 2   ;2   ;Field     ;
+                Name="No.";
+                CaptionML=ENU=Customer No.;
+                ToolTipML=ENU=Specifies the customer.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 8   ;2   ;Part      ;
+                Name=Control8;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="Sell-to Customer No."=FIELD("No.");
+                PagePartID="Customer Order Lines Status" }
+
+    { 4   ;2   ;Field     ;
+                Name=Name;
+                ToolTipML=ENU=Specifies the name of the customer.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Name;
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 1905001101;1;Group  ;
+                Name=Orders;
+                CaptionML=ENU=Orders }
+
+    { 11  ;2   ;Field     ;
+                Name=No.2;
+                CaptionML=ENU=Customer No.;
+                ToolTipML=ENU=Specifies the customer.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 7   ;2   ;Part      ;
+                Name=Control7;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="Sell-to Customer No."=FIELD("No.");
+                PagePartID="Customer Order Header Status" }
+
+    { 9   ;2   ;Field     ;
+                Name=Name2;
+                ToolTipML=ENU=Specifies the name of the customer.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Name;
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 1907935701;1;Group  ;
+                Name=Credit;
+                CaptionML=ENU=Credit }
+
+    { 13  ;2   ;Part      ;
+                Name=CreditSubform;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="No."=FIELD("No.");
+                PagePartID="Customer Credit Information" }
+
+    { 26  ;2   ;Field     ;
+                Name=Control26;
+                ApplicationArea=#Basic,#Suite;
+                CaptionClass=Text19061440 }
+
+    { 14  ;2   ;Part      ;
+                Name=CommentSubform;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="No."=FIELD("No.");
+                PagePartID="Comment Sheet" }
+
+  }
+  CODE
+  {
+    VAR
+      Text19061440@19023415 : TextConst 'ENU=Customer Comments';
+
+    BEGIN
+    END.
+  }
+}
+

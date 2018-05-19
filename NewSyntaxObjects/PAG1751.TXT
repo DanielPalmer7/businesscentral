@@ -1,0 +1,384 @@
+OBJECT Page 1751 Data Classification Worksheet
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161353.567T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Data Classification Worksheet;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    LinksAllowed=false;
+    SourceTable="Data Sensitivity";
+    SourceTableView=WHERE("Field Caption"=FILTER(<>''));
+    PageType=List;
+    RefreshOnActivate=true;
+    PromotedActionCategoriesML=ENU=New,Process,Report,Manage,View;
+    OnOpenPage=VAR
+                 DataClassificationMgt@1000 : Codeunit "Data Classification Mgt.";
+               BEGIN
+                 SETRANGE("Company Name",COMPANYNAME);
+                 DataClassificationMgt.ShowSyncFieldsNotification;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       SetLastMidifiedBy;
+                     END;
+
+    OnAfterGetCurrRecord=VAR
+                           DataSensitivity@1000 : Record "Data Sensitivity";
+                         BEGIN
+                           CurrPage.SETSELECTIONFILTER(DataSensitivity);
+                           FieldContentEnabled :=
+                             (("Field Type" = "Field Type"::Code) or
+                              ("Field Type" = "Field Type"::Text)) and
+                             (DataSensitivity.COUNT = 1);
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 10      ;    ;ActionContainer;
+                      Name=ActionContainer10;
+                      ActionContainerType=ActionItems }
+      { 20      ;1   ;ActionGroup;
+                      Name=Edit;
+                      CaptionML=ENU=Edit }
+      { 19      ;2   ;Action    ;
+                      Name=Set Up Data Classifications;
+                      CaptionML=ENU=Set Up Data Classifications;
+                      ToolTipML=ENU=Open the Data Classification Assisted Setup Guide;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Setup;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 PAGE.RUN(PAGE::"Data Classification Wizard");
+                               END;
+                                }
+      { 18      ;2   ;Action    ;
+                      Name=Set as Sensitive;
+                      CaptionML=ENU=Set as Sensitive;
+                      ToolTipML=ENU=Set the Data Sensitivity of the selected fields to Sensitive;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=ApplyEntries;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 SetSensitivityToSelection("Data Sensitivity"::Sensitive);
+                               END;
+                                }
+      { 12      ;2   ;Action    ;
+                      Name=Set as Personal;
+                      CaptionML=ENU=Set as Personal;
+                      ToolTipML=ENU=Set the Data Sensitivity of the selected fields to Personal;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=ApplyEntries;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 SetSensitivityToSelection("Data Sensitivity"::Personal);
+                               END;
+                                }
+      { 13      ;2   ;Action    ;
+                      Name=Set as Normal;
+                      CaptionML=ENU=Set as Normal;
+                      ToolTipML=ENU=Set the Data Sensitivity of the selected fields to Normal;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=ApplyEntries;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 SetSensitivityToSelection("Data Sensitivity"::Normal);
+                               END;
+                                }
+      { 27      ;2   ;Action    ;
+                      Name=Set as Company Confidential;
+                      CaptionML=ENU=Set as Company Confidential;
+                      ToolTipML=ENU=Set the Data Sensitivity of the selected fields to Company Confidential;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=ApplyEntries;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 SetSensitivityToSelection("Data Sensitivity"::"Company Confidential");
+                               END;
+                                }
+      { 21      ;1   ;ActionGroup;
+                      Name=View;
+                      CaptionML=ENU=View }
+      { 28      ;2   ;Action    ;
+                      Name=View Similar Fields;
+                      CaptionML=ENU=View Similar Fields;
+                      ToolTipML=ENU=View the fields of the related records that have similar name with one of the fields selected.;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=FilterLines;
+                      PromotedCategory=Category5;
+                      OnAction=VAR
+                                 DataClassificationMgt@1000 : Codeunit "Data Classification Mgt.";
+                               BEGIN
+                                 CurrPage.SETSELECTIONFILTER(Rec);
+                                 if not FINDSET then
+                                   ERROR(NoRecordsErr);
+                                 DataClassificationMgt.FindSimilarFields(Rec);
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+      { 15      ;2   ;Action    ;
+                      Name=View Unclassified;
+                      CaptionML=ENU=View Unclassified;
+                      ToolTipML=ENU=View only unclassified fields;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=FilterLines;
+                      PromotedCategory=Category5;
+                      OnAction=BEGIN
+                                 SETRANGE("Data Sensitivity","Data Sensitivity"::Unclassified);
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+      { 22      ;2   ;Action    ;
+                      Name=View Sensitive;
+                      CaptionML=ENU=View Sensitive;
+                      ToolTipML=ENU=View only fields classified as Sensitive;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      Image=FilterLines;
+                      PromotedCategory=Category5;
+                      OnAction=BEGIN
+                                 SETRANGE("Data Sensitivity","Data Sensitivity"::Sensitive);
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+      { 16      ;2   ;Action    ;
+                      Name=View Personal;
+                      CaptionML=ENU=View Personal;
+                      ToolTipML=ENU=View only fields classified as Personal;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      Image=FilterLines;
+                      PromotedCategory=Category5;
+                      OnAction=BEGIN
+                                 SETRANGE("Data Sensitivity","Data Sensitivity"::Personal);
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+      { 17      ;2   ;Action    ;
+                      Name=View Normal;
+                      CaptionML=ENU=View Normal;
+                      ToolTipML=ENU=View only fields classified as Normal;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      Image=FilterLines;
+                      PromotedCategory=Category5;
+                      OnAction=BEGIN
+                                 SETRANGE("Data Sensitivity","Data Sensitivity"::Normal);
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+      { 26      ;2   ;Action    ;
+                      Name=View Company Confidential;
+                      CaptionML=ENU=View Company Confidential;
+                      ToolTipML=ENU=View only fields classified as Company Confidential;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      Image=FilterLines;
+                      PromotedCategory=Category5;
+                      OnAction=BEGIN
+                                 SETRANGE("Data Sensitivity","Data Sensitivity"::"Company Confidential");
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+      { 23      ;2   ;Action    ;
+                      Name=View All;
+                      CaptionML=ENU=View All;
+                      ToolTipML=ENU=View all fields;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      Image=ClearFilter;
+                      PromotedCategory=Category5;
+                      OnAction=BEGIN
+                                 RESET;
+                                 SETRANGE("Company Name",COMPANYNAME);
+                                 SETFILTER("Field Caption",'<>%1','');
+                               END;
+                                }
+      { 30      ;2   ;Action    ;
+                      Name=Show Field Content;
+                      CaptionML=ENU=Show Field Content;
+                      ToolTipML=ENU=Show all the unique values of the selected field;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      Enabled=FieldContentEnabled;
+                      PromotedIsBig=true;
+                      Image=Table;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 TempFieldContentBuffer@1000 : TEMPORARY Record "Field Content Buffer";
+                                 DataClassificationMgt@1003 : Codeunit "Data Classification Mgt.";
+                                 RecordRef@1001 : RecordRef;
+                                 FieldRef@1002 : FieldRef;
+                               BEGIN
+                                 RecordRef.OPEN("Table No");
+                                 if RecordRef.FINDSET then
+                                   repeat
+                                     FieldRef := RecordRef.FIELD("Field No");
+                                     DataClassificationMgt.PopulateFieldValue(FieldRef,TempFieldContentBuffer);
+                                   until RecordRef.NEXT = 0;
+                                 PAGE.RUNMODAL(PAGE::"Field Content Buffer",TempFieldContentBuffer);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="Table No";
+                ApplicationArea=#All;
+                SourceExpr="Table No";
+                Enabled=FALSE;
+                Editable=FALSE;
+                ImplicitType=Integer }
+
+    { 4   ;2   ;Field     ;
+                Name="Field No";
+                ApplicationArea=#All;
+                SourceExpr="Field No";
+                Enabled=FALSE;
+                Editable=FALSE;
+                ImplicitType=Integer }
+
+    { 5   ;2   ;Field     ;
+                Name="Table Caption";
+                DrillDown=false;
+                ApplicationArea=#All;
+                SourceExpr="Table Caption";
+                Enabled=FALSE;
+                Editable=FALSE;
+                ImplicitType=Text80 }
+
+    { 6   ;2   ;Field     ;
+                Name="Field Caption";
+                DrillDown=false;
+                ApplicationArea=#All;
+                SourceExpr="Field Caption";
+                Enabled=FALSE;
+                Editable=FALSE;
+                Style=Standard;
+                StyleExpr=TRUE;
+                ImplicitType=Text80 }
+
+    { 7   ;2   ;Field     ;
+                Name="Field Type";
+                DrillDown=false;
+                ApplicationArea=#All;
+                SourceExpr="Field Type";
+                Enabled=FALSE;
+                Editable=FALSE;
+                Style=Standard;
+                StyleExpr=TRUE;
+                ImplicitType=Option }
+
+    { 9   ;2   ;Field     ;
+                Name="Data Sensitivity";
+                OptionCaptionML=ENU=Unclassified,Sensitive,Personal,Company Confidential,Normal;
+                ApplicationArea=#All;
+                SourceExpr="Data Sensitivity";
+                OnValidate=BEGIN
+                             VALIDATE("Last Modified By",USERSECURITYID);
+                             VALIDATE("Last Modified",CURRENTDATETIME);
+                             SetLastMidifiedBy;
+                           END;
+
+                ImplicitType=Option }
+
+    { 8   ;2   ;Field     ;
+                Name="Data Classification";
+                ApplicationArea=#All;
+                SourceExpr="Data Classification";
+                Visible=FALSE;
+                Enabled=FALSE;
+                Editable=FALSE;
+                ImplicitType=Option }
+
+    { 24  ;2   ;Field     ;
+                Name=LastModifiedBy;
+                CaptionML=ENU=Last Modified By;
+                ApplicationArea=#All;
+                SourceExpr=LastModifiedBy;
+                Enabled=FALSE;
+                Editable=FALSE;
+                ImplicitType=Text }
+
+    { 25  ;2   ;Field     ;
+                Name="Last Modified";
+                ApplicationArea=#All;
+                SourceExpr="Last Modified";
+                Enabled=FALSE;
+                Editable=FALSE;
+                ImplicitType=DateTime }
+
+  }
+  CODE
+  {
+    VAR
+      NoRecordsErr@1000 : TextConst 'ENU=No record has been selected.';
+      FieldContentEnabled@1002 : Boolean;
+      LastModifiedBy@1003 : Text;
+      DeletedUserTok@1004 : TextConst 'ENU=Deleted User';
+      ClassifyAllfieldsQst@1005 : TextConst '@@@="%1=Choosen sensitivity %2=total number of fields";ENU=Do you want to set data sensitivity to %1 on %2 fields?';
+
+    LOCAL PROCEDURE SetSensitivityToSelection@4(Sensitivity@1000 : Option);
+    VAR
+      DataSensitivity@1001 : Record "Data Sensitivity";
+      DataClassificationMgt@1003 : Codeunit "Data Classification Mgt.";
+    BEGIN
+      CurrPage.SETSELECTIONFILTER(DataSensitivity);
+      if DataSensitivity.COUNT > 20 then
+        if not CONFIRM(STRSUBSTNO(
+               ClassifyAllfieldsQst,
+               SELECTSTR(Sensitivity + 1,DataClassificationMgt.GetDataSensitivityOptionString),
+               DataSensitivity.COUNT))
+        then
+          exit;
+
+      DataClassificationMgt.SetSensitivities(DataSensitivity,Sensitivity);
+      CurrPage.UPDATE;
+    END;
+
+    LOCAL PROCEDURE SetLastMidifiedBy@2();
+    VAR
+      User@1000 : Record User;
+    BEGIN
+      LastModifiedBy := '';
+      if User.GET("Last Modified By") then
+        LastModifiedBy := User."User Name"
+      else
+        if not ISNULLGUID("Last Modified By") then
+          LastModifiedBy := DeletedUserTok;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

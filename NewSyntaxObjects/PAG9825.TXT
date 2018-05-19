@@ -1,0 +1,44 @@
+OBJECT Page 9825 Plans FactBox
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161710.980T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Plans FactBox;
+    LinksAllowed=false;
+    SourceTable=Plan;
+    PageType=ListPart;
+    ShowFilter=false;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=Name;
+                ToolTipML=ENU=Specifies the name of the record.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Name;
+                ImplicitType=Text50 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,58 @@
+OBJECT Page 27014 SAT Customer Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161725.867T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=SAT Customer Subform;
+    SourceTable=Customer;
+    PageType=ListPart;
+  }
+  CONTROLS
+  {
+    { 1020000;0;Container ;
+                Name=Control1020000;
+                ContainerType=ContentArea }
+
+    { 1020001;1;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1020002;2;Field     ;
+                Name="No.";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                ImplicitType=Code20 }
+
+    { 1020003;2;Field     ;
+                Name=Name;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Name;
+                ImplicitType=Text50 }
+
+    { 1020004;2;Field     ;
+                Name="CFDI Purpose";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="CFDI Purpose";
+                ImplicitType=Code10 }
+
+    { 1020005;2;Field     ;
+                Name="CFDI Relation";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="CFDI Relation";
+                ImplicitType=Code10 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,36 @@
+OBJECT Table 5070 Organizational Level
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160134.487T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Code,Description;
+    CaptionML=ENU=Organizational Level;
+    LookupPageID="Organizational Levels";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

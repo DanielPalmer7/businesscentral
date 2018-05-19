@@ -1,0 +1,112 @@
+OBJECT Page 592 Change Log Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161303.230T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Change Log Setup;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="Change Log Setup";
+    PageType=Card;
+    PromotedActionCategoriesML=ENU=New,Process,Report,Setup;
+    OnOpenPage=BEGIN
+                 RESET;
+                 if not GET then begin
+                   INIT;
+                   INSERT;
+                 end;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;  ;ActionContainer;
+                      Name=ActionContainer1900000003;
+                      ActionContainerType=ActionItems }
+      { 5       ;1   ;ActionGroup;
+                      Name="&Setup";
+                      CaptionML=ENU=&Setup;
+                      Image=Setup }
+      { 6       ;2   ;Action    ;
+                      Name=Tables;
+                      CaptionML=ENU=Tables;
+                      ToolTipML=ENU=View what must be logged for each table.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      Image=Table;
+                      PromotedCategory=Category4;
+                      PromotedOnly=true;
+                      OnAction=VAR
+                                 ChangeLogSetupList@1000 : Page "Change Log Setup (Table) List";
+                               BEGIN
+                                 ChangeLogSetupList.SetSource;
+                                 ChangeLogSetupList.RUNMODAL;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=General;
+                CaptionML=ENU=General }
+
+    { 2   ;2   ;Field     ;
+                Name="Change Log Activated";
+                ToolTipML=ENU=Specifies that the change log is active.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Change Log Activated";
+                OnValidate=BEGIN
+                             ConfirmActivationOfChangeLog;
+                           END;
+
+                ImplicitType=Boolean }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Name=Control1900383207;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      ActivateChangeLogQst@1000 : TextConst 'ENU=Turning on the Change Log might slow things down, especially if you are monitoring entities that often change. Do you want to log changes?';
+
+    LOCAL PROCEDURE ConfirmActivationOfChangeLog@1();
+    VAR
+      PermissionManager@1000 : Codeunit "Permission Manager";
+    BEGIN
+      if not "Change Log Activated" then
+        exit;
+      if not PermissionManager.SoftwareAsAService then
+        exit;
+      if not CONFIRM(ActivateChangeLogQst,true) then
+        ERROR('');
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

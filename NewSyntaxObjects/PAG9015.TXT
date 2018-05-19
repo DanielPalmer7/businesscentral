@@ -1,0 +1,767 @@
+OBJECT Page 9015 Job Project Manager RC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161633.843T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[@@@="{Dependency=Match,""ProfileDescription_PROJECTMANAGER""}";
+               ENU=Project Manager];
+    PageType=RoleCenter;
+    ActionList=ACTIONS
+    {
+      { 1900000011;0 ;ActionContainer;
+                      Name=ActionContainer1900000011;
+                      ActionContainerType=HomeItems }
+      { 12      ;1   ;Action    ;
+                      Name=Jobs;
+                      CaptionML=ENU=Jobs;
+                      ToolTipML=ENU=Define a project activity by creating a job card with integrated job tasks and job planning lines, structured in two layers. The job task enables you to set up job planning lines and to post consumption to the job. The job planning lines specify the detailed use of resources, items, and various general ledger expenses.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job List";
+                      Image=Job }
+      { 53      ;1   ;Action    ;
+                      Name=JobsOnOrder;
+                      CaptionML=ENU=Open;
+                      ToolTipML=ENU=Open the card for the selected record.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job List";
+                      RunPageView=WHERE(Status=FILTER(Open)) }
+      { 54      ;1   ;Action    ;
+                      Name=JobsPlannedAndQuoted;
+                      CaptionML=ENU=Planned and Quoted;
+                      ToolTipML=ENU=View all planned and quoted jobs.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job List";
+                      RunPageView=WHERE(Status=FILTER(Quote|Planning)) }
+      { 35      ;1   ;Action    ;
+                      Name=JobsCompleted;
+                      CaptionML=ENU=Completed;
+                      ToolTipML=ENU=View all completed jobs.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job List";
+                      RunPageView=WHERE(Status=FILTER(Completed)) }
+      { 55      ;1   ;Action    ;
+                      Name=JobsUnassigned;
+                      CaptionML=ENU=Unassigned;
+                      ToolTipML=ENU=View all unassigned jobs.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job List";
+                      RunPageView=WHERE("Person Responsible"=FILTER('')) }
+      { 36      ;1   ;Action    ;
+                      Name="Job Tasks";
+                      CaptionML=ENU=Job Tasks;
+                      ToolTipML=ENU=Define the various tasks involved in a job. You must create at least one job task per job because all posting refers to a job task. Having at least one job task in your job enables you to set up job planning lines and to post consumption to the job.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Job Task List" }
+      { 37      ;1   ;Action    ;
+                      Name="Sales Invoices";
+                      CaptionML=ENU=Sales Invoices;
+                      ToolTipML=ENU=Register your sales to customers and invite them to pay according to the delivery and payment terms by sending them a sales invoice document. Posting a sales invoice registers shipment and records an open receivable entry on the customer's account, which will be closed when payment is received. To manage the shipment process, use sales orders, in which sales invoicing is integrated.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Sales Invoice List";
+                      Image=Invoice }
+      { 38      ;1   ;Action    ;
+                      Name="Sales Credit Memos";
+                      CaptionML=ENU=Sales Credit Memos;
+                      ToolTipML=ENU=Revert the financial transactions involved when your customers want to cancel a purchase or return incorrect or damaged items that you sent to them and received payment for. To include the correct information, you can create the sales credit memo from the related posted sales invoice or you can create a new sales credit memo with copied invoice information. If you need more control of the sales return process, such as warehouse documents for the physical handling, use sales return orders, in which sales credit memos are integrated. Note: If an erroneous sale has not been paid yet, you can simply cancel the posted sales invoice to automatically revert the financial transaction.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Sales Credit Memos" }
+      { 39      ;1   ;Action    ;
+                      Name="Purchase Orders";
+                      CaptionML=ENU=Purchase Orders;
+                      ToolTipML=ENU=Create purchase orders to mirror sales documents that vendors send to you. This enables you to record the cost of purchases and to track accounts payable. Posting purchase orders dynamically updates inventory levels so that you can minimize inventory costs and provide better customer service. Purchase orders allow partial receipts, unlike with purchase invoices, and enable drop shipment directly from your vendor to your customer. Purchase orders can be created automatically from PDF or image files from your vendors by using the Incoming Documents feature.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Purchase Order List" }
+      { 40      ;1   ;Action    ;
+                      Name="Purchase Invoices";
+                      CaptionML=ENU=Purchase Invoices;
+                      ToolTipML=ENU=Create purchase invoices to mirror sales documents that vendors send to you. This enables you to record the cost of purchases and to track accounts payable. Posting purchase invoices dynamically updates inventory levels so that you can minimize inventory costs and provide better customer service. Purchase invoices can be created automatically from PDF or image files from your vendors by using the Incoming Documents feature.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Purchase Invoices" }
+      { 41      ;1   ;Action    ;
+                      Name="Purchase Credit Memos";
+                      CaptionML=ENU=Purchase Credit Memos;
+                      ToolTipML=ENU=Create purchase credit memos to mirror sales credit memos that vendors send to you for incorrect or damaged items that you have paid for and then returned to the vendor. If you need more control of the purchase return process, such as warehouse documents for the physical handling, use purchase return orders, in which purchase credit memos are integrated. Purchase credit memos can be created automatically from PDF or image files from your vendors by using the Incoming Documents feature. Note: If you have not yet paid for an erroneous purchase, you can simply cancel the posted purchase invoice to automatically revert the financial transaction.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Purchase Credit Memos" }
+      { 42      ;1   ;Action    ;
+                      Name=Resources;
+                      CaptionML=ENU=Resources;
+                      ToolTipML=ENU=Manage your resources' job activities by setting up their costs and prices. The job-related prices, discounts, and cost factor rules are set up on the respective job card. You can specify the costs and prices for individual resources, resource groups, or all available resources of the company. When resources are used or sold in a job, the specified prices and costs are recorded for the project.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Resource List" }
+      { 43      ;1   ;Action    ;
+                      Name="Resource Groups";
+                      CaptionML=ENU=Resource Groups;
+                      ToolTipML=ENU=View all resource groups.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Resource Groups" }
+      { 44      ;1   ;Action    ;
+                      Name=Items;
+                      CaptionML=ENU=Items;
+                      ToolTipML=ENU=View or edit detailed information for the products that you trade in. The item card can be of type Inventory or Service to specify if the item is a physical unit or a labor time unit. Here you also define if items in inventory or on incoming orders are automatically reserved for outbound documents and whether order tracking links are created between demand and supply to reflect planning actions.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Item List";
+                      Image=Item }
+      { 45      ;1   ;Action    ;
+                      Name=Customers;
+                      CaptionML=ENU=Customers;
+                      ToolTipML=ENU=View or edit detailed information for the customers that you trade with. From each customer card, you can open related information, such as sales statistics and ongoing orders, and you can define special prices and line discounts that you grant if certain conditions are met.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Customer List";
+                      Image=Customer }
+      { 4       ;1   ;Action    ;
+                      Name="Time Sheets";
+                      CaptionML=ENU=Time Sheets;
+                      ToolTipML=ENU=Enable resources to register time. When approved, if approval is required, time sheet entries can be posted to the relevant job journal or resource journal as part of project progress reporting. To save setup time and to ensure data correctness, you can copy job planning lines into time sheets.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Time Sheet List" }
+      { 1020000 ;1   ;Action    ;
+                      Name=Page Manager Time Sheet List;
+                      CaptionML=ENU=Manager Time Sheets;
+                      ToolTipML=ENU=Open the list of your time sheets.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Manager Time Sheet List" }
+      { 1900000012;0 ;ActionContainer;
+                      Name=ActionContainer1900000012;
+                      ActionContainerType=ActivityButtons }
+      { 2       ;1   ;ActionGroup;
+                      Name=ActionGroup2;
+                      CaptionML=ENU=Jobs;
+                      ToolTipML=ENU="Create, plan, and execute tasks in project management. ";
+                      Image=Job }
+      { 90      ;2   ;Action    ;
+                      Name=Action90;
+                      CaptionML=ENU=Jobs;
+                      ToolTipML=ENU=Define a project activity by creating a job card with integrated job tasks and job planning lines, structured in two layers. The job task enables you to set up job planning lines and to post consumption to the job. The job planning lines specify the detailed use of resources, items, and various general ledger expenses.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job List";
+                      Promoted=true;
+                      Image=Job }
+      { 89      ;2   ;Action    ;
+                      Name=Open;
+                      CaptionML=ENU=Open;
+                      ToolTipML=ENU=Open the card for the selected record.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job List";
+                      RunPageView=WHERE(Status=FILTER(Open)) }
+      { 88      ;2   ;Action    ;
+                      Name=JobsPlannedAndQuotd;
+                      CaptionML=ENU=Planned and Quoted;
+                      ToolTipML=ENU=Open the list of all planned and quoted jobs.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job List";
+                      RunPageView=WHERE(Status=FILTER(Quote|Planning)) }
+      { 87      ;2   ;Action    ;
+                      Name=JobsComplet;
+                      CaptionML=ENU=Completed;
+                      ToolTipML=ENU=Open the list of all completed jobs.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job List";
+                      RunPageView=WHERE(Status=FILTER(Completed)) }
+      { 86      ;2   ;Action    ;
+                      Name=JobsUnassign;
+                      CaptionML=ENU=Unassigned;
+                      ToolTipML=ENU=Open the list of all unassigned jobs.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job List";
+                      RunPageView=WHERE("Person Responsible"=FILTER('')) }
+      { 3       ;2   ;Action    ;
+                      Name=Action3;
+                      CaptionML=ENU=Job Tasks;
+                      ToolTipML=ENU=Open the list of ongoing job tasks. Job tasks represent the actual work that is performed in a job, and they enable you to set up job planning lines and to post consumption to the job.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Job Task List";
+                      Promoted=true }
+      { 97      ;2   ;Action    ;
+                      Name="Job Registers";
+                      CaptionML=ENU=Job Registers;
+                      ToolTipML=ENU=View auditing details for all job ledger entries. Every time an entry is posted, a register is created in which you can see the first and last number of its entries in order to document when entries were posted.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job Registers";
+                      Image=JobRegisters }
+      { 99      ;2   ;Action    ;
+                      Name="Job Planning Lines";
+                      CaptionML=ENU=Job Planning Lines;
+                      ToolTipML=ENU=Open the list of ongoing job planning lines for the job. You use this window to plan what items, resources, and general ledger expenses that you expect to use on a job (budget) or you can specify what you actually agreed with your customer that he should pay for the job (billable).;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job Planning Lines";
+                      Promoted=true }
+      { 18      ;2   ;Action    ;
+                      Name=JobJournals;
+                      CaptionML=ENU=Job Journals;
+                      ToolTipML=ENU=Record job expenses or usage in the job ledger, either by reusing job planning lines or by manual entry.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job Journal Batches";
+                      RunPageView=WHERE(Recurring=CONST(false));
+                      Promoted=true }
+      { 19      ;2   ;Action    ;
+                      Name=JobGLJournals;
+                      CaptionML=ENU=Job G/L Journals;
+                      ToolTipML=ENU=Record job expenses or usage in job accounts in the general ledger. For expenses or usage of type G/L Account, use the job G/L journal instead of the job journal.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "General Journal Batches";
+                      RunPageView=WHERE("Template Type"=CONST(Jobs),
+                                        Recurring=CONST(false));
+                      Promoted=true }
+      { 23      ;2   ;Action    ;
+                      Name=RecurringJobJournals;
+                      CaptionML=ENU=Recurring Job Journals;
+                      ToolTipML=ENU=Reuse preset journal lines to record recurring job expenses or usage in the job ledger.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job Journal Batches";
+                      RunPageView=WHERE(Recurring=CONST(true));
+                      Promoted=true }
+      { 101     ;2   ;Action    ;
+                      Name=Action101;
+                      CaptionML=ENU=Sales Invoices;
+                      ToolTipML=ENU=Register your sales to customers and invite them to pay according to the delivery and payment terms by sending them a sales invoice document. Posting a sales invoice registers shipment and records an open receivable entry on the customer's account, which will be closed when payment is received. To manage the shipment process, use sales orders, in which sales invoicing is integrated.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Sales Invoice List";
+                      Promoted=true;
+                      Image=Invoice }
+      { 100     ;2   ;Action    ;
+                      Name=Action100;
+                      CaptionML=ENU=Purchase Invoices;
+                      ToolTipML=ENU=Create purchase invoices to mirror sales documents that vendors send to you. This enables you to record the cost of purchases and to track accounts payable. Posting purchase invoices dynamically updates inventory levels so that you can minimize inventory costs and provide better customer service. Purchase invoices can be created automatically from PDF or image files from your vendors by using the Incoming Documents feature.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Purchase Invoices";
+                      Promoted=true }
+      { 91      ;1   ;ActionGroup;
+                      Name=ActionGroup91;
+                      CaptionML=ENU=Resources;
+                      ToolTipML=ENU="Manage the people or machines that are used to perform job tasks. ";
+                      Image=Journals }
+      { 93      ;2   ;Action    ;
+                      Name=Action93;
+                      CaptionML=ENU=Resources;
+                      ToolTipML=ENU=Manage your resources' job activities by setting up their costs and prices. The job-related prices, discounts, and cost factor rules are set up on the respective job card. You can specify the costs and prices for individual resources, resource groups, or all available resources of the company. When resources are used or sold in a job, the specified prices and costs are recorded for the project.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Resource List";
+                      Promoted=true }
+      { 92      ;2   ;Action    ;
+                      Name=Action92;
+                      CaptionML=ENU=Resource Groups;
+                      ToolTipML=ENU=Organize resources in groups, such as Consultants, for easier assignment of common values and to analyze financial figures by groups.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Resource Groups";
+                      Promoted=true }
+      { 20      ;2   ;Action    ;
+                      Name=ResourceJournals;
+                      CaptionML=ENU=Resource Journals;
+                      ToolTipML=ENU=Post usage and sales of your resources for internal use and statistics. Use time sheet entries as input. Note that unlike with job journals, entries posted with resource journals are not posted to G/L accounts.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Resource Jnl. Batches";
+                      RunPageView=WHERE(Recurring=CONST(false));
+                      Promoted=true }
+      { 46      ;2   ;Action    ;
+                      Name=RecurringResourceJournals;
+                      CaptionML=ENU=Recurring Resource Journals;
+                      ToolTipML=ENU=Post recurring usage and sales of your resources for internal use and statistics in a journal that is preset for your usual posting.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Resource Jnl. Batches";
+                      RunPageView=WHERE(Recurring=CONST(true));
+                      Promoted=true }
+      { 98      ;2   ;Action    ;
+                      Name="Resource Registers";
+                      CaptionML=ENU=Resource Registers;
+                      ToolTipML=ENU=View auditing details for all resource ledger entries. Every time an entry is posted, a register is created in which you can see the first and last number of its entries in order to document when entries were posted.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Resource Registers";
+                      Image=ResourceRegisters }
+      { 13      ;1   ;ActionGroup;
+                      Name=Journals;
+                      CaptionML=ENU=Journals;
+                      ToolTipML=ENU=Post entries directly to G/L accounts.;
+                      Image=Journals }
+      { 22      ;2   ;Action    ;
+                      Name=ItemJournals;
+                      CaptionML=ENU=Item Journals;
+                      ToolTipML=ENU=Post item transactions directly to the item ledger to adjust inventory in connection with purchases, sales, and positive or negative adjustments without using documents. You can save sets of item journal lines as standard journals so that you can perform recurring postings quickly. A condensed version of the item journal function exists on item cards for quick adjustment of an items inventory quantity.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Item Journal Batches";
+                      RunPageView=WHERE("Template Type"=CONST(Item),
+                                        Recurring=CONST(false)) }
+      { 47      ;2   ;Action    ;
+                      Name=RecurringItemJournals;
+                      CaptionML=ENU=Recurring Item Journals;
+                      ToolTipML=ENU=Post recurring item transactions directly to the item ledger in a journal that is preset for your usual posting.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Item Journal Batches";
+                      RunPageView=WHERE("Template Type"=CONST(Item),
+                                        Recurring=CONST(true)) }
+      { 94      ;1   ;ActionGroup;
+                      Name=ActionGroup94;
+                      CaptionML=ENU=Time Sheets;
+                      ToolTipML=ENU=Manage time sheets for resources.;
+                      Image=Journals }
+      { 96      ;2   ;Action    ;
+                      Name=Action96;
+                      CaptionML=ENU=Time Sheets;
+                      ToolTipML=ENU=Approve or reject your resources' time sheet entries in a window that contains lines for all time sheets that resources have submitted for review.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Time Sheet List";
+                      Promoted=true }
+      { 95      ;2   ;Action    ;
+                      Name="Manager Time Sheets";
+                      CaptionML=ENU=Manager Time Sheets;
+                      ToolTipML=ENU=Open the list of your time sheets.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Manager Time Sheet List";
+                      Promoted=true }
+      { 62      ;1   ;ActionGroup;
+                      Name="Posted Documents";
+                      CaptionML=ENU=Posted Documents;
+                      ToolTipML=ENU=View the posting history for sales, shipments, and inventory.;
+                      Image=FiledPosted }
+      { 67      ;2   ;Action    ;
+                      Name="Posted Shipments";
+                      CaptionML=ENU=Posted Shipments;
+                      ToolTipML=ENU=Open the list of posted shipments.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Posted Sales Shipments" }
+      { 68      ;2   ;Action    ;
+                      Name="Posted Sales Invoices";
+                      CaptionML=ENU=Posted Sales Invoices;
+                      ToolTipML=ENU=Open the list of posted sales invoices.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Posted Sales Invoices";
+                      Image=PostedOrder }
+      { 69      ;2   ;Action    ;
+                      Name="Posted Sales Credit Memos";
+                      CaptionML=ENU=Posted Sales Credit Memos;
+                      ToolTipML=ENU=Open the list of posted sales credit memos.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Posted Sales Credit Memos";
+                      Image=PostedOrder }
+      { 70      ;2   ;Action    ;
+                      Name="Posted Purchase Receipts";
+                      CaptionML=ENU=Posted Purchase Receipts;
+                      ToolTipML=ENU=Open the list of posted purchase receipts.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Posted Purchase Receipts" }
+      { 71      ;2   ;Action    ;
+                      Name="Posted Purchase Invoices";
+                      CaptionML=ENU=Posted Purchase Invoices;
+                      ToolTipML=ENU=Open the list of posted purchase credit memos.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Posted Purchase Invoices" }
+      { 72      ;2   ;Action    ;
+                      Name="Posted Purchase Credit Memos";
+                      CaptionML=ENU=Posted Purchase Credit Memos;
+                      ToolTipML=ENU=Open the list of posted purchase credit memos.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Posted Purchase Credit Memos" }
+      { 73      ;2   ;Action    ;
+                      Name="G/L Registers";
+                      CaptionML=ENU=G/L Registers;
+                      ToolTipML=ENU=View auditing details for all G/L entries. Every time an entry is posted, a register is created in which you can see the first and last number of its entries in order to document when entries were posted.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "G/L Registers";
+                      Image=GLRegisters }
+      { 74      ;2   ;Action    ;
+                      Name=Action74;
+                      CaptionML=ENU=Job Registers;
+                      ToolTipML=ENU=View auditing details for all item ledger entries. Every time an entry is posted, a register is created in which you can see the first and last number of its entries in order to document when entries were posted.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job Registers";
+                      Image=JobRegisters }
+      { 75      ;2   ;Action    ;
+                      Name="Item Registers";
+                      CaptionML=ENU=Item Registers;
+                      ToolTipML=ENU=View auditing details for all item ledger entries. Every time an entry is posted, a register is created in which you can see the first and last number of its entries in order to document when entries were posted.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Item Registers";
+                      Image=ItemRegisters }
+      { 76      ;2   ;Action    ;
+                      Name=Action76;
+                      CaptionML=ENU=Resource Registers;
+                      ToolTipML=ENU=View auditing details for all resource ledger entries. Every time an entry is posted, a register is created in which you can see the first and last number of its entries in order to document when entries were posted.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Resource Registers";
+                      Image=ResourceRegisters }
+      { 85      ;1   ;ActionGroup;
+                      Name="Self-Service";
+                      CaptionML=ENU=Self-Service;
+                      ToolTipML=ENU=Manage your time sheets and assignments.;
+                      Image=HumanResources }
+      { 82      ;2   ;Action    ;
+                      Name=Action82;
+                      CaptionML=ENU=Time Sheets;
+                      ToolTipML=ENU=Approve or reject your resources' time sheet entries in a window that contains lines for all time sheets that resources have submitted for review.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Time Sheet List";
+                      Gesture=None }
+      { 80      ;2   ;Action    ;
+                      Name=Page Time Sheet List Open;
+                      CaptionML=ENU=Open;
+                      ToolTipML=ENU=Open the card for the selected record.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Time Sheet List";
+                      RunPageView=WHERE("Open Exists"=CONST(true)) }
+      { 79      ;2   ;Action    ;
+                      Name=Page Time Sheet List Submitted;
+                      CaptionML=ENU=Submitted;
+                      ToolTipML=ENU=Open the list of submitted time sheets.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Time Sheet List";
+                      RunPageView=WHERE("Submitted Exists"=CONST(true)) }
+      { 78      ;2   ;Action    ;
+                      Name=Page Time Sheet List Rejected;
+                      CaptionML=ENU=Rejected;
+                      ToolTipML=ENU=Open the list of rejected time sheets.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Time Sheet List";
+                      RunPageView=WHERE("Rejected Exists"=CONST(true)) }
+      { 17      ;2   ;Action    ;
+                      Name=Page Time Sheet List Approved;
+                      CaptionML=ENU=Approved;
+                      ToolTipML=ENU=Open the list of approved time sheets.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Time Sheet List";
+                      RunPageView=WHERE("Approved Exists"=CONST(true)) }
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 58      ;1   ;ActionGroup;
+                      Name=NewGroup;
+                      CaptionML=ENU=New;
+                      ActionContainerType=NewDocumentItems }
+      { 59      ;2   ;Action    ;
+                      Name=Page Job;
+                      CaptionML=ENU=Job;
+                      ToolTipML=ENU=Create a new job.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job Creation Wizard";
+                      Promoted=true;
+                      Image=Job;
+                      PromotedCategory=New;
+                      RunPageMode=Create }
+      { 57      ;2   ;Action    ;
+                      Name="Job J&ournal";
+                      CaptionML=ENU=Job J&ournal;
+                      ToolTipML=ENU=Prepare to post a job activity to the job ledger.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job Journal";
+                      Promoted=true;
+                      Image=JobJournal;
+                      PromotedCategory=New }
+      { 52      ;2   ;Action    ;
+                      Name="Job G/L &Journal";
+                      CaptionML=ENU=Job G/L &Journal;
+                      ToolTipML=ENU=Prepare to post a job activity to the general ledger.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Job G/L Journal";
+                      Promoted=true;
+                      Image=GLJournal;
+                      PromotedCategory=New }
+      { 51      ;2   ;Action    ;
+                      Name="R&esource Journal";
+                      CaptionML=ENU=R&esource Journal;
+                      ToolTipML=ENU=Prepare to post resource usage.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Resource Journal";
+                      Promoted=true;
+                      Image=ResourceJournal;
+                      PromotedCategory=New }
+      { 48      ;2   ;Action    ;
+                      Name="Job &Create Sales Invoice";
+                      CaptionML=ENU=Job &Create Sales Invoice;
+                      ToolTipML=ENU=Use a function to automatically create a sales invoice for one or more jobs.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Job Create Sales Invoice";
+                      Image=CreateJobSalesInvoice }
+      { 49      ;2   ;Action    ;
+                      Name="Update Job I&tem Cost";
+                      CaptionML=ENU=Update Job I&tem Cost;
+                      ToolTipML=ENU=Use a function to automatically update the cost of items used in jobs.;
+                      ApplicationArea=#Suite;
+                      RunObject=Report "Update Job Item Cost";
+                      Image=Report }
+      { 50      ;1   ;ActionGroup;
+                      Name=Reports;
+                      CaptionML=ENU=Reports }
+      { 30      ;2   ;ActionGroup;
+                      Name="Job Reports";
+                      CaptionML=ENU=Job Reports;
+                      Image=ReferenceData }
+      { 1400000 ;3   ;Action    ;
+                      Name="Job List";
+                      CaptionML=ENU=Job List;
+                      ToolTipML=ENU=View a list of your outstanding jobs. For each job, this report includes the customer number and name, and the budgeted price.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Job List";
+                      Image=Report }
+      { 1400001 ;3   ;Action    ;
+                      Name="Completed Jobs";
+                      CaptionML=ENU=Completed Jobs;
+                      ToolTipML=ENU=View of list of jobs that are fully processed.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Completed Jobs";
+                      Image=Report }
+      { 29      ;3   ;Action    ;
+                      Name="Job &Analysis";
+                      CaptionML=ENU=Job &Analysis;
+                      ToolTipML=ENU=Analyze your jobs. For example, you can create a report that shows you the scheduled prices, usage prices, and contract prices, and then compares the three sets of prices.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Job Analysis";
+                      Image=Report }
+      { 26      ;3   ;Action    ;
+                      Name="Job Actual To &Budget (Cost)";
+                      CaptionML=ENU=Job Actual To &Budget (Cost);
+                      ToolTipML=ENU=Compare scheduled and usage amounts for selected jobs. All lines of the selected job show quantity, total cost, and line amount.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Job Actual to Budget (Cost)";
+                      Image=Report }
+      { 1480000 ;3   ;Action    ;
+                      Name="Job Actual to Budget (Price)";
+                      CaptionML=ENU=Job Actual to Budget (Price);
+                      ToolTipML=ENU=Compare the actual price of your jobs to the price that was budgeted. The report shows budget and actual amounts for each phase, task, and steps.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Job Actual to Budget (Price)";
+                      Image=Report }
+      { 1480001 ;3   ;Action    ;
+                      Name="Job Cost Transaction Detail";
+                      CaptionML=ENU=Job Cost Transaction Detail;
+                      ToolTipML=ENU=List the details of your job transactions. The report includes the job number and description followed by a list of the transactions that occurred in the period you specify.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Job Cost Transaction Detail";
+                      Image=Report }
+      { 25      ;3   ;Action    ;
+                      Name="Job - Pla&nning Line";
+                      CaptionML=ENU=Job - Pla&nning Line;
+                      ToolTipML=ENU=Define job tasks to capture any information that you want to track for a job. You can use planning lines to add information such as what resources are required or to capture what items are needed to perform the job.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Job - Planning Lines";
+                      Image=Report }
+      { 16      ;3   ;Separator ;
+                      Name=Separator16 }
+      { 15      ;3   ;Action    ;
+                      Name="Job Cost Su&ggested Billing";
+                      CaptionML=ENU=Job Cost Su&ggested Billing;
+                      ToolTipML=ENU=View a list of all jobs, grouped by customer, how much the customer has already been invoiced, and how much remains to be invoiced, that is, the suggested billing.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Job Cost Suggested Billing";
+                      Image=Report }
+      { 14      ;3   ;Action    ;
+                      Name="Customer Jobs (Cost)";
+                      CaptionML=ENU=Customer Jobs (Cost);
+                      ToolTipML=ENU=View a list of all jobs, grouped by customer where you can compare the scheduled price, the percentage of completion, the invoiced price, and the percentage of invoiced amounts for each customer.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Customer Jobs (Cost)";
+                      Image=Report }
+      { 1480002 ;3   ;Action    ;
+                      Name="Customer Jobs (Price)";
+                      CaptionML=ENU=Customer Jobs (Price);
+                      ToolTipML=ENU=View jobs and job prices by customer. The report only includes jobs that are marked as completed.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Customer Jobs (Price)";
+                      Image=Report }
+      { 8       ;3   ;Action    ;
+                      Name="Items per &Job";
+                      CaptionML=ENU=Items per &Job;
+                      ToolTipML=ENU=View which items are used for which jobs.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Items per Job";
+                      Image=Report }
+      { 6       ;3   ;Action    ;
+                      Name="Jobs per &Item";
+                      CaptionML=ENU=Jobs per &Item;
+                      ToolTipML=ENU=View on which job a specific item is used.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Jobs per Item";
+                      Image=Report }
+      { 84      ;2   ;ActionGroup;
+                      Name="Absence Reports";
+                      CaptionML=ENU=Absence Reports;
+                      ToolTipML=ENU=Analyze employee absence.;
+                      Image=ReferenceData }
+      { 83      ;3   ;Action    ;
+                      Name=Employee - Staff Absences;
+                      CaptionML=ENU=Employee - Staff Absences;
+                      ToolTipML=ENU=View a list of employee absences by date. The list includes the cause of each employee absence.;
+                      ApplicationArea=#BasicHR;
+                      RunObject=Report "Employee - Staff Absences";
+                      Image=Report }
+      { 81      ;3   ;Action    ;
+                      Name=Employee - Absences by Causes;
+                      CaptionML=ENU=Employee - Absences by Causes;
+                      ToolTipML=ENU=View a list of all your employee absences categorized by absence code.;
+                      ApplicationArea=#BasicHR;
+                      RunObject=Report "Employee - Absences by Causes";
+                      Image=Report }
+      { 60      ;1   ;ActionGroup;
+                      Name=Manage;
+                      CaptionML=ENU=Manage }
+      { 61      ;2   ;ActionGroup;
+                      Name=Timesheet;
+                      CaptionML=ENU=Time Sheet;
+                      Image=Worksheets }
+      { 65      ;3   ;Action    ;
+                      Name=Create Time Sheets;
+                      CaptionML=ENU=Create Time Sheets;
+                      ToolTipML=ENU=As the time sheet administrator, create time sheets for resources that have the Use Time Sheet check box selected on the resource card. Afterwards, view the time sheets that you have created in the Time Sheets window.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Create Time Sheets";
+                      Image=JobTimeSheet }
+      { 66      ;3   ;Action    ;
+                      Name=Manage Time Sheets;
+                      CaptionML=ENU=Manager Time Sheets;
+                      ToolTipML=ENU=Approve or reject your resources' time sheet entries in a window that contains lines for all time sheets that resources have submitted for review.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Manager Time Sheet";
+                      Image=JobTimeSheet }
+      { 1       ;3   ;Action    ;
+                      Name="Manager Time Sheet by Job";
+                      CaptionML=ENU=Manager Time Sheet by Job;
+                      ToolTipML=ENU=Open the list of time sheets for which your name is filled into the Person Responsible field on the related job card.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Page "Manager Time Sheet by Job";
+                      Image=JobTimeSheet }
+      { 5       ;3   ;Separator ;
+                      Name=Separator5 }
+      { 7       ;3   ;Separator ;
+                      Name=Separator7 }
+      { 63      ;2   ;ActionGroup;
+                      Name=WIP;
+                      CaptionML=ENU=Job Closing;
+                      ToolTipML=ENU=Perform various post-processing of jobs.;
+                      Image=Job }
+      { 9       ;3   ;Action    ;
+                      Name="Job Calculate &WIP";
+                      CaptionML=ENU=Job Calculate &WIP;
+                      ToolTipML=ENU=Calculate the general ledger entries needed to update or close the job.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Job Calculate WIP";
+                      Image=CalculateWIP }
+      { 10      ;3   ;Action    ;
+                      Name="Jo&b Post WIP to G/L";
+                      CaptionML=ENU=Jo&b Post WIP to G/L;
+                      ToolTipML=ENU=Post to the general ledger the entries calculated for your jobs.;
+                      ApplicationArea=#Jobs;
+                      RunObject=Report "Job Post WIP to G/L";
+                      Image=PostOrder }
+      { 27      ;3   ;Action    ;
+                      Name="Job WIP";
+                      CaptionML=ENU=Job WIP;
+                      ToolTipML=ENU=Overview and track work in process for all of your projects. Each line contains information about a job, including calculated and posted WIP.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Job WIP Cockpit";
+                      Image=WIP }
+      { 64      ;1   ;ActionGroup;
+                      Name=History;
+                      CaptionML=ENU=History }
+      { 24      ;2   ;Action    ;
+                      Name="Navi&gate";
+                      CaptionML=ENU=Navi&gate;
+                      ToolTipML=ENU=Find all entries and documents that exist for the document number and posting date on the selected entry or document.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page Navigate;
+                      Image=Navigate }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000008;0;Container;
+                Name=Control1900000008;
+                ContainerType=RoleCenterArea }
+
+    { 102 ;1   ;Part      ;
+                Name=Control102;
+                ApplicationArea=#Jobs;
+                PagePartID="Headline RC Project Manager";
+                PartType=Page }
+
+    { 33  ;1   ;Part      ;
+                Name=Control33;
+                ApplicationArea=#Jobs;
+                PagePartID="Project Manager Activities";
+                PartType=Page }
+
+    { 77  ;1   ;Part      ;
+                Name=Control77;
+                ApplicationArea=#Suite;
+                PagePartID="Team Member Activities";
+                PartType=Page }
+
+    { 34  ;1   ;Part      ;
+                Name=Control34;
+                ApplicationArea=#Jobs;
+                PagePartID="My Jobs";
+                PartType=Page }
+
+    { 56  ;1   ;Part      ;
+                Name=Job Actual Price to Budget Price;
+                CaptionML=ENU=Job Actual Price to Budget Price;
+                ToolTipML=ENU=Compare the actual price of your jobs to the price that was budgeted. The report shows budget and actual amounts for each phase, task, and steps.;
+                ApplicationArea=#Jobs;
+                PagePartID="Job Act to Bud Price Chart";
+                PartType=Page }
+
+    { 32  ;1   ;Part      ;
+                Name=Job Profitability;
+                CaptionML=ENU=Job Profitability;
+                ToolTipML=ENU=View profit figures for completed jobs.;
+                ApplicationArea=#Jobs;
+                PagePartID="Job Profitability Chart";
+                PartType=Page }
+
+    { 28  ;1   ;Part      ;
+                Name=Job Actual Cost to Budget Cost;
+                CaptionML=ENU=Job Actual Cost to Budget Cost;
+                ToolTipML=ENU=Comparison the actual cost of your jobs to the cost that was budgeted. The report shows budget and actual amounts for each phase, task and steps.;
+                ApplicationArea=#Jobs;
+                PagePartID="Job Act to Bud Cost Chart";
+                PartType=Page }
+
+    { 1907692008;1;Part   ;
+                Name=Control1907692008;
+                ApplicationArea=#Advanced;
+                PagePartID="My Customers";
+                Visible=false;
+                Enabled=false;
+                Editable=false;
+                PartType=Page }
+
+    { 21  ;1   ;Part      ;
+                Name=Control21;
+                ApplicationArea=#Advanced;
+                PagePartID="My Job Queue";
+                Visible=false;
+                PartType=Page }
+
+    { 1903012608;1;Part   ;
+                Name=Control1903012608;
+                ApplicationArea=#Advanced;
+                PagePartID="Connect Online";
+                Visible=false;
+                PartType=Page }
+
+    { 31  ;1   ;Part      ;
+                Name=Control31;
+                ApplicationArea=#Advanced;
+                PagePartID="Report Inbox Part";
+                Visible=FALSE;
+                PartType=Page }
+
+    { 1901377608;1;Part   ;
+                Name=Control1901377608;
+                ApplicationArea=#Advanced;
+                Visible=False;
+                PartType=System;
+                SystemPartID=MyNotes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,127 @@
+OBJECT Table 2118 O365 Email Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160131.133T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnInsert=VAR
+               IntegrationManagement@1001 : Codeunit "Integration Management";
+             BEGIN
+               if Email = '' then
+                 ERROR(EmailAddressEmptyErr);
+
+               Code := UPPERCASE(IntegrationManagement.GetIdWithoutBrackets(CREATEGUID));
+
+               CheckAlreadyAdded;
+             END;
+
+    OnModify=BEGIN
+               if Email <> '' then
+                 CheckAlreadyAdded
+               else
+                 if DELETE then; // If Email validate was called rec may have been deleted already
+             END;
+
+    OnRename=BEGIN
+               CheckAlreadyAdded;
+             END;
+
+    CaptionML=ENU=O365 Email Setup;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code80        ;OnValidate=VAR
+                                                                GuidVar@1000 : GUID;
+                                                              BEGIN
+                                                                if not EVALUATE(GuidVar,Code) then
+                                                                  ERROR(CodeFormatErr);
+
+                                                                if ISNULLGUID(GuidVar) then
+                                                                  ERROR(CodeEmptyErr);
+                                                              END;
+
+                                                   CaptionML=ENU=Code }
+    { 2   ;   ;Email               ;Text80        ;OnValidate=VAR
+                                                                MailManagement@1000 : Codeunit "Mail Management";
+                                                              BEGIN
+                                                                if DELCHR(Email,'=',' ') = '' then
+                                                                  if DELETE then
+                                                                    exit;
+
+                                                                MailManagement.CheckValidEmailAddress(Email);
+                                                              END;
+
+                                                   ExtendedDatatype=E-Mail;
+                                                   CaptionML=ENU=Email }
+    { 3   ;   ;RecipientType       ;Option        ;CaptionML=ENU=RecipientType;
+                                                   OptionCaptionML=ENU=CC,BCC;
+                                                   OptionString=CC,BCC }
+  }
+  KEYS
+  {
+    {    ;Code,RecipientType                      ;Clustered=true }
+    {    ;Email,RecipientType                      }
+    {    ;Email                                    }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      EmailAddressEmptyErr@1000 : TextConst 'ENU=An email address must be specified.';
+      ConfigAlreadyExistsErr@1001 : TextConst 'ENU=The email address has already been added.';
+      CodeFormatErr@1002 : TextConst 'ENU=The code must be a GUID.';
+      CodeEmptyErr@1003 : TextConst 'ENU=The code must be not null.';
+
+    [External]
+    PROCEDURE GetCCAddressesFromO365EmailSetup@1() Addresses : Text[250];
+    BEGIN
+      RESET;
+      SETCURRENTKEY(Email,RecipientType);
+      SETRANGE(RecipientType,RecipientType::CC);
+
+      if FINDSET then begin
+        repeat
+          Addresses += Email + ';';
+        until NEXT = 0;
+      end;
+      Addresses := DELCHR(Addresses,'>',';');
+    END;
+
+    [External]
+    PROCEDURE GetBCCAddressesFromO365EmailSetup@3() Addresses : Text[250];
+    BEGIN
+      RESET;
+      SETCURRENTKEY(Email,RecipientType);
+      SETRANGE(RecipientType,RecipientType::BCC);
+      if FINDSET then begin
+        repeat
+          Addresses += Email + ';';
+        until NEXT = 0;
+      end;
+      Addresses := DELCHR(Addresses,'>',';');
+    END;
+
+    LOCAL PROCEDURE CheckAlreadyAdded@7();
+    VAR
+      O365EmailSetup@1000 : Record "O365 Email Setup";
+    BEGIN
+      O365EmailSetup.SETFILTER(Code,'<>%1',Code);
+      SETCURRENTKEY(Email,RecipientType);
+      O365EmailSetup.SETRANGE(Email,Email);
+      O365EmailSetup.SETRANGE(RecipientType,RecipientType);
+      if not O365EmailSetup.ISEMPTY then
+        ERROR(ConfigAlreadyExistsErr);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

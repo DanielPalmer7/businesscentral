@@ -1,0 +1,59 @@
+OBJECT Page 10456 PAC Web Service Details
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161724.653T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=PAC Web Service Details;
+    SourceTable="PAC Web Service Detail";
+    DelayedInsert=true;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1020000;1;Group     ;
+                Name=Control1020000;
+                GroupType=Repeater }
+
+    { 1020001;2;Field     ;
+                Name=Environment;
+                ToolTipML=ENU=Specifies if the web service is for a test environment or a production environment.;
+                SourceExpr=Environment;
+                ImplicitType=Option }
+
+    { 1020003;2;Field     ;
+                Name=Type;
+                ToolTipML=ENU=Specifies if the web service is for requesting digital stamps or for canceling signed invoices.;
+                SourceExpr=Type;
+                ImplicitType=Option }
+
+    { 1020005;2;Field     ;
+                Name="Method Name";
+                ToolTipML=ENU=Specifies the web method that will be used for this request type. Contact your authorized service provider, PAC, for this information.;
+                SourceExpr="Method Name";
+                ImplicitType=Text50 }
+
+    { 1020007;2;Field     ;
+                Name=Address;
+                ToolTipML=ENU=Specifies the web method URL used for this type of request. Contact your authorized service provider, PAC, for this information.;
+                SourceExpr=Address;
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

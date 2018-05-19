@@ -1,0 +1,35 @@
+OBJECT Table 5929 Service Shelf
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160207.370T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Service Shelf;
+    LookupPageID="Service Shelves";
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code10        ;CaptionML=ENU=No.;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;"No."                                   ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

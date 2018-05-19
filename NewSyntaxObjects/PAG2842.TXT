@@ -1,0 +1,75 @@
+OBJECT Page 2842 Native - Email Setting
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161414.787T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[@@@={Locked};
+               ENU=nativeEmailSetup];
+    SaveValues=true;
+    SourceTable="O365 Email Setup";
+    DelayedInsert=true;
+    SourceTableView=SORTING(Email,RecipientType)
+                    ORDER(Ascending);
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 2   ;0   ;Container ;
+                Name=Control2;
+                ContainerType=ContentArea }
+
+    { 3   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1   ;2   ;Field     ;
+                Name=code;
+                CaptionML=[@@@={Locked};
+                           ENU=code];
+                ApplicationArea=#All;
+                SourceExpr=Code;
+                Editable=false;
+                ImplicitType=Code80 }
+
+    { 4   ;2   ;Field     ;
+                Name=recipientType;
+                CaptionML=[@@@={Locked};
+                           ENU=recipientType];
+                ApplicationArea=#All;
+                SourceExpr=RecipientType;
+                ImplicitType=Option }
+
+    { 5   ;2   ;Field     ;
+                Name=eMail;
+                CaptionML=ENU=eMail;
+                ApplicationArea=#All;
+                SourceExpr=Email;
+                OnValidate=VAR
+                             dnRegex@1003 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.RegularExpressions.Regex";
+                             dnMatch@1002 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.RegularExpressions.Match";
+                           BEGIN
+                             dnMatch := dnRegex.Match(Email,EmailValidatorRegexTxt);
+                             if not dnMatch.Success then
+                               ERROR(EmailInvalidErr);
+                           END;
+
+                ImplicitType=Text80 }
+
+  }
+  CODE
+  {
+    VAR
+      EmailValidatorRegexTxt@1001 : TextConst '@@@={Locked};ENU=^[A-Z0-9a-z._%+-]+@(?:[A-Za-z0-9.-]+\.)+[A-Za-z]{2,64}$';
+      EmailInvalidErr@1000 : TextConst 'ENU=Invalid Email Address.';
+
+    BEGIN
+    END.
+  }
+}
+

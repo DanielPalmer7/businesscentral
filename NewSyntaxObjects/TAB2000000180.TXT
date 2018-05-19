@@ -1,0 +1,36 @@
+OBJECT Table 2000000180 Media Set
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.863T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;ID                  ;GUID           }
+    { 2   ;   ;Media ID            ;Media          }
+    { 3   ;   ;Company Name        ;Text30        ;TableRelation=Company.Name }
+    { 4   ;   ;Media Index         ;BigInteger     }
+  }
+  KEYS
+  {
+    {    ;ID,"Media ID"                           ;Clustered=true }
+    {    ;"Media Index"                            }
+    {    ;"Company Name"                           }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

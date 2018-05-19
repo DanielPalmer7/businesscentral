@@ -1,0 +1,44 @@
+OBJECT Table 2000000175 Scheduled Task
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.943T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;ID                  ;GUID           }
+    { 2   ;   ;User ID             ;GUID           }
+    { 3   ;   ;User Name           ;Text50         }
+    { 4   ;   ;User Language ID    ;Integer        }
+    { 5   ;   ;User Format ID      ;Integer        }
+    { 6   ;   ;User Time Zone      ;Text32         }
+    { 7   ;   ;User App ID         ;Text20         }
+    { 10  ;   ;Company             ;Text30        ;TableRelation=Company.Name }
+    { 11  ;   ;Is Ready            ;Boolean        }
+    { 12  ;   ;Not Before          ;DateTime       }
+    { 20  ;   ;Run Codeunit        ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(Codeunit)) }
+    { 21  ;   ;Failure Codeunit    ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(Codeunit)) }
+    { 22  ;   ;Record              ;RecordID       }
+  }
+  KEYS
+  {
+    {    ;ID                                      ;Clustered=true }
+    {    ;Record                                   }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

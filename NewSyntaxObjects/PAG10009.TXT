@@ -1,0 +1,388 @@
+OBJECT Page 10009 Customer Order Header Status
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161712.817T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Customer Order Header Status;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="Sales Header";
+    SourceTableView=SORTING("Document Type","Sell-to Customer No.","No.")
+                    WHERE("Document Type"=FILTER(Order|"Return Order"));
+    PageType=List;
+    OnInit=BEGIN
+             "On HoldEditable" := true;
+           END;
+
+    OnOpenPage=BEGIN
+                 OnCreditManagementForm(true);
+                 UpdateTotal;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       GetLastShipmentInvoice;
+                       AfterGetCurrentRecord;
+                     END;
+
+    OnNewRecord=BEGIN
+                  AfterGetCurrentRecord;
+                END;
+
+    OnModifyRecord=BEGIN
+                     UpdateTotal;
+                   END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 1020004;2;Field     ;
+                Name="Document Type";
+                ToolTipML=ENU=Specifies the type of the document.;
+                SourceExpr="Document Type";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Option }
+
+    { 2   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the record.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                Editable=FALSE;
+                OnDrillDown=BEGIN
+                              case "Document Type" of
+                                "Document Type"::Order:
+                                  if PAGE.RUNMODAL(PAGE::"Sales Order",Rec) = ACTION::LookupOK then;
+                                "Document Type"::"Return Order":
+                                  if PAGE.RUNMODAL(PAGE::"Sales Return Order",Rec) = ACTION::LookupOK then;
+                              end;
+                            END;
+
+                ImplicitType=Code20 }
+
+    { 21  ;2   ;Field     ;
+                Name="Your Reference";
+                ToolTipML=ENU=Specifies the customer's reference. The content will be printed on sales documents.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Your Reference";
+                ImplicitType=Text35 }
+
+    { 4   ;2   ;Field     ;
+                Name="Order Date";
+                ToolTipML=ENU=Specifies the date on which the related sales order was created.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Order Date";
+                Editable=FALSE;
+                ImplicitType=Date }
+
+    { 14  ;2   ;Field     ;
+                Name=LastShipmentDate;
+                CaptionML=ENU=Last Shipment Date;
+                ToolTipML=ENU=Specifies the date when the order was last posted as shipped.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=LastShipmentDate;
+                Editable=FALSE;
+                OnDrillDown=BEGIN
+                              case "Document Type" of
+                                "Document Type"::Order:
+                                  begin
+                                    GetLastShipment;
+                                    if PAGE.RUNMODAL(PAGE::"Posted Sales Shipments",SalesShipmentHeader) = ACTION::LookupOK then;
+                                  end;
+                                "Document Type"::"Return Order":
+                                  begin
+                                    GetLastRetReceipt;
+                                    if PAGE.RUNMODAL(PAGE::"Posted Return Receipts",RetReceiptHeader) = ACTION::LookupOK then;
+                                  end;
+                              end;
+                            END;
+
+                ImplicitType=Date }
+
+    { 1020006;2;Field     ;
+                Name="Requested Delivery Date";
+                ToolTipML=ENU=Specifies the requested delivery date for the customer order.;
+                SourceExpr="Requested Delivery Date";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Date }
+
+    { 1020008;2;Field     ;
+                Name="Promised Delivery Date";
+                ToolTipML=ENU=Specifies the promised delivery date for the customer order.;
+                SourceExpr="Promised Delivery Date";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Date }
+
+    { 6   ;2   ;Field     ;
+                Name="Shipment Date";
+                CaptionML=ENU=Next Shipment Date;
+                ToolTipML=ENU=Specifies the next data a shipment is planned for the order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Shipment Date";
+                Editable=FALSE;
+                ImplicitType=Date }
+
+    { 1020010;2;Field     ;
+                Name="Shipping Time";
+                ToolTipML=ENU=Specifies the shipping time for the order. This is the time it takes from when the order is shipped from the warehouse, to when the order is delivered to the customer's address.;
+                SourceExpr="Shipping Time";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=DateFormula }
+
+    { 1020002;2;Field     ;
+                Name="Completely Shipped";
+                ToolTipML=ENU=Specifies whether all the items on the order have been shipped or, in the case of inbound items, completely received.;
+                SourceExpr="Completely Shipped";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Boolean }
+
+    { 16  ;2   ;Field     ;
+                Name=LastInvoiceDate;
+                CaptionML=ENU=Last Invoice Date;
+                ToolTipML=ENU=Specifies the date when the order was last posted as invoiced.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=LastInvoiceDate;
+                Editable=FALSE;
+                OnDrillDown=BEGIN
+                              case "Document Type" of
+                                "Document Type"::Order:
+                                  begin
+                                    GetLastInvoice;
+                                    if PAGE.RUNMODAL(PAGE::"Posted Sales Invoices",SalesInvoiceHeader) = ACTION::LookupOK then;
+                                  end;
+                                "Document Type"::"Return Order":
+                                  begin
+                                    GetLastCrMemo;
+                                    if PAGE.RUNMODAL(PAGE::"Posted Sales Credit Memos",RetCreditMemoHeader) = ACTION::LookupOK then;
+                                  end;
+                              end;
+                            END;
+
+                ImplicitType=Date }
+
+    { 18  ;2   ;Field     ;
+                Name="Outstanding Amount ($)";
+                CaptionML=ENU=Open Amount;
+                ToolTipML=ENU=Specifies the outstanding amount that is calculated, based on the Sales Line table and the Outstanding Amount ($) field.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Outstanding Amount ($)";
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 1020000;2;Field     ;
+                Name=Status;
+                ToolTipML=ENU=Specifies the status of the document.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Status;
+                Editable=FALSE;
+                ImplicitType=Option }
+
+    { 8   ;2   ;Field     ;
+                Name="On Hold";
+                ToolTipML=ENU=Specifies if the document was put on hold when it was posted, for example because payment of the resulting customer ledger entries is overdue.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="On Hold";
+                Editable="On HoldEditable";
+                ImplicitType=Code3 }
+
+    { 20  ;1   ;Group     ;
+                Name=Control20 }
+
+    { 12  ;2   ;Field     ;
+                Name=TotalOpenAmountOnHold;
+                CaptionML=ENU=Total Open Amount On Hold;
+                ToolTipML=ENU=Specifies the total amount on open documents that are on hold.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalOpenAmountOnHold;
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 10  ;2   ;Field     ;
+                Name=TotalOpenAmount;
+                CaptionML=ENU=Total Open Amount;
+                ToolTipML=ENU=Specifies the total amount on open documents.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalOpenAmount;
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1900316107;1;Part   ;
+                Name=Control1900316107;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="No."=FIELD("Bill-to Customer No.");
+                PagePartID="Customer Details FactBox";
+                Visible=TRUE;
+                Editable=FALSE;
+                PartType=Page }
+
+    { 1904036807;1;Part   ;
+                Name=Control1904036807;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="Document Type"=FILTER(Order|"Return Order"),
+                            "Document No."=FIELD("No.");
+                PagePartID="Order Lines Status Factbox";
+                Visible=TRUE;
+                Editable=FALSE;
+                PartType=Page }
+
+    { 1904036507;1;Part   ;
+                Name=Control1904036507;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="No."=FIELD("Bill-to Customer No.");
+                PagePartID="Customer Credit FactBox";
+                Visible=TRUE;
+                Editable=FALSE;
+                PartType=Page }
+
+    { 1902018507;1;Part   ;
+                Name=Control1902018507;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="No."=FIELD("Bill-to Customer No.");
+                PagePartID="Customer Statistics FactBox";
+                Visible=TRUE;
+                PartType=Page }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                Editable=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      SalesHeader@1020000 : Record "Sales Header";
+      SalesShipmentHeader@1020001 : Record "Sales Shipment Header";
+      SalesInvoiceHeader@1020002 : Record "Sales Invoice Header";
+      RetReceiptHeader@1020009 : Record "Return Receipt Header";
+      RetCreditMemoHeader@1020010 : Record "Sales Cr.Memo Header";
+      LastShipmentDate@1020004 : Date;
+      LastInvoiceDate@1020005 : Date;
+      TotalOpenAmount@1020007 : Decimal;
+      TotalOpenAmountOnHold@1020008 : Decimal;
+      "On HoldEditable"@19058110 : Boolean INDATASET;
+
+    [External]
+    PROCEDURE OnCreditManagementForm@1(SetOnCreditManagementForm@1020000 : Boolean);
+    BEGIN
+      // Make certain Fields editable
+      "On HoldEditable" := SetOnCreditManagementForm;
+    END;
+
+    [External]
+    PROCEDURE UpdateTotal@2();
+    BEGIN
+      TotalOpenAmount := 0;
+      TotalOpenAmountOnHold := 0;
+      SalesHeader.COPY(Rec);
+      if SalesHeader.FIND('-') then
+        repeat
+          SalesHeader.CALCFIELDS("Outstanding Amount ($)");
+          TotalOpenAmount := TotalOpenAmount + SalesHeader."Outstanding Amount ($)";
+          if SalesHeader."On Hold" <> '' then
+            TotalOpenAmountOnHold := TotalOpenAmountOnHold + SalesHeader."Outstanding Amount ($)";
+        until SalesHeader.NEXT = 0;
+    END;
+
+    [External]
+    PROCEDURE GetLastShipmentInvoice@3();
+    BEGIN
+      // Calculate values for this row
+      case "Document Type" of
+        "Document Type"::Order:
+          begin
+            if GetLastShipment then
+              LastShipmentDate := SalesShipmentHeader."Shipment Date"
+            else
+              LastShipmentDate := 0D;
+            if GetLastInvoice then
+              LastInvoiceDate := SalesInvoiceHeader."Posting Date"
+            else
+              LastInvoiceDate := 0D;
+          end;
+        "Document Type"::"Return Order":
+          begin
+            if GetLastRetReceipt then
+              LastShipmentDate := RetReceiptHeader."Posting Date"
+            else
+              LastShipmentDate := 0D;
+            if GetLastCrMemo then
+              LastInvoiceDate := RetCreditMemoHeader."Posting Date"
+            else
+              LastInvoiceDate := 0D;
+          end;
+        else
+          begin
+          LastShipmentDate := 0D;
+          LastInvoiceDate := 0D;
+        end;
+      end;
+    END;
+
+    [External]
+    PROCEDURE GetLastShipment@4() : Boolean;
+    BEGIN
+      SalesShipmentHeader.SETCURRENTKEY("Order No."{, "Shipment Date"}); // may want to create this key
+      SalesShipmentHeader.SETRANGE("Order No.","No.");
+      exit(SalesShipmentHeader.FINDLAST);
+    END;
+
+    [External]
+    PROCEDURE GetLastInvoice@5() : Boolean;
+    BEGIN
+      SalesInvoiceHeader.SETCURRENTKEY("Order No."{, "Shipment Date"}); // may want to create this key
+      SalesInvoiceHeader.SETRANGE("Order No.","No.");
+      exit(SalesInvoiceHeader.FINDLAST);
+    END;
+
+    [External]
+    PROCEDURE GetLastRetReceipt@6() : Boolean;
+    BEGIN
+      RetReceiptHeader.SETCURRENTKEY("Return Order No."{, "Shipment Date"}); // may want to create this key
+      RetReceiptHeader.SETRANGE("Return Order No.","No.");
+      exit(RetReceiptHeader.FINDLAST);
+    END;
+
+    [External]
+    PROCEDURE GetLastCrMemo@7() : Boolean;
+    BEGIN
+      RetCreditMemoHeader.SETCURRENTKEY("Return Order No."{, "Shipment Date"}); // may want to create this key
+      RetCreditMemoHeader.SETRANGE("Return Order No.","No.");
+      exit(RetCreditMemoHeader.FINDLAST);
+    END;
+
+    LOCAL PROCEDURE AfterGetCurrentRecord@19077479();
+    BEGIN
+      xRec := Rec;
+      UpdateTotal;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

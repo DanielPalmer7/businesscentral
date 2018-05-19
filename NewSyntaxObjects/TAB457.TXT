@@ -1,0 +1,67 @@
+OBJECT Table 457 Posted Approval Comment Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160113.367T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               if "Entry No." = 0 then
+                 "Entry No." := GetNextEntryNo;
+             END;
+
+    CaptionML=ENU=Posted Approval Comment Line;
+    LookupPageID="Posted Approval Comments";
+    DrillDownPageID="Posted Approval Comments";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=ENU=Entry No. }
+    { 2   ;   ;Table ID            ;Integer       ;CaptionML=ENU=Table ID }
+    { 4   ;   ;Document No.        ;Code20        ;CaptionML=ENU=Document No. }
+    { 5   ;   ;User ID             ;Code50        ;TableRelation=User."User Name";
+                                                   OnLookup=VAR
+                                                              UserMgt@1000 : Codeunit "User Management";
+                                                            BEGIN
+                                                              UserMgt.LookupUserID("User ID");
+                                                            END;
+
+                                                   TestTableRelation=false;
+                                                   DataClassification=EndUserIdentifiableInformation;
+                                                   CaptionML=ENU=User ID }
+    { 6   ;   ;Date and Time       ;DateTime      ;CaptionML=ENU=Date and Time }
+    { 7   ;   ;Comment             ;Text80        ;CaptionML=ENU=Comment }
+    { 8   ;   ;Posted Record ID    ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Posted Record ID }
+  }
+  KEYS
+  {
+    {    ;"Entry No."                             ;Clustered=true }
+    {    ;"Table ID","Document No.","Date and Time" }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    LOCAL PROCEDURE GetNextEntryNo@4() : Integer;
+    VAR
+      PostedApprovalCommentLine@1000 : Record "Posted Approval Comment Line";
+    BEGIN
+      PostedApprovalCommentLine.SETCURRENTKEY("Entry No.");
+      if PostedApprovalCommentLine.FINDLAST then
+        exit(PostedApprovalCommentLine."Entry No." + 1);
+
+      exit(1);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

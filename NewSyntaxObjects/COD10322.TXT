@@ -1,0 +1,208 @@
+OBJECT Codeunit 10322 Exp. Writing EFT
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    PROCEDURE ExportEFT@1020000(DataExchEntryCodeDetail@1020000 : Integer;DataExchEntryCodeFooter@1020001 : Integer;FilePath@1020014 : Text;Filename@1020002 : Text;ACHFileName@1020015 : Text;DataExchEntryCodeFooterArray@1020003 : ARRAY [100] OF Integer;VAR TempNameValueBuffer@1020016 : TEMPORARY Record "Name/Value Buffer";VAR ZipFileName@1020017 : Text;VAR FileManagementUnit@1020018 : Codeunit "File Management");
+    VAR
+      DataExchFooter@1020013 : Record "Data Exch.";
+      DataExchDetail@1020012 : Record "Data Exch.";
+      TempBlob@1020011 : Record TempBlob;
+      TempBlob2@1020010 : Record TempBlob;
+      ExportEFTACH@1020019 : Codeunit "Export EFT (ACH)";
+      CustomLayoutReporting@1020020 : Codeunit "Custom Layout Reporting";
+      FileManagement@1020021 : Codeunit "File Management";
+      ExportFile@1020009 : File;
+      OutStream@1020008 : OutStream;
+      InStream@1020007 : InStream;
+      Filename2@1020006 : Text[250];
+      RecordCount@1020005 : Integer;
+      ArrayLength@1020004 : Integer;
+      ClientFile@1020022 : Text;
+    BEGIN
+      // Need to copy the File Name and File from the footer to the Detail record.
+      ExportFile.WRITEMODE := true;
+      ExportFile.TEXTMODE := true;
+      ExportFile.OPEN(Filename);
+
+      // Copy current file contents to TempBlob
+      ExportFile.CREATEINSTREAM(InStream);
+      TempBlob.Blob.CREATEOUTSTREAM(OutStream);
+      COPYSTREAM(OutStream,InStream);
+
+      Filename2 := COPYSTR(Filename,1,250);
+
+      DataExchDetail.SETRANGE("Entry No.",DataExchEntryCodeDetail);
+      if DataExchDetail.FINDFIRST then begin
+        DataExchDetail."File Name" := Filename2;
+        DataExchDetail."File Content" := TempBlob.Blob;
+        DataExchDetail.MODIFY;
+      end;
+      ExportFile.CLOSE;
+
+      if CustomLayoutReporting.IsWebClient then
+        ExportEFTACH.AddFileToClientZip(Filename,ACHFileName,TempNameValueBuffer,ZipFileName,FileManagementUnit)
+      else begin
+        if FilePath[STRLEN(FilePath)] <> '\' then
+          FilePath := FilePath + '\';
+        ClientFile := FilePath + ACHFileName;
+        FileManagement.DownloadToFile(Filename,ClientFile);
+      end;
+
+      // Need to clear out the File Name and blob (File Content) for the footer record(s)
+      DataExchFooter.SETRANGE("Entry No.",DataExchEntryCodeFooter);
+      if DataExchFooter.FINDFIRST then begin
+        ArrayLength := ARRAYLEN(DataExchEntryCodeFooterArray);
+        RecordCount := 1;
+        while (DataExchEntryCodeFooterArray[RecordCount] > 0) and (RecordCount < ArrayLength) do begin
+          DataExchFooter."Entry No." := DataExchEntryCodeFooterArray[RecordCount];
+          DataExchFooter."File Name" := '';
+          TempBlob2.Blob.CREATEOUTSTREAM(OutStream);
+          DataExchFooter."File Content" := TempBlob2.Blob;
+          DataExchFooter.MODIFY;
+          RecordCount := RecordCount + 1;
+        end;
+      end;
+    END;
+
+    [External]
+    PROCEDURE CleanUpEFTWorkTables@2(DataExchEntryCodeHeaderArray@1005 : ARRAY [100] OF Integer;DataExchEntryCodeDetailArray@1004 : ARRAY [100] OF Integer;DataExchEntryCodeFooterArray@1003 : ARRAY [100] OF Integer);
+    VAR
+      ACHUSHeader@1009 : Record "ACH US Header";
+      ACHUSDetail@1008 : Record "ACH US Detail";
+      ACHUSFooter@1007 : Record "ACH US Footer";
+      ACHRBHeader@1020000 : Record "ACH RB Header";
+      ACHRBDetail@1020001 : Record "ACH RB Detail";
+      ACHRBFooter@1020002 : Record "ACH RB Footer";
+      ACHCecobanHeader@1020003 : Record "ACH Cecoban Header";
+      ACHCecobanDetail@1020004 : Record "ACH Cecoban Detail";
+      ACHCecobanFooter@1020005 : Record "ACH Cecoban Footer";
+      RecordCount@1002 : Integer;
+      ArrayLength@1006 : Integer;
+    BEGIN
+      ArrayLength := ARRAYLEN(DataExchEntryCodeHeaderArray);
+      RecordCount := 1;
+      while (DataExchEntryCodeHeaderArray[RecordCount] > 0) and (RecordCount < ArrayLength) do begin
+        ACHUSHeader.SETRANGE("Data Exch. Entry No.",DataExchEntryCodeHeaderArray[RecordCount]);
+        ACHUSHeader.DELETEALL;
+        RecordCount := RecordCount + 1;
+      end;
+
+      ArrayLength := ARRAYLEN(DataExchEntryCodeDetailArray);
+      RecordCount := 1;
+      while (DataExchEntryCodeDetailArray[RecordCount] > 0) and (RecordCount < ArrayLength) do begin
+        ACHUSDetail.SETRANGE("Data Exch. Entry No.",DataExchEntryCodeDetailArray[RecordCount]);
+        ACHUSDetail.DELETEALL;
+        RecordCount := RecordCount + 1;
+      end;
+
+      ArrayLength := ARRAYLEN(DataExchEntryCodeFooterArray);
+      RecordCount := 1;
+      while (DataExchEntryCodeFooterArray[RecordCount] > 0) and (RecordCount < ArrayLength) do begin
+        ACHUSFooter.SETRANGE("Data Exch. Entry No.",DataExchEntryCodeFooterArray[RecordCount]);
+        ACHUSFooter.DELETEALL;
+        RecordCount := RecordCount + 1;
+      end;
+
+      ArrayLength := ARRAYLEN(DataExchEntryCodeHeaderArray);
+      RecordCount := 1;
+      while (DataExchEntryCodeHeaderArray[RecordCount] > 0) and (RecordCount < ArrayLength) do begin
+        ACHRBHeader.SETRANGE("Data Exch. Entry No.",DataExchEntryCodeHeaderArray[RecordCount]);
+        ACHRBHeader.DELETEALL;
+        RecordCount := RecordCount + 1;
+      end;
+
+      ArrayLength := ARRAYLEN(DataExchEntryCodeDetailArray);
+      RecordCount := 1;
+      while (DataExchEntryCodeDetailArray[RecordCount] > 0) and (RecordCount < ArrayLength) do begin
+        ACHRBDetail.SETRANGE("Data Exch. Entry No.",DataExchEntryCodeDetailArray[RecordCount]);
+        ACHRBDetail.DELETEALL;
+        RecordCount := RecordCount + 1;
+      end;
+
+      ArrayLength := ARRAYLEN(DataExchEntryCodeFooterArray);
+      RecordCount := 1;
+      while (DataExchEntryCodeFooterArray[RecordCount] > 0) and (RecordCount < ArrayLength) do begin
+        ACHRBFooter.SETRANGE("Data Exch. Entry No.",DataExchEntryCodeFooterArray[RecordCount]);
+        ACHRBFooter.DELETEALL;
+        RecordCount := RecordCount + 1;
+      end;
+
+      ArrayLength := ARRAYLEN(DataExchEntryCodeHeaderArray);
+      RecordCount := 1;
+      while (DataExchEntryCodeHeaderArray[RecordCount] > 0) and (RecordCount < ArrayLength) do begin
+        ACHCecobanHeader.SETRANGE("Data Exch. Entry No.",DataExchEntryCodeHeaderArray[RecordCount]);
+        ACHCecobanHeader.DELETEALL;
+        RecordCount := RecordCount + 1;
+      end;
+
+      ArrayLength := ARRAYLEN(DataExchEntryCodeDetailArray);
+      RecordCount := 1;
+      while (DataExchEntryCodeDetailArray[RecordCount] > 0) and (RecordCount < ArrayLength) do begin
+        ACHCecobanDetail.SETRANGE("Data Exch. Entry No.",DataExchEntryCodeDetailArray[RecordCount]);
+        ACHCecobanDetail.DELETEALL;
+        RecordCount := RecordCount + 1;
+      end;
+
+      ArrayLength := ARRAYLEN(DataExchEntryCodeFooterArray);
+      RecordCount := 1;
+      while (DataExchEntryCodeFooterArray[RecordCount] > 0) and (RecordCount < ArrayLength) do begin
+        ACHCecobanFooter.SETRANGE("Data Exch. Entry No.",DataExchEntryCodeFooterArray[RecordCount]);
+        ACHCecobanFooter.DELETEALL;
+        RecordCount := RecordCount + 1;
+      end;
+    END;
+
+    PROCEDURE PreCleanUpUSWorkTables@1020001();
+    VAR
+      ACHUSHeader@1020003 : Record "ACH US Header";
+      ACHUSDetail@1020002 : Record "ACH US Detail";
+      ACHUSFooter@1020001 : Record "ACH US Footer";
+    BEGIN
+      ACHUSHeader.DELETEALL;
+      ACHUSDetail.DELETEALL;
+      ACHUSFooter.DELETEALL;
+      COMMIT;
+    END;
+
+    PROCEDURE PreCleanUpCAWorkTables@1020002();
+    VAR
+      ACHRBHeader@1020002 : Record "ACH RB Header";
+      ACHRBDetail@1020001 : Record "ACH RB Detail";
+      ACHRBFooter@1020000 : Record "ACH RB Footer";
+    BEGIN
+      ACHRBHeader.DELETEALL;
+      ACHRBDetail.DELETEALL;
+      ACHRBFooter.DELETEALL;
+      COMMIT;
+    END;
+
+    PROCEDURE PreCleanUpMXWorkTables@1020003();
+    VAR
+      ACHCecobanHeader@1020002 : Record "ACH Cecoban Header";
+      ACHCecobanDetail@1020001 : Record "ACH Cecoban Detail";
+      ACHCecobanFooter@1020000 : Record "ACH Cecoban Footer";
+    BEGIN
+      ACHCecobanHeader.DELETEALL;
+      ACHCecobanDetail.DELETEALL;
+      ACHCecobanFooter.DELETEALL;
+      COMMIT;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

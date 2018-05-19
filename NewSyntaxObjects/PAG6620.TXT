@@ -1,0 +1,601 @@
+OBJECT Page 6620 Blanket Sales Order Archive
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161556.853T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Blanket Sales Order Archive;
+    SourceTable="Sales Header Archive";
+    SourceTableView=WHERE("Document Type"=CONST("Blanket Order"));
+    PageType=Document;
+    ActionList=ACTIONS
+    {
+      { 79      ;0   ;ActionContainer;
+                      Name=ActionContainer79;
+                      ActionContainerType=RelatedInformation }
+      { 78      ;1   ;ActionGroup;
+                      Name="Ver&sion";
+                      CaptionML=ENU=Ver&sion;
+                      Image=Versions }
+      { 77      ;2   ;Action    ;
+                      Name=Card;
+                      ShortCutKey=Shift+F7;
+                      CaptionML=ENU=Card;
+                      ToolTipML=ENU=View or edit detailed information about the customer on the sales document.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Customer Card";
+                      RunPageLink="No."=FIELD("Sell-to Customer No.");
+                      Image=EditLines }
+      { 76      ;2   ;Action    ;
+                      Name=Dimensions;
+                      CaptionML=ENU=Dimensions;
+                      ToolTipML=ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                      ApplicationArea=#Dimensions;
+                      Promoted=true;
+                      Image=Dimensions;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 ShowDimensions;
+                               END;
+                                }
+      { 75      ;2   ;Action    ;
+                      Name="Co&mments";
+                      CaptionML=ENU=Co&mments;
+                      ToolTipML=ENU=View or add comments for the record.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Sales Archive Comment Sheet";
+                      RunPageLink="Document Type"=FIELD("Document Type"),
+                                  "No."=FIELD("No."),
+                                  "Document Line No."=CONST(0),
+                                  "Doc. No. Occurrence"=FIELD("Doc. No. Occurrence"),
+                                  "Version No."=FIELD("Version No.");
+                      Promoted=true;
+                      Image=ViewComments;
+                      PromotedCategory=Process }
+      { 74      ;2   ;Action    ;
+                      Name=Print;
+                      CaptionML=ENU=Print;
+                      ToolTipML=ENU=Prepare to print the document. A report request window for the document opens where you can specify what to include on the print-out.;
+                      ApplicationArea=#Advanced;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Print;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 DocPrint@1000 : Codeunit "Document-Print";
+                               BEGIN
+                                 DocPrint.PrintSalesHeaderArch(Rec);
+                               END;
+                                }
+      { 73      ;0   ;ActionContainer;
+                      Name=ActionContainer73;
+                      ActionContainerType=ActionItems }
+      { 72      ;1   ;Action    ;
+                      Name=Restore;
+                      Ellipsis=true;
+                      CaptionML=ENU=&Restore;
+                      ToolTipML=ENU=Recreate the document that it was archived from.;
+                      ApplicationArea=#Advanced;
+                      Promoted=true;
+                      Image=Restore;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ArchiveManagement@1000 : Codeunit ArchiveManagement;
+                               BEGIN
+                                 ArchiveManagement.RestoreSalesDocument(Rec);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 71  ;0   ;Container ;
+                Name=Control71;
+                ContainerType=ContentArea }
+
+    { 70  ;1   ;Group     ;
+                Name=General;
+                CaptionML=ENU=General }
+
+    { 69  ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the archived sales order.;
+                ApplicationArea=#Advanced;
+                SourceExpr="No.";
+                Importance=Promoted;
+                ImplicitType=Code20 }
+
+    { 68  ;2   ;Field     ;
+                Name="Sell-to Customer No.";
+                ToolTipML=ENU=Specifies the number of the customer who will receive the products and be billed by default.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Sell-to Customer No.";
+                Importance=Promoted;
+                ImplicitType=Code20 }
+
+    { 67  ;2   ;Field     ;
+                Name="Sell-to Contact No.";
+                ToolTipML=ENU=Specifies the number of the contact person associated with this sales order.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Sell-to Contact No.";
+                ImplicitType=Code20 }
+
+    { 66  ;2   ;Field     ;
+                Name="Sell-to Customer Name";
+                ToolTipML=ENU=Specifies the name of the customer who will receive the products and be billed by default.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Sell-to Customer Name";
+                ImplicitType=Text50 }
+
+    { 65  ;2   ;Field     ;
+                Name="Sell-to Address";
+                ToolTipML=ENU=Specifies which address applies for the sales order.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Sell-to Address";
+                ImplicitType=Text50 }
+
+    { 64  ;2   ;Field     ;
+                Name="Sell-to Address 2";
+                ToolTipML=ENU=Specifies an additional part of the address.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Sell-to Address 2";
+                ImplicitType=Text50 }
+
+    { 63  ;2   ;Field     ;
+                Name="Sell-to Post Code";
+                ToolTipML=ENU=Specifies the ZIP Code of the address.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Sell-to Post Code";
+                ImplicitType=Code20 }
+
+    { 62  ;2   ;Field     ;
+                Name="Sell-to City";
+                ToolTipML=ENU=Specifies the name of the city where the customer is located;
+                ApplicationArea=#Advanced;
+                SourceExpr="Sell-to City";
+                ImplicitType=Text30 }
+
+    { 61  ;2   ;Field     ;
+                Name="Sell-to Contact";
+                ToolTipML=ENU=Specifies the name of the contact person associated with this sales order.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Sell-to Contact";
+                ImplicitType=Text50 }
+
+    { 60  ;2   ;Field     ;
+                Name="Posting Date";
+                ToolTipML=ENU=Specifies the date when the document was posted.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Posting Date";
+                Importance=Promoted;
+                ImplicitType=Date }
+
+    { 59  ;2   ;Field     ;
+                Name="Order Date";
+                ToolTipML=ENU=Specifies the date when the order was created.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Order Date";
+                ImplicitType=Date }
+
+    { 58  ;2   ;Field     ;
+                Name="Document Date";
+                ToolTipML=ENU=Specifies the date the document was created.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Document Date";
+                ImplicitType=Date }
+
+    { 57  ;2   ;Field     ;
+                Name="Requested Delivery Date";
+                ToolTipML=ENU=Specifies the date that your customer has asked for the order to be delivered.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Requested Delivery Date";
+                ImplicitType=Date }
+
+    { 56  ;2   ;Field     ;
+                Name="Promised Delivery Date";
+                ToolTipML=ENU=Specifies the date that you have promised to deliver the order, as a result of the Order Promising function.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Promised Delivery Date";
+                ImplicitType=Date }
+
+    { 55  ;2   ;Field     ;
+                Name="External Document No.";
+                ToolTipML=ENU=Specifies the external document number that was entered on the purchase header or journal line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="External Document No.";
+                ImplicitType=Code35 }
+
+    { 54  ;2   ;Field     ;
+                Name="Salesperson Code";
+                ToolTipML=ENU=Specifies the name of the salesperson who is assigned to the customer.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Salesperson Code";
+                ImplicitType=Code20 }
+
+    { 53  ;2   ;Field     ;
+                Name="Campaign No.";
+                ToolTipML=ENU=Specifies the campaign number the document is linked to.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Campaign No.";
+                ImplicitType=Code20 }
+
+    { 52  ;2   ;Field     ;
+                Name="Responsibility Center";
+                ToolTipML=ENU=Specifies the code of the responsibility center (for example, a distribution center) assigned to the customer or associated with the order.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Responsibility Center";
+                ImplicitType=Code10 }
+
+    { 51  ;2   ;Field     ;
+                Name=Status;
+                ToolTipML=ENU=Specifies the status of the order.;
+                ApplicationArea=#Advanced;
+                SourceExpr=Status;
+                Importance=Promoted;
+                ImplicitType=Option }
+
+    { 50  ;1   ;Part      ;
+                Name=SalesLinesArchive;
+                ApplicationArea=#Advanced;
+                SubPageLink="Document No."=FIELD("No."),
+                            "Doc. No. Occurrence"=FIELD("Doc. No. Occurrence"),
+                            "Version No."=FIELD("Version No.");
+                PagePartID="Blanket Sales Order Arch. Sub.";
+                PartType=Page }
+
+    { 49  ;1   ;Group     ;
+                Name=Invoicing;
+                CaptionML=ENU=Invoicing }
+
+    { 48  ;2   ;Field     ;
+                Name="Bill-to Customer No.";
+                ToolTipML=ENU=Specifies the number of the customer that you send or sent the invoice to.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Bill-to Customer No.";
+                Importance=Promoted;
+                ImplicitType=Code20 }
+
+    { 47  ;2   ;Field     ;
+                Name="Bill-to Contact No.";
+                ToolTipML=ENU=Specifies the number of the contact person at the customer's billing address.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Bill-to Contact No.";
+                ImplicitType=Code20 }
+
+    { 46  ;2   ;Field     ;
+                Name="Bill-to Name";
+                ToolTipML=ENU=Specifies the name of the customer that you send or sent the invoice to.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Bill-to Name";
+                ImplicitType=Text50 }
+
+    { 45  ;2   ;Field     ;
+                Name="Bill-to Address";
+                ToolTipML=ENU=Specifies the address of the customer to whom you sent the invoice.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Bill-to Address";
+                ImplicitType=Text50 }
+
+    { 44  ;2   ;Field     ;
+                Name="Bill-to Address 2";
+                ToolTipML=ENU=Specifies an additional line of the address.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Bill-to Address 2";
+                ImplicitType=Text50 }
+
+    { 43  ;2   ;Field     ;
+                Name="Bill-to Post Code";
+                ToolTipML=ENU=Specifies the ZIP Code of the customer's billing address.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Bill-to Post Code";
+                ImplicitType=Code20 }
+
+    { 42  ;2   ;Field     ;
+                Name="Bill-to City";
+                ToolTipML=ENU=Specifies the city of the address.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Bill-to City";
+                ImplicitType=Text30 }
+
+    { 41  ;2   ;Field     ;
+                Name="Bill-to Contact";
+                ToolTipML=ENU=Specifies the name of the contact person at the customer's billing address.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Bill-to Contact";
+                ImplicitType=Text50 }
+
+    { 40  ;2   ;Field     ;
+                Name="Shortcut Dimension 1 Code";
+                ToolTipML=ENU=Specifies the code for Shortcut Dimension 1, which is one of two global dimension codes that you set up in the General Ledger Setup window.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shortcut Dimension 1 Code";
+                ImplicitType=Code20 }
+
+    { 39  ;2   ;Field     ;
+                Name="Shortcut Dimension 2 Code";
+                ToolTipML=ENU=Specifies the code for Shortcut Dimension 2, which is one of two global dimension codes that you set up in the General Ledger Setup window.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shortcut Dimension 2 Code";
+                ImplicitType=Code20 }
+
+    { 38  ;2   ;Field     ;
+                Name="Payment Terms Code";
+                ToolTipML=ENU=Specifies a formula that calculates the payment due date, payment discount date, and payment discount amount on the sales document.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Payment Terms Code";
+                Importance=Promoted;
+                ImplicitType=Code10 }
+
+    { 37  ;2   ;Field     ;
+                Name="Due Date";
+                ToolTipML=ENU=Specifies when the related sales invoice must be paid.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Due Date";
+                Importance=Promoted;
+                ImplicitType=Date }
+
+    { 36  ;2   ;Field     ;
+                Name="Payment Discount %";
+                ToolTipML=ENU=Specifies the payment discount percentage that is granted if the customer pays on or before the date entered in the Pmt. Discount Date field. The discount percentage is specified in the Payment Terms Code field.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Payment Discount %";
+                ImplicitType=Decimal }
+
+    { 35  ;2   ;Field     ;
+                Name="Pmt. Discount Date";
+                ToolTipML=ENU=Specifies the date on which the amount in the entry must be paid for a payment discount to be granted.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Pmt. Discount Date";
+                ImplicitType=Date }
+
+    { 34  ;2   ;Field     ;
+                Name="Payment Method Code";
+                ToolTipML=ENU=Specifies how the customer must pay for products on the sales document.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Payment Method Code";
+                ImplicitType=Code10 }
+
+    { 33  ;2   ;Field     ;
+                Name="Prices Including VAT";
+                ToolTipML=ENU=Specifies if the Unit Price and Line Amount fields on document lines should be shown with or without Tax.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Prices Including VAT";
+                ImplicitType=Boolean }
+
+    { 32  ;1   ;Group     ;
+                Name=Shipping;
+                CaptionML=ENU=Shipping }
+
+    { 31  ;2   ;Field     ;
+                Name="Ship-to Code";
+                ToolTipML=ENU=Specifies a code for an alternate shipment address if you want to ship to another address than the one that has been entered automatically. This field is also used in case of drop shipment.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Ship-to Code";
+                Importance=Promoted;
+                ImplicitType=Code10 }
+
+    { 30  ;2   ;Field     ;
+                Name="Ship-to Name";
+                ToolTipML=ENU=Specifies the name of the company at the address to which the items were shipped.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Ship-to Name";
+                ImplicitType=Text50 }
+
+    { 29  ;2   ;Field     ;
+                Name="Ship-to Address";
+                ToolTipML=ENU=Specifies the address that the items are shipped to.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Ship-to Address";
+                ImplicitType=Text50 }
+
+    { 28  ;2   ;Field     ;
+                Name="Ship-to Address 2";
+                ToolTipML=ENU=Specifies an additional part of the ship-to address, in case it is a long address.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Ship-to Address 2";
+                ImplicitType=Text50 }
+
+    { 27  ;2   ;Field     ;
+                Name="Ship-to Post Code";
+                ToolTipML=ENU=Specifies the ZIP Code of the address.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Ship-to Post Code";
+                Importance=Promoted;
+                ImplicitType=Code20 }
+
+    { 26  ;2   ;Field     ;
+                Name="Ship-to City";
+                ToolTipML=ENU=Specifies the city of the address that the items are shipped to.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Ship-to City";
+                ImplicitType=Text30 }
+
+    { 25  ;2   ;Field     ;
+                Name="Ship-to Contact";
+                ToolTipML=ENU=Specifies the name of a contact person at the address that the items were shipped to.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Ship-to Contact";
+                ImplicitType=Text50 }
+
+    { 24  ;2   ;Field     ;
+                Name="Location Code";
+                ToolTipML=ENU=Specifies the location from where inventory items to the customer on the sales document are to be shipped by default.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Location Code";
+                Importance=Promoted;
+                ImplicitType=Code10 }
+
+    { 23  ;2   ;Field     ;
+                Name="Outbound Whse. Handling Time";
+                ToolTipML=ENU="Specifies a date formula for the time it takes to get items ready to ship from this location. The time element is used in the calculation of the delivery date as follows: Shipment Date + Outbound Warehouse Handling Time = Planned Shipment Date + Shipping Time = Planned Delivery Date.";
+                ApplicationArea=#Advanced;
+                SourceExpr="Outbound Whse. Handling Time";
+                ImplicitType=DateFormula }
+
+    { 22  ;2   ;Field     ;
+                Name="Shipment Method Code";
+                ToolTipML=ENU=Specifies the delivery conditions of the related shipment, such as free on board (FOB).;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shipment Method Code";
+                ImplicitType=Code10 }
+
+    { 21  ;2   ;Field     ;
+                Name="Shipping Agent Code";
+                ToolTipML=ENU=Specifies the code for the shipping agent who is transporting the items.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shipping Agent Code";
+                ImplicitType=Code10 }
+
+    { 20  ;2   ;Field     ;
+                Name="Shipping Agent Service Code";
+                ToolTipML=ENU=Specifies the code for the service, such as a one-day delivery, that is offered by the shipping agent.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shipping Agent Service Code";
+                ImplicitType=Code10 }
+
+    { 19  ;2   ;Field     ;
+                Name="Shipping Time";
+                ToolTipML=ENU=Specifies how long it takes from when the items are shipped from the warehouse to when they are delivered.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shipping Time";
+                ImplicitType=DateFormula }
+
+    { 18  ;2   ;Field     ;
+                Name="Late Order Shipping";
+                ToolTipML=ENU=Specifies that the shipment of one or more lines has been delayed, or that the shipment date is before the work date.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Late Order Shipping";
+                ImplicitType=Boolean }
+
+    { 17  ;2   ;Field     ;
+                Name="Package Tracking No.";
+                ToolTipML=ENU=Specifies the shipping agent's package number.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Package Tracking No.";
+                ImplicitType=Text30 }
+
+    { 16  ;2   ;Field     ;
+                Name="Shipment Date";
+                ToolTipML=ENU=Specifies when items on the document are shipped or were shipped. A shipment date is usually calculated from a requested delivery date plus lead time.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shipment Date";
+                Importance=Promoted;
+                ImplicitType=Date }
+
+    { 15  ;2   ;Field     ;
+                Name="Shipping Advice";
+                ToolTipML=ENU=Specifies if the customer accepts partial shipment of orders.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shipping Advice";
+                ImplicitType=Option }
+
+    { 14  ;1   ;Group     ;
+                Name="Foreign Trade";
+                CaptionML=ENU=Foreign Trade }
+
+    { 13  ;2   ;Field     ;
+                Name="Currency Code";
+                ToolTipML=ENU=Specifies the currency code for the amount on the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Currency Code";
+                Importance=Promoted;
+                ImplicitType=Code10 }
+
+    { 12  ;2   ;Field     ;
+                Name="EU 3-Party Trade";
+                ToolTipML=ENU=Specifies if the sales document is part of a three-party trade.;
+                ApplicationArea=#Advanced;
+                SourceExpr="EU 3-Party Trade";
+                ImplicitType=Boolean }
+
+    { 11  ;2   ;Field     ;
+                Name="Transaction Type";
+                ToolTipML=ENU=Specifies the number for the transaction type, for the purpose of reporting to INTRASTAT.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Transaction Type";
+                ImplicitType=Code10 }
+
+    { 10  ;2   ;Field     ;
+                Name="Transaction Specification";
+                ToolTipML=ENU=Specifies a code for the sales document's transaction specification, for the purpose of reporting to INTRASTAT.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Transaction Specification";
+                ImplicitType=Code10 }
+
+    { 9   ;2   ;Field     ;
+                Name="Transport Method";
+                ToolTipML=ENU=Specifies the transport method, for the purpose of reporting to INTRASTAT.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Transport Method";
+                ImplicitType=Code10 }
+
+    { 8   ;2   ;Field     ;
+                Name="Exit Point";
+                ToolTipML=ENU=Specifies the point of exit through which you ship the items out of your country/region, for reporting to Intrastat.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Exit Point";
+                ImplicitType=Code10 }
+
+    { 7   ;2   ;Field     ;
+                Name=Area;
+                ToolTipML=ENU=Specifies the area in which your company has to pay sales tax.;
+                ApplicationArea=#Advanced;
+                SourceExpr=Area;
+                ImplicitType=Code10 }
+
+    { 6   ;1   ;Group     ;
+                Name=Version;
+                CaptionML=ENU=Version }
+
+    { 5   ;2   ;Field     ;
+                Name="Version No.";
+                ToolTipML=ENU=Specifies the version number of the archived document.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Version No.";
+                Importance=Promoted;
+                ImplicitType=Integer }
+
+    { 4   ;2   ;Field     ;
+                Name="Archived By";
+                ToolTipML=ENU=Specifies the user who archived the document.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Archived By";
+                ImplicitType=Code50 }
+
+    { 3   ;2   ;Field     ;
+                Name="Date Archived";
+                ToolTipML=ENU=Specifies the date when the document was archived.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Date Archived";
+                Importance=Promoted;
+                ImplicitType=Date }
+
+    { 2   ;2   ;Field     ;
+                Name="Time Archived";
+                ToolTipML=ENU=Specifies what time the document was archived.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Time Archived";
+                ImplicitType=Time }
+
+    { 1   ;2   ;Field     ;
+                Name="Interaction Exist";
+                ToolTipML=ENU=Specifies that the archived document is linked to an interaction log entry.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Interaction Exist";
+                ImplicitType=Boolean }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,216 @@
+OBJECT Codeunit 1439 Headline Management
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160658.353T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      MorningGreetingTxt@1006 : TextConst '@@@=%1 is the user name. This is displayed between 00:00 and 10:59.;ENU=Good morning, %1!';
+      LateMorningGreetingTxt@1005 : TextConst '@@@=%1 is the user name.  This is displayed between 11:00 and 11:59.;ENU=Hi, %1!';
+      NoonGreetingTxt@1004 : TextConst '@@@=%1 is the user name.  This is displayed between 12:00 and 13:59.;ENU=Hi, %1!';
+      AfternoonGreetingTxt@1003 : TextConst '@@@=%1 is the user name.  This is displayed between 14:00 and 18:59.;ENU=Good afternoon, %1!';
+      EveningGreetingTxt@1001 : TextConst '@@@=%1 is the user name.  This is displayed between 19:00 and 23:59.;ENU=Good evening, %1!';
+      TimeOfDay@1002 : 'Morning,LateMorning,Noon,Afternoon,Evening';
+      SimpleMorningGreetingTxt@1013 : TextConst '@@@=" This is displayed between 00:00 and 10:59.";ENU=Good morning!';
+      SimpleLateMorningGreetingTxt@1012 : TextConst '@@@=" This is displayed between 11:00 and 11:59.";ENU=Hi!';
+      SimpleNoonGreetingTxt@1011 : TextConst '@@@=" This is displayed between 12:00 and 13:59.";ENU=Hi!';
+      SimpleAfternoonGreetingTxt@1010 : TextConst '@@@=" This is displayed between 14:00 and 18:59.";ENU=Good afternoon!';
+      SimpleEveningGreetingTxt@1009 : TextConst '@@@=" This is displayed between 19:00 and 23:59.";ENU=Good evening!';
+
+    [External]
+    PROCEDURE Truncate@3(TextToTruncate@1000 : Text;MaxLength@1001 : Integer) : Text;
+    BEGIN
+      if STRLEN(TextToTruncate) <= MaxLength then
+        exit(TextToTruncate);
+
+      if MaxLength <= 0 then
+        exit('');
+
+      if MaxLength <= 3 then
+        exit(COPYSTR(TextToTruncate,1,MaxLength));
+
+      exit(COPYSTR(TextToTruncate,1,MaxLength - 3) + '...');
+    END;
+
+    [External]
+    PROCEDURE Emphasize@4(TextToEmphasize@1000 : Text) : Text;
+    BEGIN
+      if TextToEmphasize <> '' then
+        exit(STRSUBSTNO('<emphasize>%1</emphasize>',TextToEmphasize));
+    END;
+
+    [External]
+    PROCEDURE GetHeadlineText@7(Qualifier@1000 : Text;Payload@1001 : Text;VAR ResultText@1002 : Text) : Boolean;
+    VAR
+      TextManagement@1004 : Codeunit TextManagement;
+      PayloadWithoutEmphasize@1003 : Text[158];
+      PayloadTagsLength@1005 : Integer;
+      QualifierTagsLength@1006 : Integer;
+    BEGIN
+      QualifierTagsLength := 23;
+      PayloadTagsLength := 19;
+
+      if STRLEN(Qualifier) + STRLEN(Payload) > 250 - QualifierTagsLength - PayloadTagsLength then
+        exit(false); // this won't fit
+
+      if Payload = '' then
+        exit(false); // payload should not be empty
+
+      if STRLEN(Qualifier) > GetMaxQualifierLength then
+        exit(false); // qualifier is too long to be a qualifier
+
+      TextManagement.ReplaceRegex(Payload,'<emphasize>|</emphasize>','',PayloadWithoutEmphasize);
+      if STRLEN(PayloadWithoutEmphasize) > GetMaxPayloadLength then
+        exit(false); // payload is too long for being a headline
+
+      ResultText := GetQualifierText(Qualifier) + GetPayloadText(Payload);
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE GetPayloadText@8(PayloadText@1000 : Text) : Text;
+    BEGIN
+      if PayloadText <> '' then
+        exit(STRSUBSTNO('<payload>%1</payload>',PayloadText));
+    END;
+
+    LOCAL PROCEDURE GetQualifierText@9(QualifierText@1000 : Text) : Text;
+    BEGIN
+      if QualifierText <> '' then
+        exit(STRSUBSTNO('<qualifier>%1</qualifier>',QualifierText));
+    END;
+
+    PROCEDURE GetUserGreetingText@2(VAR GreetingText@1001 : Text[250]);
+    VAR
+      User@1000 : Record User;
+      UserNameFound@1002 : Boolean;
+    BEGIN
+      UserNameFound := User.GET(USERSECURITYID) and (User."Full Name" <> '');
+
+      case GetTimeOfDay of
+        TimeOfDay::Morning:
+          if UserNameFound then
+            GreetingText := STRSUBSTNO(MorningGreetingTxt,User."Full Name")
+          else
+            GreetingText := SimpleMorningGreetingTxt;
+        TimeOfDay::LateMorning:
+          if UserNameFound then
+            GreetingText := STRSUBSTNO(LateMorningGreetingTxt,User."Full Name")
+          else
+            GreetingText := SimpleLateMorningGreetingTxt;
+        TimeOfDay::Noon:
+          if UserNameFound then
+            GreetingText := STRSUBSTNO(NoonGreetingTxt,User."Full Name")
+          else
+            GreetingText := SimpleNoonGreetingTxt;
+        TimeOfDay::Afternoon:
+          if UserNameFound then
+            GreetingText := STRSUBSTNO(AfternoonGreetingTxt,User."Full Name")
+          else
+            GreetingText := SimpleAfternoonGreetingTxt;
+        TimeOfDay::Evening:
+          if UserNameFound then
+            GreetingText := STRSUBSTNO(EveningGreetingTxt,User."Full Name")
+          else
+            GreetingText := SimpleEveningGreetingTxt;
+      end
+    END;
+
+    LOCAL PROCEDURE GetTimeOfDay@6() : Integer;
+    VAR
+      TypeHelper@1001 : Codeunit "Type Helper";
+      TimezoneOffset@1000 : Duration;
+      Hour@1005 : Integer;
+    BEGIN
+      if not TypeHelper.GetUserTimezoneOffset(TimezoneOffset) then
+        TimezoneOffset := 0;
+
+      EVALUATE(Hour,TypeHelper.FormatUtcDateTime(TypeHelper.GetCurrUTCDateTime,'HH',''));
+      Hour += TimezoneOffset div (60 * 60 * 1000);
+
+      case Hour of
+        0..10:
+          exit(TimeOfDay::Morning);
+        11:
+          exit(TimeOfDay::LateMorning);
+        12..13:
+          exit(TimeOfDay::Noon);
+        14..18:
+          exit(TimeOfDay::Afternoon);
+        19..23:
+          exit(TimeOfDay::Evening);
+      end;
+    END;
+
+    PROCEDURE ShouldUserGreetingBeVisible@1() : Boolean;
+    VAR
+      SessionEvent@1000 : Record "Session Event";
+      Duration@1001 : Duration;
+      LimitDate@1002 : DateTime;
+    BEGIN
+      SessionEvent.SETRANGE("User ID",USERID);
+      SessionEvent.SETRANGE("Event Type",SessionEvent."Event Type"::Logon);
+      SessionEvent.SETFILTER("Client Type",'%1|%2|%3|%4|%5',
+        SessionEvent."Client Type"::Desktop,
+        SessionEvent."Client Type"::"Web Client",
+        SessionEvent."Client Type"::Phone,
+        SessionEvent."Client Type"::Tablet,
+        SessionEvent."Client Type"::"Windows Client");
+
+      Duration := 10 * 60 * 1000; // 10 min
+      LimitDate := CREATEDATETIME(TODAY,TIME - Duration);
+      SessionEvent.SETFILTER("Event Datetime",'>=%1',LimitDate);
+
+      exit(not SessionEvent.ISEMPTY); // greet if login is in the last 10 minutes, then stop greeting
+    END;
+
+    [External]
+    PROCEDURE GetMaxQualifierLength@5() : Integer;
+    BEGIN
+      exit(50);
+    END;
+
+    [External]
+    PROCEDURE GetMaxPayloadLength@10() : Integer;
+    BEGIN
+      exit(75);
+    END;
+
+    PROCEDURE ScheduleTask@11(CodeunitId@1002 : Integer);
+    VAR
+      JobQueueEntry@1000 : Record "Job Queue Entry";
+      DummyRecordId@1001 : RecordID;
+    BEGIN
+      OnBeforeScheduleTask(CodeunitId);
+      if not TASKSCHEDULER.CANCREATETASK then
+        exit;
+
+      JobQueueEntry.SETRANGE("Object Type to Run",JobQueueEntry."Object Type to Run"::Codeunit);
+      JobQueueEntry.SETRANGE("Object ID to Run",CodeunitId);
+      JobQueueEntry.SETRANGE(Status,JobQueueEntry.Status::"In Process");
+      if not JobQueueEntry.ISEMPTY then
+        exit;
+
+      JobQueueEntry.ScheduleJobQueueEntry(CodeunitId,DummyRecordId);
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeScheduleTask@12(CodeunitId@1000 : Integer);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

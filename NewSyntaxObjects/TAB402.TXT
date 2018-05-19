@@ -1,0 +1,33 @@
+OBJECT Table 402 Change Log Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160111.803T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Change Log Setup;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=ENU=Primary Key }
+    { 2   ;   ;Change Log Activated;Boolean       ;CaptionML=ENU=Change Log Activated }
+  }
+  KEYS
+  {
+    {    ;"Primary Key"                           ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

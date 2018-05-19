@@ -1,0 +1,182 @@
+OBJECT Report 10084 Void/Transmit Elec. Payments
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160438.303T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Void/Transmit Electronic Payments;
+    ProcessingOnly=true;
+    OnPreReport=BEGIN
+                  with BankAccount do begin
+                    GET("No.");
+                    TESTFIELD(Blocked,false);
+                    TESTFIELD("Currency Code",'');  // local currency only
+                    TESTFIELD("Export Format");
+
+                    if UsageType <> UsageType::Transmit then
+                      if not CONFIRM(Text000,
+                           false,
+                           UsageType,
+                           TABLECAPTION,
+                           "No.")
+                      then
+                        CurrReport.QUIT;
+                  end;
+                END;
+
+  }
+  DATASET
+  {
+    { 7024;    ;DataItem;Gen. Journal Line   ;
+               DataItemTable="Gen. Journal Line";
+               DataItemTableView=SORTING("Journal Template Name","Journal Batch Name","Line No.") WHERE("Document Type"=FILTER(Payment|Refund),"Bank Payment Type"=FILTER("Electronic Payment"|"Electronic Payment-IAT"),"Check Printed"=CONST(true),"Check Exported"=CONST(true),"Check Transmitted"=CONST(false));
+               OnPreDataItem=BEGIN
+                               FirstTime := true;
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  if "Account Type" = "Account Type"::"Bank Account" then begin
+                                    if "Account No." <> BankAccount."No." then
+                                      CurrReport.SKIP;
+                                  end else
+                                    if "Bal. Account Type" = "Bal. Account Type"::"Bank Account" then begin
+                                      if "Bal. Account No." <> BankAccount."No." then
+                                        CurrReport.SKIP;
+                                    end else
+                                      CurrReport.SKIP;
+
+                                  if FirstTime then begin
+                                    case UsageType of
+                                      UsageType::Void:
+                                        begin
+                                          if "Check Transmitted" then
+                                            ERROR(Text001);
+                                        end;
+                                      UsageType::Transmit:
+                                        begin
+                                          if not RTCConfirmTransmit then
+                                            exit;
+                                          if "Check Transmitted" then
+                                            ERROR(Text003);
+                                        end;
+                                    end;
+                                    FirstTime := false;
+                                  end;
+                                  CheckManagement.ProcessElectronicPayment("Gen. Journal Line",UsageType);
+
+                                  if UsageType = UsageType::Void then begin
+                                    "Check Exported" := false;
+                                    "Check Printed" := false;
+                                    "Document No." := '';
+                                    CleanEFTExportTable("Gen. Journal Line");
+                                  end else
+                                    "Check Transmitted" := true;
+
+                                  MODIFY;
+                                END;
+                                 }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+      SaveValues=true;
+      OnOpenPage=BEGIN
+                   DisplayUsageType := UsageType;
+                   if DisplayUsageType = 0 then
+                     ERROR(Text004);
+                 END;
+
+    }
+    CONTROLS
+    {
+      { 1900000001;0;Container;
+                  Name=Control1900000001;
+                  ContainerType=ContentArea }
+
+      { 1900000002;1;Group  ;
+                  Name=Options;
+                  CaptionML=ENU=Options }
+
+      { 1   ;2   ;Field     ;
+                  Name="BankAccount.""No.""";
+                  CaptionML=ENU=Bank Account No.;
+                  ToolTipML=ENU=Specifies the bank account that the payment is transmitted to.;
+                  ApplicationArea=#Basic,#Suite;
+                  SourceExpr=BankAccount."No.";
+                  TableRelation="Bank Account" }
+
+      { 3   ;2   ;Field     ;
+                  Name=DisplayUsageType;
+                  CaptionML=ENU=E-Pay Operation;
+                  ToolTipML=ENU=Specifies if you want to transmit or void the electronic payment file. The Transmit option produces an electronic payment file to be transmitted to your bank for processing. The Void option voids the exported file. Confirm that the correct selection has been made before you process the electronic payment file.;
+                  OptionCaptionML=ENU=,Void,Transmit;
+                  ApplicationArea=#Basic,#Suite;
+                  SourceExpr=DisplayUsageType;
+                  Editable=FALSE }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      BankAccount@1000 : Record "Bank Account";
+      CheckManagement@1001 : Codeunit CheckManagement;
+      FirstTime@1004 : Boolean;
+      UsageType@1005 : ',Void,Transmit';
+      DisplayUsageType@1006 : ',Void,Transmit';
+      Text000@1007 : TextConst 'ENU=Are you SURE you want to %1 all of the Electronic Payments written against %2 %3?';
+      Text001@1008 : TextConst 'ENU=The export file has already been transmitted. You can no longer void these entries.';
+      Text003@1010 : TextConst 'ENU=The export file has already been transmitted.';
+      Text004@1020001 : TextConst 'ENU=This process can only be run from the Payment Journal';
+      Text005@1480000 : TextConst 'ENU=Has export file been successfully transmitted?';
+
+    [External]
+    PROCEDURE SetUsageType@2(NewUsageType@1000 : ',Void,Transmit');
+    BEGIN
+      UsageType := NewUsageType;
+    END;
+
+    [External]
+    PROCEDURE RTCConfirmTransmit@1480000() : Boolean;
+    BEGIN
+      if not CONFIRM(Text005,false) then
+        exit(false);
+
+      exit(true);
+    END;
+
+    [External]
+    PROCEDURE SetBankAccountNo@1020000(AccountNumber@1020000 : Code[20]);
+    BEGIN
+      BankAccount.GET(AccountNumber);
+    END;
+
+    LOCAL PROCEDURE CleanEFTExportTable@1020001(VAR GenJournalLine@1020000 : Record "Gen. Journal Line");
+    VAR
+      EFTExport@1020001 : Record "EFT Export";
+    BEGIN
+      EFTExport.SETRANGE("Journal Template Name",GenJournalLine."Journal Template Name");
+      EFTExport.SETRANGE("Journal Batch Name",GenJournalLine."Journal Batch Name");
+      EFTExport.SETRANGE("Line No.",GenJournalLine."Line No.");
+      if EFTExport.FINDLAST then
+        EFTExport.DELETE;
+    END;
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

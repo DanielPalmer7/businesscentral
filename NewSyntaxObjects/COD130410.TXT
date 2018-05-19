@@ -1,0 +1,50 @@
+OBJECT Codeunit 130410 Sys. Warmup Test Runner
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Subtype=TestRunner;
+    TestIsolation=Codeunit;
+    OnRun=BEGIN
+            CODEUNIT.RUN(CODEUNIT::"Sys. Warmup Scenarios");
+          END;
+
+  }
+  CODE
+  {
+
+    [EventSubscriber(Codeunit,1,OnAfterCompanyOpen,"",Skip,Skip)]
+    LOCAL PROCEDURE WarmUpOnAfterCompanyOpen@1();
+    VAR
+      O365GettingStarted@1001 : Record "O365 Getting Started";
+      CompanyInformationMgt@1002 : Codeunit "Company Information Mgt.";
+      PermissionManager@1003 : Codeunit "Permission Manager";
+    BEGIN
+      if not GUIALLOWED then
+        exit;
+
+      if not CompanyInformationMgt.IsDemoCompany then
+        exit;
+
+      if not PermissionManager.SoftwareAsAService then
+        exit;
+
+      if not O365GettingStarted.ISEMPTY then
+        exit;
+
+      if not TASKSCHEDULER.CANCREATETASK then
+        exit;
+
+      TASKSCHEDULER.CREATETASK(CODEUNIT::"Sys. Warmup Test Runner",0,true,COMPANYNAME,CURRENTDATETIME + 10000); // Add 10s
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

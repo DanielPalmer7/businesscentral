@@ -1,0 +1,193 @@
+OBJECT Codeunit 43 LanguageManagement
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      SavedGlobalLanguageID@1000 : Integer;
+
+    [Internal]
+    PROCEDURE SetGlobalLanguage@1();
+    VAR
+      TempLanguage@1001 : TEMPORARY Record "Windows Language";
+    BEGIN
+      GetApplicationLanguages(TempLanguage);
+
+      with TempLanguage do begin
+        SETCURRENTKEY(Name);
+        if GET(GLOBALLANGUAGE) then;
+        PAGE.RUN(PAGE::"Application Languages",TempLanguage);
+      end;
+    END;
+
+    PROCEDURE GetApplicationLanguages@2(VAR TempLanguage@1034 : TEMPORARY Record "Windows Language");
+    VAR
+      Language@1035 : Record "Windows Language";
+    BEGIN
+      with Language do begin
+        GetLanguageFilters(Language);
+        if FINDSET then
+          repeat
+            TempLanguage := Language;
+            TempLanguage.INSERT;
+          until NEXT = 0;
+      end;
+    END;
+
+    [Internal]
+    PROCEDURE ValidateApplicationLanguage@3(LanguageID@1037 : Integer);
+    VAR
+      TempLanguage@1038 : TEMPORARY Record "Windows Language";
+    BEGIN
+      GetApplicationLanguages(TempLanguage);
+
+      with TempLanguage do begin
+        SETRANGE("Language ID",LanguageID);
+        FINDFIRST;
+      end;
+    END;
+
+    [Internal]
+    PROCEDURE LookupApplicationLanguage@4(VAR LanguageID@1040 : Integer);
+    VAR
+      TempLanguage@1039 : TEMPORARY Record "Windows Language";
+    BEGIN
+      GetApplicationLanguages(TempLanguage);
+
+      with TempLanguage do begin
+        if GET(LanguageID) then;
+        if PAGE.RUNMODAL(PAGE::"Windows Languages",TempLanguage) = ACTION::LookupOK then
+          LanguageID := "Language ID";
+      end;
+    END;
+
+    [External]
+    PROCEDURE LookupWindowsLocale@5(VAR LocaleID@1000 : Integer);
+    VAR
+      WindowsLanguage@1002 : Record "Windows Language";
+    BEGIN
+      with WindowsLanguage do begin
+        SETCURRENTKEY(Name);
+        if PAGE.RUNMODAL(PAGE::"Windows Languages",WindowsLanguage) = ACTION::LookupOK then
+          LocaleID := "Language ID";
+      end;
+    END;
+
+    PROCEDURE SetGlobalLanguageByCode@150(LanguageCode@1000 : Code[10]);
+    VAR
+      Language@1001 : Record Language;
+    BEGIN
+      if LanguageCode = '' then
+        exit;
+      SavedGlobalLanguageID := GLOBALLANGUAGE;
+      GLOBALLANGUAGE(Language.GetLanguageID(LanguageCode));
+    END;
+
+    PROCEDURE RestoreGlobalLanguage@151();
+    BEGIN
+      if SavedGlobalLanguageID <> 0 then begin
+        GLOBALLANGUAGE(SavedGlobalLanguageID);
+        SavedGlobalLanguageID := 0;
+      end;
+    END;
+
+    LOCAL PROCEDURE GetLanguageFilters@6(VAR WindowsLanguage@1000 : Record "Windows Language");
+    VAR
+      CompanyInformation@1020001 : Record "Company Information";
+      IdentityManagement@1020000 : Codeunit "Identity Management";
+      EnglishUnitedStatesCode@1020002 : Integer;
+      EnglishCanadaCode@1020003 : Integer;
+      FrenchCanadaCode@1020004 : Integer;
+    BEGIN
+      WindowsLanguage.SETRANGE("Localization Exist",true);
+      WindowsLanguage.SETRANGE("Globally Enabled",true);
+
+      if IdentityManagement.IsInvAppId then begin
+        if WindowsLanguage.COUNT <= 1 then
+          exit;
+
+        EnglishUnitedStatesCode := 1033;
+        EnglishCanadaCode := 4105;
+        FrenchCanadaCode := 3084;
+        if CompanyInformation.IsCanada then
+          // Filter in EN-CA and FR-CA in the Canadian build
+          WindowsLanguage.SETFILTER("Language ID",'%1|%2',EnglishCanadaCode,FrenchCanadaCode)
+        else
+          // Filter in US-EN in the US build
+          WindowsLanguage.SETFILTER("Language ID",'%1',EnglishUnitedStatesCode);
+      end;
+    END;
+
+    [External]
+    PROCEDURE GetWindowsLanguageNameFromLanguageCode@12(LanguageCode@1000 : Code[10]) : Text;
+    VAR
+      Language@1002 : Record Language;
+    BEGIN
+      if LanguageCode = '' then
+        exit('');
+
+      Language.SETAUTOCALCFIELDS("Windows Language Name");
+      if Language.GET(LanguageCode) then
+        exit(Language."Windows Language Name");
+
+      exit('');
+    END;
+
+    [External]
+    PROCEDURE GetWindowsLanguageIDFromLanguageName@17(LanguageName@1000 : Text) : Integer;
+    VAR
+      WindowsLanguage@1001 : Record "Windows Language";
+    BEGIN
+      if LanguageName = '' then
+        exit(0);
+      WindowsLanguage.SETRANGE("Localization Exist",true);
+      WindowsLanguage.SETFILTER(Name,'@*' + COPYSTR(LanguageName,1,MAXSTRLEN(WindowsLanguage.Name)) + '*');
+      if not WindowsLanguage.FINDFIRST then
+        exit(0);
+
+      exit(WindowsLanguage."Language ID");
+    END;
+
+    [External]
+    PROCEDURE GetLanguageCodeFromLanguageID@20(LanguageID@1000 : Integer) : Code[10];
+    VAR
+      Language@1001 : Record Language;
+    BEGIN
+      if LanguageID = 0 then
+        exit('');
+      Language.SETRANGE("Windows Language ID",LanguageID);
+      if Language.FINDFIRST then
+        exit(Language.Code);
+      exit('');
+    END;
+
+    [External]
+    PROCEDURE GetWindowsLanguageNameFromLanguageID@7(LanguageID@1000 : Integer) : Text;
+    VAR
+      Language@1002 : Record Language;
+    BEGIN
+      if LanguageID = 0 then
+        exit('');
+
+      Language.SETRANGE("Windows Language ID",LanguageID);
+      if Language.FINDFIRST then
+        exit(Language."Windows Language Name");
+      exit('');
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

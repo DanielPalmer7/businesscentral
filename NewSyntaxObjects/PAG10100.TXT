@@ -1,0 +1,70 @@
+OBJECT Page 10100 Account Identifiers
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161719.653T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Account Identifiers;
+    SourceTable="Account Identifier";
+    PageType=Card;
+    OnNewRecord=BEGIN
+                  Company.GET;
+                  "Business No." := Company."Federal ID No.";
+                END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1030000;1;Group     ;
+                Name=Control1030000;
+                GroupType=Repeater }
+
+    { 1030001;2;Field     ;
+                Name="Business No.";
+                ToolTipML=ENU=Specifies the business number for the account identifier.;
+                SourceExpr="Business No.";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 1030002;2;Field     ;
+                Name="Program Identifier";
+                ToolTipML=ENU=Specifies the program identifier.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Program Identifier";
+                ImplicitType=Option }
+
+    { 1030003;2;Field     ;
+                Name="Reference No.";
+                ToolTipML=ENU=Specifies the reference number for the account identifier.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Reference No.";
+                ImplicitType=Code4 }
+
+    { 1030004;2;Field     ;
+                Name="Business Number";
+                ToolTipML=ENU=Specifies the business number for the account identifier.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Business Number";
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+  }
+  CODE
+  {
+    VAR
+      Company@1030000 : Record "Company Information";
+
+    BEGIN
+    END.
+  }
+}
+

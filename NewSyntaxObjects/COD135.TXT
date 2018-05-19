@@ -1,0 +1,26 @@
+OBJECT Codeunit 135 Retrieve Document From OCR
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Incoming Document";
+    OnRun=VAR
+            SendIncomingDocumentToOCR@1000 : Codeunit "Send Incoming Document to OCR";
+          BEGIN
+            SendIncomingDocumentToOCR.RetrieveDocFromOCR(Rec);
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,56 @@
+OBJECT Page 2195 O365 Country/Region Card
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161406.310T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Country/Region;
+    LinksAllowed=false;
+    SourceTable="O365 Country/Region";
+    PageType=Card;
+    SourceTableTemporary=true;
+    OnInsertRecord=BEGIN
+                     O365SalesManagement.InsertNewCountryCode(Rec);
+                   END;
+
+    OnModifyRecord=BEGIN
+                     O365SalesManagement.ModifyCountryCode(xRec,Rec);
+                   END;
+
+  }
+  CONTROLS
+  {
+    { 1000;0   ;Container ;
+                Name=Control1000;
+                ContainerType=ContentArea }
+
+    { 1002;1   ;Field     ;
+                Name=Code;
+                ToolTipML=ENU=Specifies the ISO code of the country or region.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Code;
+                ImplicitType=Code10 }
+
+    { 1003;1   ;Field     ;
+                Name=Name;
+                ToolTipML=ENU=Specifies the name of the country or region.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Name;
+                ImplicitType=Text50 }
+
+  }
+  CODE
+  {
+    VAR
+      O365SalesManagement@1000 : Codeunit "O365 Sales Management";
+
+    BEGIN
+    END.
+  }
+}
+

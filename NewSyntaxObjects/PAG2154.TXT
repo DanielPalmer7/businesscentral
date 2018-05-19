@@ -1,0 +1,106 @@
+OBJECT Page 2154 O365 Payment Method List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161404.587T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Payment Methods;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    LinksAllowed=false;
+    SourceTable="O365 Payment Method";
+    PageType=List;
+    SourceTableTemporary=true;
+    ShowFilter=false;
+    OnOpenPage=BEGIN
+                 RefreshRecords;
+               END;
+
+    OnFindRecord=BEGIN
+                   RefreshRecords;
+
+                   exit(FIND(Which));
+                 END;
+
+    ActionList=ACTIONS
+    {
+      { 5       ;    ;ActionContainer;
+                      Name=ActionContainer5;
+                      ActionContainerType=ActionItems }
+      { 8       ;1   ;Action    ;
+                      Name=NewPaymentMethod;
+                      CaptionML=ENU=New;
+                      ToolTipML=ENU=Create a new payment term.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Invoicing-MDL-New;
+                      PromotedCategory=Process;
+                      PromotedOnly=true;
+                      RunPageMode=Create;
+                      OnAction=BEGIN
+                                 if PAGE.RUNMODAL(PAGE::"BC O365 Payment Method Card") = ACTION::LookupOK then;
+                               END;
+                                }
+      { 7       ;1   ;Action    ;
+                      Name=EditPaymentMethod;
+                      CaptionML=ENU=Edit;
+                      ToolTipML=ENU=Edit this payment term;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Edit;
+                      Scope=Repeater;
+                      OnAction=VAR
+                                 PaymentMethod@1001 : Record "Payment Method";
+                                 BCO365PaymentMethodCard@1000 : Page "BC O365 Payment Method Card";
+                               BEGIN
+                                 if PaymentMethod.GET(Code) then begin
+                                   BCO365PaymentMethodCard.SetPaymentMethod(PaymentMethod);
+                                   BCO365PaymentMethodCard.LOOKUPMODE(true);
+                                   if BCO365PaymentMethodCard.RUNMODAL = ACTION::LookupOK then;
+                                 end;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=Code;
+                CaptionML=ENU=Short name;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Code;
+                ImplicitType=Code10 }
+
+    { 4   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the payment method.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Description;
+                ImplicitType=Text100 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

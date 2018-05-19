@@ -1,0 +1,32 @@
+OBJECT Codeunit 1446 Headline RC Team Member
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=VAR
+            HeadlineRCTeamMember@1000 : Record "Headline RC Team Member";
+          BEGIN
+            HeadlineRCTeamMember.GET;
+            WORKDATE := HeadlineRCTeamMember."Workdate for computations";
+            OnComputeHeadlines;
+          END;
+
+  }
+  CODE
+  {
+
+    [Integration]
+    LOCAL PROCEDURE OnComputeHeadlines@1();
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

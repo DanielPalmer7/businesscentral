@@ -1,0 +1,61 @@
+OBJECT Report 5173 Del. Blanket Purch. Order Ver.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160350.27T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Delete Archived Blanket Purchase Order Versions;
+    ProcessingOnly=true;
+    OnPostReport=BEGIN
+                   MESSAGE(ArchivedVersionsDeletedMsg);
+                 END;
+
+  }
+  DATASET
+  {
+    { 6075;    ;DataItem;Purchase Header Archive;
+               DataItemTable="Purchase Header Archive";
+               DataItemTableView=SORTING("Document Type","No.","Doc. No. Occurrence","Version No.") WHERE("Document Type"=CONST("Blanket Order"),"Interaction Exist"=CONST(false));
+               OnAfterGetRecord=VAR
+                                  PurchHeader@1000 : Record "Purchase Header";
+                                BEGIN
+                                  PurchHeader.SETRANGE("Document Type",PurchHeader."Document Type"::"Blanket Order");
+                                  PurchHeader.SETRANGE("No.","No.");
+                                  PurchHeader.SETRANGE("Doc. No. Occurrence","Doc. No. Occurrence");
+                                  if not PurchHeader.FINDFIRST then
+                                    DELETE(true);
+                                END;
+
+               ReqFilterFields="No.","Date Archived","Buy-from Vendor No." }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      ArchivedVersionsDeletedMsg@1000 : TextConst 'ENU=Archived versions deleted.';
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

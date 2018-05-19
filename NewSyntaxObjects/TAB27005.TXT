@@ -1,0 +1,97 @@
+OBJECT Table 27005 CFDI Documents
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160238.347T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields="No.";
+    CaptionML=ENU=CFDI Documents;
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;CaptionML=ENU=No. }
+    { 5   ;   ;Document Table ID   ;Integer       ;CaptionML=ENU=Document Table ID }
+    { 10  ;   ;Prepayment          ;Boolean       ;CaptionML=ENU=Prepayment }
+    { 15  ;   ;Reversal            ;Boolean       ;CaptionML=ENU=Reversal }
+    { 10019;  ;Electronic Document Sent;Boolean   ;CaptionML=ENU=Electronic Document Sent;
+                                                   Editable=false }
+    { 10020;  ;Original Document XML;BLOB         ;CaptionML=ENU=Original Document XML }
+    { 10021;  ;No. of E-Documents Sent;Integer    ;CaptionML=ENU=No. of E-Documents Sent;
+                                                   Editable=false }
+    { 10022;  ;Original String     ;BLOB          ;CaptionML=ENU=Original String }
+    { 10023;  ;Digital Stamp SAT   ;BLOB          ;CaptionML=ENU=Digital Stamp SAT }
+    { 10024;  ;Certificate Serial No.;Text250     ;CaptionML=ENU=Certificate Serial No.;
+                                                   Editable=false }
+    { 10025;  ;Signed Document XML ;BLOB          ;CaptionML=ENU=Signed Document XML }
+    { 10026;  ;Digital Stamp PAC   ;BLOB          ;CaptionML=ENU=Digital Stamp PAC }
+    { 10030;  ;Electronic Document Status;Option  ;CaptionML=ENU=Electronic Document Status;
+                                                   OptionCaptionML=ENU=" ,Stamp Received,Sent,Canceled,Stamp Request Error,Cancel Error";
+                                                   OptionString=" ","Stamp Received",Sent,Canceled,"Stamp Request Error","Cancel Error";
+                                                   Editable=false }
+    { 10031;  ;Date/Time Stamped   ;Text50        ;CaptionML=ENU=Date/Time Stamped;
+                                                   Editable=false }
+    { 10032;  ;Date/Time Sent      ;Text50        ;CaptionML=ENU=Date/Time Sent;
+                                                   Editable=false }
+    { 10033;  ;Date/Time Canceled  ;Text50        ;CaptionML=ENU=Date/Time Canceled;
+                                                   Editable=false }
+    { 10035;  ;Error Code          ;Code10        ;CaptionML=ENU=Error Code;
+                                                   Editable=false }
+    { 10036;  ;Error Description   ;Text250       ;CaptionML=ENU=Error Description;
+                                                   Editable=false }
+    { 10040;  ;PAC Web Service Name;Text50        ;CaptionML=ENU=PAC Web Service Name;
+                                                   Editable=false }
+    { 10041;  ;QR Code             ;BLOB          ;CaptionML=ENU=QR Code }
+    { 10042;  ;Fiscal Invoice Number PAC;Text50   ;CaptionML=ENU=Fiscal Invoice Number PAC;
+                                                   Editable=false }
+    { 10043;  ;Date/Time First Req. Sent;Text50   ;CaptionML=ENU=Date/Time First Req. Sent;
+                                                   Editable=false }
+  }
+  KEYS
+  {
+    {    ;"No.","Document Table ID",Prepayment,Reversal;
+                                                   Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      NoStampErr@1020000 : TextConst '@@@="%1=The document number.";ENU=There is no electronic stamp for document no. %1.';
+
+    [External]
+    PROCEDURE ExportEDocument@1020000();
+    VAR
+      TempBlob@1020000 : Record TempBlob;
+      FileManagement@1020001 : Codeunit "File Management";
+    BEGIN
+      CALCFIELDS("Signed Document XML");
+      if "Signed Document XML".HASVALUE then begin
+        TempBlob.Blob := "Signed Document XML";
+        FileManagement.BLOBExport(TempBlob,"No." + '.xml',true);
+      end else
+        ERROR(NoStampErr,"No.");
+    END;
+
+    [External]
+    PROCEDURE SendEDocument@1020001();
+    VAR
+      EInvoiceMgt@1020001 : Codeunit "E-Invoice Mgt.";
+      LoCRecRef@1020000 : RecordRef;
+      EDocAction@1020002 : '"Request Stamp",Send,Cancel';
+    BEGIN
+      LoCRecRef.GETTABLE(Rec);
+      EInvoiceMgt.EDocActionValidation(EDocAction::Send,"Electronic Document Status");
+      EInvoiceMgt.Send(LoCRecRef,true);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

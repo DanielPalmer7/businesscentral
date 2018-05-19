@@ -1,0 +1,74 @@
+OBJECT Codeunit 10012 Ship-Post + Print
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160926.537T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Sales Header";
+    OnRun=BEGIN
+            SalesHeader.COPY(Rec);
+            Code;
+            Rec := SalesHeader;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      SalesHeader@1020007 : Record "Sales Header";
+      SalesShptHeader@1020006 : Record "Sales Shipment Header";
+      SalesInvHeader@1020005 : Record "Sales Invoice Header";
+      SalesCrMemoHeader@1020004 : Record "Sales Cr.Memo Header";
+      ReturnRcptHeader@1020003 : Record "Return Receipt Header";
+      ReportSelection@1020002 : Record "Report Selections";
+      SalesPost@1020001 : Codeunit "Sales-Post";
+      Text1020001@1020009 : TextConst 'ENU=Do you want to ship and print the %1?';
+
+    LOCAL PROCEDURE Code@1020000();
+    BEGIN
+      with SalesHeader do
+        if "Document Type" = "Document Type"::Order then begin
+          if not CONFIRM(Text1020001,false,"Document Type") then begin
+            "Shipping No." := '-1';
+            exit;
+          end;
+          Ship := true;
+          Invoice := false;
+          SalesPost.RUN(SalesHeader);
+
+          SalesShptHeader."No." := "Last Shipping No.";
+          SalesShptHeader.SETRECFILTER;
+          PrintReport(ReportSelection.Usage::"S.Shipment");
+        end;
+    END;
+
+    LOCAL PROCEDURE PrintReport@1020001(ReportUsage@1020000 : Integer);
+    BEGIN
+      ReportSelection.RESET;
+      ReportSelection.SETRANGE(Usage,ReportUsage);
+      ReportSelection.FIND('-');
+      repeat
+        ReportSelection.TESTFIELD("Report ID");
+        case ReportUsage of
+          ReportSelection.Usage::"S.Invoice":
+            REPORT.RUN(ReportSelection."Report ID",false,false,SalesInvHeader);
+          ReportSelection.Usage::"S.Cr.Memo":
+            REPORT.RUN(ReportSelection."Report ID",false,false,SalesCrMemoHeader);
+          ReportSelection.Usage::"S.Shipment":
+            REPORT.RUN(ReportSelection."Report ID",false,false,SalesShptHeader);
+          ReportSelection.Usage::"S.Ret.Rcpt.":
+            REPORT.RUN(ReportSelection."Report ID",false,false,ReturnRcptHeader);
+        end;
+      until ReportSelection.NEXT = 0;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

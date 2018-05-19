@@ -1,0 +1,42 @@
+OBJECT Table 2000000080 Page Data Personalization
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.760T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 3   ;   ;User SID            ;GUID          ;TableRelation=User."User Security ID" }
+    { 6   ;   ;User ID             ;Code50        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(User."User Name" WHERE ("User Security ID"=FIELD("User SID"))) }
+    { 9   ;   ;Object Type         ;Option        ;OptionString=,,,Report,,,XMLport,,Page }
+    { 12  ;   ;Object ID           ;Integer       ;TableRelation=Object.ID WHERE (Type=FIELD("Object Type")) }
+    { 15  ;   ;Date                ;Date           }
+    { 18  ;   ;Time                ;Time           }
+    { 21  ;   ;Personalization ID  ;Code40         }
+    { 24  ;   ;ValueName           ;Code40         }
+    { 27  ;   ;Value               ;BLOB           }
+  }
+  KEYS
+  {
+    {    ;"User SID","Object Type","Object ID","Personalization ID",ValueName;
+                                                   Clustered=true }
+    {    ;Date                                     }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

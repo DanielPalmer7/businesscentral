@@ -1,0 +1,428 @@
+OBJECT Page 10041 Sales Invoice Stats.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161716.327T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Sales Invoice Statistics;
+    SourceTable="Sales Invoice Header";
+    PageType=ListPlus;
+    OnAfterGetRecord=VAR
+                       CostCalcMgt@1001 : Codeunit "Cost Calculation Management";
+                       TempSalesTaxAmtLine@1020002 : TEMPORARY Record "Sales Tax Amount Line";
+                       PrevPrintOrder@1020001 : Integer;
+                       PrevTaxPercent@1020000 : Decimal;
+                     BEGIN
+                       CLEARALL;
+                       TaxArea.GET("Tax Area Code");
+
+                       if "Currency Code" = '' then
+                         Currency.InitRoundingPrecision
+                       else
+                         Currency.GET("Currency Code");
+
+                       SalesInvLine.SETRANGE("Document No.","No.");
+
+                       if SalesInvLine.FIND('-') then
+                         repeat
+                           CustAmount := CustAmount + SalesInvLine.Amount;
+                           AmountInclTax := AmountInclTax + SalesInvLine."Amount Including VAT";
+                           if "Prices Including VAT" then
+                             InvDiscAmount := InvDiscAmount + SalesInvLine."Inv. Discount Amount" / (1 + SalesInvLine."VAT %" / 100)
+                           else
+                             InvDiscAmount := InvDiscAmount + SalesInvLine."Inv. Discount Amount";
+                           CostLCY := CostLCY + (SalesInvLine.Quantity * SalesInvLine."Unit Cost (LCY)");
+                           LineQty := LineQty + SalesInvLine.Quantity;
+                           TotalNetWeight := TotalNetWeight + (SalesInvLine.Quantity * SalesInvLine."Net Weight");
+                           TotalGrossWeight := TotalGrossWeight + (SalesInvLine.Quantity * SalesInvLine."Gross Weight");
+                           TotalVolume := TotalVolume + (SalesInvLine.Quantity * SalesInvLine."Unit Volume");
+                           if SalesInvLine."Units per Parcel" > 0 then
+                             TotalParcels := TotalParcels + ROUND(SalesInvLine.Quantity / SalesInvLine."Units per Parcel",1,'>');
+                           if SalesInvLine."VAT %" <> TaxPercentage then
+                             if TaxPercentage = 0 then
+                               TaxPercentage := SalesInvLine."VAT %"
+                             else
+                               TaxPercentage := -1;
+                           TotalAdjCostLCY := TotalAdjCostLCY + CostCalcMgt.CalcSalesInvLineCostLCY(SalesInvLine);
+                         until SalesInvLine.NEXT = 0;
+                       TaxAmount := AmountInclTax - CustAmount;
+                       InvDiscAmount := ROUND(InvDiscAmount,Currency."Amount Rounding Precision");
+
+                       if "Currency Code" = '' then
+                         AmountLCY := CustAmount
+                       else
+                         AmountLCY :=
+                           CurrExchRate.ExchangeAmtFCYToLCY(
+                             WORKDATE,"Currency Code",CustAmount,"Currency Factor");
+                       ProfitLCY := AmountLCY - CostLCY;
+                       if AmountLCY <> 0 then
+                         ProfitPct := ROUND(100 * ProfitLCY / AmountLCY,0.1);
+
+                       AdjProfitLCY := AmountLCY - TotalAdjCostLCY;
+                       if AmountLCY <> 0 then
+                         AdjProfitPct := ROUND(100 * AdjProfitLCY / AmountLCY,0.1);
+
+                       if Cust.GET("Bill-to Customer No.") then
+                         Cust.CALCFIELDS("Balance (LCY)")
+                       else
+                         CLEAR(Cust);
+                       if Cust."Credit Limit (LCY)" = 0 then
+                         CreditLimitLCYExpendedPct := 0
+                       else
+                         if Cust."Balance (LCY)" / Cust."Credit Limit (LCY)" < 0 then
+                           CreditLimitLCYExpendedPct := 0
+                         else
+                           if Cust."Balance (LCY)" / Cust."Credit Limit (LCY)" > 1 then
+                             CreditLimitLCYExpendedPct := 10000
+                           else
+                             CreditLimitLCYExpendedPct := ROUND(Cust."Balance (LCY)" / Cust."Credit Limit (LCY)" * 10000,1);
+
+                       SalesTaxCalculate.StartSalesTaxCalculation;
+                       TempSalesTaxLine.DELETEALL;
+                       OnAfterCalculateSalesTax(SalesInvLine,TempSalesTaxLine,TempSalesTaxAmtLine,SalesTaxCalculationOverridden);
+                       if not SalesTaxCalculationOverridden then
+                         if TaxArea."Use External Tax Engine" then
+                           SalesTaxCalculate.CallExternalTaxEngineForDoc(DATABASE::"Sales Invoice Header",0,"No.")
+                         else begin
+                           SalesTaxCalculate.AddSalesInvoiceLines("No.");
+                           SalesTaxCalculate.EndSalesTaxCalculation("Posting Date");
+                         end;
+
+                       SalesTaxCalculate.GetSalesTaxAmountLineTable(TempSalesTaxLine);
+
+                       if not SalesTaxCalculationOverridden then
+                         SalesTaxCalculate.GetSummarizedSalesTaxTable(TempSalesTaxAmtLine);
+
+                       if TaxArea."Country/Region" = TaxArea."Country/Region"::CA then
+                         BreakdownTitle := Text006
+                       else
+                         BreakdownTitle := Text007;
+
+                       with TempSalesTaxAmtLine do begin
+                         RESET;
+                         SETCURRENTKEY("Print Order","Tax Area Code for Key","Tax Jurisdiction Code");
+                         if FIND('-') then
+                           repeat
+                             if ("Print Order" = 0) or
+                                ("Print Order" <> PrevPrintOrder) or
+                                ("Tax %" <> PrevTaxPercent)
+                             then begin
+                               BrkIdx := BrkIdx + 1;
+                               if BrkIdx > ARRAYLEN(BreakdownAmt) then begin
+                                 BrkIdx := BrkIdx - 1;
+                                 BreakdownLabel[BrkIdx] := Text008;
+                               end else
+                                 BreakdownLabel[BrkIdx] := STRSUBSTNO("Print Description","Tax %");
+                             end;
+                             BreakdownAmt[BrkIdx] := BreakdownAmt[BrkIdx] + "Tax Amount";
+                           until NEXT = 0;
+                       end;
+                       CurrPage.Subform.PAGE.SetTempTaxAmountLine(TempSalesTaxLine);
+                       CurrPage.Subform.PAGE.InitGlobals("Currency Code",false,false,false,false,"VAT Base Discount %");
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 36  ;1   ;Group     ;
+                Name=General;
+                CaptionML=ENU=General }
+
+    { 2   ;2   ;Field     ;
+                Name="CustAmount + InvDiscAmount";
+                CaptionML=ENU=Amount;
+                ToolTipML=ENU=Specifies the transaction amount.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CustAmount + InvDiscAmount;
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code" }
+
+    { 6   ;2   ;Field     ;
+                Name=InvDiscAmount;
+                CaptionML=ENU=Inv. Discount Amount;
+                ToolTipML=ENU=Specifies the invoice discount amount for the entire sales document. If the Calc. Inv. Discount field in the Sales & Receivables Setup window is selected, the discount is automatically calculated.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=InvDiscAmount;
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                ImplicitType=Decimal }
+
+    { 12  ;2   ;Field     ;
+                Name=CustAmount;
+                CaptionML=ENU=Total;
+                ToolTipML=ENU=Specifies the total amount less any invoice discount amount and exclusive of tax for the posted document.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CustAmount;
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                ImplicitType=Decimal }
+
+    { 16  ;2   ;Field     ;
+                Name=TaxAmount;
+                CaptionML=ENU=Tax Amount;
+                ToolTipML=ENU=Specifies the tax amount.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TaxAmount;
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                ImplicitType=Decimal }
+
+    { 20  ;2   ;Field     ;
+                Name=AmountInclTax;
+                CaptionML=ENU=Total Incl. Tax;
+                ToolTipML=ENU=Specifies the total amount, including tax, that has been posted as invoiced.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=AmountInclTax;
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                ImplicitType=Decimal }
+
+    { 26  ;2   ;Field     ;
+                Name=AmountLCY;
+                CaptionML=ENU=Sales ($);
+                ToolTipML=ENU=Specifies the sales amount.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=AmountLCY;
+                AutoFormatType=1;
+                ImplicitType=Decimal }
+
+    { 30  ;2   ;Field     ;
+                Name=ProfitLCY;
+                CaptionML=ENU=Original Profit ($);
+                ToolTipML=ENU=Specifies the profit, expressed as an amount, that was associated with the sales order when it was originally posted.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=ProfitLCY;
+                AutoFormatType=1;
+                ImplicitType=Decimal }
+
+    { 43  ;2   ;Field     ;
+                Name=AdjProfitLCY;
+                CaptionML=ENU=Adjusted Profit ($);
+                ToolTipML=ENU=Specifies the difference between the amounts in the Amount and Cost fields on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=AdjProfitLCY;
+                AutoFormatType=1;
+                ImplicitType=Decimal }
+
+    { 32  ;2   ;Field     ;
+                Name=ProfitPct;
+                CaptionML=ENU=Original Profit %;
+                ToolTipML=ENU=Specifies the profit, expressed as a percentage, that was associated with the sales order when it was originally posted.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=1:1;
+                SourceExpr=ProfitPct;
+                ImplicitType=Decimal }
+
+    { 41  ;2   ;Field     ;
+                Name=AdjProfitPct;
+                CaptionML=ENU=Adjusted Profit %;
+                ToolTipML=ENU=Specifies the adjusted profit of the sales order expressed as a percentage.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=1:1;
+                SourceExpr=AdjProfitPct;
+                ImplicitType=Decimal }
+
+    { 3   ;2   ;Field     ;
+                Name=LineQty;
+                CaptionML=ENU=Quantity;
+                ToolTipML=ENU=Specifies the item quantity.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=0:5;
+                SourceExpr=LineQty;
+                ImplicitType=Decimal }
+
+    { 13  ;2   ;Field     ;
+                Name=TotalParcels;
+                CaptionML=ENU=Parcels;
+                ToolTipML=ENU=Specifies the number of parcels on the document.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalParcels;
+                ImplicitType=Decimal }
+
+    { 7   ;2   ;Field     ;
+                Name=TotalNetWeight;
+                CaptionML=ENU=Net Weight;
+                ToolTipML=ENU=Specifies the net weight of items on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalNetWeight;
+                ImplicitType=Decimal }
+
+    { 10  ;2   ;Field     ;
+                Name=TotalGrossWeight;
+                CaptionML=ENU=Gross Weight;
+                ToolTipML=ENU=Specifies the gross weight of items on the document.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalGrossWeight;
+                ImplicitType=Decimal }
+
+    { 17  ;2   ;Field     ;
+                Name=TotalVolume;
+                CaptionML=ENU=Volume;
+                ToolTipML=ENU=Specifies the volume of the invoiced items.;
+                DecimalPlaces=0:5;
+                SourceExpr=TotalVolume;
+                ImplicitType=Decimal }
+
+    { 28  ;2   ;Field     ;
+                Name=CostLCY;
+                CaptionML=ENU=Original Cost ($);
+                ToolTipML=ENU=Specifies the original cost of the items on the sales document.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CostLCY;
+                AutoFormatType=1;
+                ImplicitType=Decimal }
+
+    { 35  ;2   ;Field     ;
+                Name=TotalAdjCostLCY;
+                CaptionML=ENU=Adjusted Cost ($);
+                ToolTipML=ENU=Specifies the adjusted cost of the items on the sales order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAdjCostLCY;
+                AutoFormatType=1;
+                ImplicitType=Decimal }
+
+    { 39  ;2   ;Field     ;
+                Name="TotalAdjCostLCY - CostLCY";
+                CaptionML=ENU=Cost Adjmt. Amount ($);
+                ToolTipML=ENU=Specifies the adjusted cost of the sales order based on the total adjusted cost, total sales, and unit cost.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TotalAdjCostLCY - CostLCY;
+                AutoFormatType=1;
+                OnLookup=BEGIN
+                           LookupAdjmtValueEntries;
+                         END;
+                          }
+
+    { 1020001;2;Field     ;
+                Name=BreakdownTitle;
+                ApplicationArea=#Basic,#Suite;
+                CaptionClass=FORMAT(BreakdownTitle);
+                Editable=FALSE }
+
+    { 1020005;2;Field     ;
+                Name="BreakdownAmt[1]";
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[1];
+                CaptionClass=FORMAT(BreakdownLabel[1]);
+                Editable=FALSE }
+
+    { 1020006;2;Field     ;
+                Name="BreakdownAmt[2]";
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[2];
+                CaptionClass=FORMAT(BreakdownLabel[2]);
+                Editable=FALSE }
+
+    { 1020007;2;Field     ;
+                Name="BreakdownAmt[3]";
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[3];
+                CaptionClass=FORMAT(BreakdownLabel[3]);
+                Editable=FALSE }
+
+    { 1020009;2;Field     ;
+                Name="BreakdownAmt[4]";
+                ApplicationArea=#Basic,#Suite;
+                BlankZero=true;
+                SourceExpr=BreakdownAmt[4];
+                CaptionClass=FORMAT(BreakdownLabel[4]);
+                Editable=FALSE }
+
+    { 18  ;1   ;Part      ;
+                Name=Subform;
+                ApplicationArea=#Basic,#Suite;
+                PagePartID="Sales Tax Lines Subform";
+                Editable=FALSE }
+
+    { 1903289601;1;Group  ;
+                Name=Customer;
+                CaptionML=ENU=Customer }
+
+    { 24  ;2   ;Field     ;
+                Name="Cust.""Balance (LCY)""";
+                CaptionML=ENU=Balance ($);
+                ToolTipML=ENU="Specifies the customer's balance. ";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Cust."Balance (LCY)";
+                AutoFormatType=1 }
+
+    { 21  ;2   ;Field     ;
+                Name="Cust.""Credit Limit (LCY)""";
+                CaptionML=ENU=Credit Limit ($);
+                ToolTipML=ENU=Specifies the customer's credit limit.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Cust."Credit Limit (LCY)";
+                AutoFormatType=1 }
+
+    { 37  ;2   ;Field     ;
+                Name=CreditLimitLCYExpendedPct;
+                ExtendedDatatype=Ratio;
+                CaptionML=ENU=Expended % of Credit Limit ($);
+                ToolTipML=ENU=Specifies how must of the customer's credit is used, expressed as a percentage of the credit limit.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CreditLimitLCYExpendedPct;
+                ImplicitType=Decimal }
+
+  }
+  CODE
+  {
+    VAR
+      CurrExchRate@1002 : Record "Currency Exchange Rate";
+      SalesInvLine@1003 : Record "Sales Invoice Line";
+      Cust@1004 : Record Customer;
+      TempSalesTaxLine@1020001 : TEMPORARY Record "Sales Tax Amount Line";
+      Currency@1022 : Record Currency;
+      TaxArea@1020002 : Record "Tax Area";
+      SalesTaxCalculate@1020000 : Codeunit "Sales Tax Calculate";
+      TotalAdjCostLCY@1023 : Decimal;
+      CustAmount@1006 : Decimal;
+      AmountInclTax@1007 : Decimal;
+      InvDiscAmount@1008 : Decimal;
+      TaxAmount@1009 : Decimal;
+      CostLCY@1010 : Decimal;
+      ProfitLCY@1011 : Decimal;
+      ProfitPct@1012 : Decimal;
+      AdjProfitLCY@1027 : Decimal;
+      AdjProfitPct@1026 : Decimal;
+      LineQty@1013 : Decimal;
+      TotalNetWeight@1014 : Decimal;
+      TotalGrossWeight@1015 : Decimal;
+      TotalVolume@1016 : Decimal;
+      TotalParcels@1017 : Decimal;
+      AmountLCY@1018 : Decimal;
+      CreditLimitLCYExpendedPct@1019 : Decimal;
+      TaxPercentage@1020 : Decimal;
+      BreakdownTitle@1020006 : Text[35];
+      BreakdownLabel@1020005 : ARRAY [4] OF Text[30];
+      BreakdownAmt@1020004 : ARRAY [4] OF Decimal;
+      BrkIdx@1020003 : Integer;
+      Text006@1020009 : TextConst 'ENU=Tax Breakdown:';
+      Text007@1020008 : TextConst 'ENU=Sales Tax Breakdown:';
+      Text008@1020007 : TextConst 'ENU=Other Taxes';
+      SalesTaxCalculationOverridden@1020010 : Boolean;
+
+    [Integration]
+    [External]
+    LOCAL PROCEDURE OnAfterCalculateSalesTax@1020000(VAR SalesInvoiceLine@1020000 : Record "Sales Invoice Line";VAR SalesTaxAmountLine@1020001 : Record "Sales Tax Amount Line";VAR SalesTaxAmountLine2@1020002 : Record "Sales Tax Amount Line";VAR SalesTaxCalculationOverridden@1020003 : Boolean);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

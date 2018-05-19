@@ -1,0 +1,479 @@
+OBJECT Page 6621 Blanket Sales Order Arch. Sub.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161557.153T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Lines;
+    SourceTable="Sales Line Archive";
+    SourceTableView=WHERE("Document Type"=CONST("Blanket Order"));
+    PageType=ListPart;
+    ActionList=ACTIONS
+    {
+      { 57      ;0   ;ActionContainer;
+                      Name=ActionContainer57;
+                      ActionContainerType=ActionItems }
+      { 56      ;1   ;ActionGroup;
+                      Name="&Line";
+                      CaptionML=ENU=&Line;
+                      Image=Line }
+      { 55      ;2   ;Action    ;
+                      Name=Dimensions;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=ENU=Dimensions;
+                      ToolTipML=ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                      ApplicationArea=#Dimensions;
+                      Image=Dimensions;
+                      OnAction=BEGIN
+                                 ShowDimensions;
+                               END;
+                                }
+      { 54      ;2   ;Action    ;
+                      Name="Co&mments";
+                      CaptionML=ENU=Co&mments;
+                      ToolTipML=ENU=View or add comments for the record.;
+                      ApplicationArea=#Advanced;
+                      Image=ViewComments;
+                      OnAction=BEGIN
+                                 ShowLineComments;
+                               END;
+                                }
+      { 53      ;2   ;Action    ;
+                      Name=DocumentLineTracking;
+                      CaptionML=ENU=Document &Line Tracking;
+                      ToolTipML=ENU=View related open, posted, or archived documents or document lines.;
+                      ApplicationArea=#Advanced;
+                      OnAction=BEGIN
+                                 ShowDocumentLineTracking;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 51  ;1   ;Group     ;
+                Name=Control51;
+                GroupType=Repeater }
+
+    { 50  ;2   ;Field     ;
+                Name=Type;
+                ToolTipML=ENU=Specifies the entry type.;
+                ApplicationArea=#Advanced;
+                SourceExpr=Type;
+                ImplicitType=Option }
+
+    { 49  ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the archived sales order.;
+                ApplicationArea=#Advanced;
+                SourceExpr="No.";
+                ImplicitType=Code20 }
+
+    { 48  ;2   ;Field     ;
+                Name="Cross-Reference No.";
+                ToolTipML=ENU=Specifies the cross-referenced item number. If you enter a cross reference between yours and your vendor's or customer's item number, then this number will override the standard item number when you enter the cross-reference number on a sales or purchase document.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Cross-Reference No.";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 47  ;2   ;Field     ;
+                Name="Variant Code";
+                ToolTipML=ENU=Specifies the variant of the item on the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Variant Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 46  ;2   ;Field     ;
+                Name="Substitution Available";
+                ToolTipML=ENU=Specifies if a substitute is available for the item on the assembly order line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Substitution Available";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 45  ;2   ;Field     ;
+                Name="Purchasing Code";
+                ToolTipML=ENU=Specifies which purchaser is assigned to the vendor.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Purchasing Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 44  ;2   ;Field     ;
+                Name=Nonstock;
+                ToolTipML=ENU=Specifies that the item on the sales line is a nonstock item, which means it is not normally kept in inventory.;
+                ApplicationArea=#Advanced;
+                SourceExpr=Nonstock;
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 43  ;2   ;Field     ;
+                Name="VAT Prod. Posting Group";
+                ToolTipML=ENU=Specifies the Tax product posting group. Links business transactions made for the item, resource, or G/L account with the general ledger, to account for Tax amounts resulting from trade with that record.;
+                ApplicationArea=#Advanced;
+                SourceExpr="VAT Prod. Posting Group";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 42  ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the record.;
+                ApplicationArea=#Advanced;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+    { 41  ;2   ;Field     ;
+                Name="Drop Shipment";
+                ToolTipML=ENU=Specifies if your vendor ships the items directly to your customer.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Drop Shipment";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 40  ;2   ;Field     ;
+                Name="Special Order";
+                ToolTipML=ENU=Specifies that this purchase activity includes arranging for a special order.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Special Order";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 39  ;2   ;Field     ;
+                Name="Return Reason Code";
+                ToolTipML=ENU=Specifies the code of the responsibility center that is associated with the user, company, or customer.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Return Reason Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 38  ;2   ;Field     ;
+                Name="Location Code";
+                ToolTipML=ENU=Specifies the location from where inventory items to the customer on the sales document are to be shipped by default.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Location Code";
+                ImplicitType=Code10 }
+
+    { 37  ;2   ;Field     ;
+                Name=Reserve;
+                ApplicationArea=#Advanced;
+                SourceExpr=Reserve;
+                Visible=FALSE;
+                ImplicitType=Option }
+
+    { 36  ;2   ;Field     ;
+                Name=Quantity;
+                ToolTipML=ENU=Specifies the quantity of the record.;
+                ApplicationArea=#Advanced;
+                SourceExpr=Quantity;
+                ImplicitType=Decimal }
+
+    { 35  ;2   ;Field     ;
+                Name="Unit of Measure Code";
+                ToolTipML=ENU=Specifies how each unit of the item or resource is measured, such as in pieces or hours. By default, the value in the Base Unit of Measure field on the item or resource card is inserted.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Unit of Measure Code";
+                ImplicitType=Code10 }
+
+    { 34  ;2   ;Field     ;
+                Name="Unit of Measure";
+                ToolTipML=ENU=Specifies the unit of measure used for the item, for example bottle or piece.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Unit of Measure";
+                Visible=FALSE;
+                ImplicitType=Text10 }
+
+    { 33  ;2   ;Field     ;
+                Name="Unit Cost (LCY)";
+                ToolTipML=ENU=Specifies the cost, in $, of one unit of the item on the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Unit Cost (LCY)";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 32  ;2   ;Field     ;
+                Name="Unit Price";
+                ToolTipML=ENU=Specifies the price for one unit of the item.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Unit Price";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 31  ;2   ;Field     ;
+                Name="Line Amount";
+                ToolTipML=ENU=Specifies the net amount, excluding any invoice discount amount, that must be paid for products on the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Line Amount";
+                ImplicitType=Decimal }
+
+    { 30  ;2   ;Field     ;
+                Name="Line Discount %";
+                ToolTipML=ENU=Specifies the discount percentage that is granted for the item on the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Line Discount %";
+                ImplicitType=Decimal }
+
+    { 29  ;2   ;Field     ;
+                Name="Line Discount Amount";
+                ToolTipML=ENU=Specifies the discount amount that is granted for the item on the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Line Discount Amount";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 28  ;2   ;Field     ;
+                Name="Allow Invoice Disc.";
+                ToolTipML=ENU=Specifies if invoice discounts can be calculated on the archived order.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Allow Invoice Disc.";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 27  ;2   ;Field     ;
+                Name="Inv. Discount Amount";
+                ToolTipML=ENU=Specifies the invoice discount amount for the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Inv. Discount Amount";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 26  ;2   ;Field     ;
+                Name="Qty. to Ship";
+                ToolTipML=ENU=Specifies the quantity of items that remain to be shipped.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Qty. to Ship";
+                ImplicitType=Decimal }
+
+    { 25  ;2   ;Field     ;
+                Name="Quantity Shipped";
+                ToolTipML=ENU=Specifies how many units of the item on the line have been posted as received.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Quantity Shipped";
+                ImplicitType=Decimal }
+
+    { 24  ;2   ;Field     ;
+                Name="Qty. to Invoice";
+                ToolTipML=ENU=Specifies the quantity that remains to be invoiced. It is calculated as Quantity - Qty. Invoiced.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Qty. to Invoice";
+                ImplicitType=Decimal }
+
+    { 23  ;2   ;Field     ;
+                Name="Quantity Invoiced";
+                ToolTipML=ENU=Specifies how many units of the item on the line have been posted as invoiced.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Quantity Invoiced";
+                ImplicitType=Decimal }
+
+    { 22  ;2   ;Field     ;
+                Name="Allow Item Charge Assignment";
+                ToolTipML=ENU=Specifies if item charges can be assigned to the archived order.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Allow Item Charge Assignment";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 21  ;2   ;Field     ;
+                Name="Requested Delivery Date";
+                ToolTipML=ENU=Specifies the date that your customer has asked for the order to be delivered.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Requested Delivery Date";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 20  ;2   ;Field     ;
+                Name="Promised Delivery Date";
+                ToolTipML=ENU=Specifies the date that you have promised to deliver the order, as a result of the Order Promising function.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Promised Delivery Date";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 19  ;2   ;Field     ;
+                Name="Planned Delivery Date";
+                ToolTipML=ENU=Specifies the planned date that the shipment will be delivered at the customer's address. If the customer requests a delivery date, the program calculates whether the items will be available for delivery on this date. If the items are available, the planned delivery date will be the same as the requested delivery date. If not, the program calculates the date that the items are available for delivery and enters this date in the Planned Delivery Date field.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Planned Delivery Date";
+                ImplicitType=Date }
+
+    { 18  ;2   ;Field     ;
+                Name="Planned Shipment Date";
+                ToolTipML=ENU=Specifies the date that the shipment should ship from the warehouse. If the customer requests a delivery date, the program calculates the planned shipment date by subtracting the shipping time from the requested delivery date. If the customer does not request a delivery date or the requested delivery date cannot be met, the program calculates the content of this field by adding the shipment time to the shipping date.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Planned Shipment Date";
+                ImplicitType=Date }
+
+    { 17  ;2   ;Field     ;
+                Name="Shipment Date";
+                ToolTipML=ENU=Specifies when items on the document are shipped or were shipped. A shipment date is usually calculated from a requested delivery date plus lead time.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shipment Date";
+                ImplicitType=Date }
+
+    { 16  ;2   ;Field     ;
+                Name="Shipping Agent Code";
+                ToolTipML=ENU=Specifies the code for the shipping agent who is transporting the items.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shipping Agent Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 15  ;2   ;Field     ;
+                Name="Shipping Agent Service Code";
+                ToolTipML=ENU=Specifies the code for the service, such as a one-day delivery, that is offered by the shipping agent.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shipping Agent Service Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 14  ;2   ;Field     ;
+                Name="Shipping Time";
+                ToolTipML=ENU=Specifies how long it takes from when the items are shipped from the warehouse to when they are delivered.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Shipping Time";
+                Visible=FALSE;
+                ImplicitType=DateFormula }
+
+    { 13  ;2   ;Field     ;
+                Name="Job No.";
+                ToolTipML=ENU=Specifies the number of the related job.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Job No.";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 12  ;2   ;Field     ;
+                Name="Outbound Whse. Handling Time";
+                ToolTipML=ENU="Specifies a date formula for the time it takes to get items ready to ship from this location. The time element is used in the calculation of the delivery date as follows: Shipment Date + Outbound Warehouse Handling Time = Planned Shipment Date + Shipping Time = Planned Delivery Date.";
+                ApplicationArea=#Advanced;
+                SourceExpr="Outbound Whse. Handling Time";
+                Visible=FALSE;
+                ImplicitType=DateFormula }
+
+    { 11  ;2   ;Field     ;
+                Name="Blanket Order No.";
+                ToolTipML=ENU="Specifies the number of the blanket order. ";
+                ApplicationArea=#Advanced;
+                SourceExpr="Blanket Order No.";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 10  ;2   ;Field     ;
+                Name="Blanket Order Line No.";
+                ToolTipML=ENU="Specifies the number of the blanket order line. ";
+                ApplicationArea=#Advanced;
+                SourceExpr="Blanket Order Line No.";
+                Visible=FALSE;
+                ImplicitType=Integer }
+
+    { 9   ;2   ;Field     ;
+                Name="FA Posting Date";
+                ToolTipML=ENU=Specifies the date that will be used on related fixed asset ledger entries.;
+                ApplicationArea=#Advanced;
+                SourceExpr="FA Posting Date";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 8   ;2   ;Field     ;
+                Name="Depr. until FA Posting Date";
+                ToolTipML=ENU=Specifies if depreciation was calculated until the FA posting date of the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Depr. until FA Posting Date";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 7   ;2   ;Field     ;
+                Name="Depreciation Book Code";
+                ToolTipML=ENU=Specifies the depreciation book that is assigned to the fixed asset.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Depreciation Book Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 6   ;2   ;Field     ;
+                Name="Use Duplication List";
+                ToolTipML=ENU="Specifies, if the type is Fixed Asset, that information on the line is to be posted to all the assets defined in depreciation books. ";
+                ApplicationArea=#Advanced;
+                SourceExpr="Use Duplication List";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 5   ;2   ;Field     ;
+                Name="Duplicate in Depreciation Book";
+                ToolTipML=ENU=Specifies a depreciation book code if you want the journal line to be posted to that depreciation book, as well as to the depreciation book in the Depreciation Book Code field.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Duplicate in Depreciation Book";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 4   ;2   ;Field     ;
+                Name="Appl.-from Item Entry";
+                ToolTipML=ENU=Specifies the number of the item ledger entry that the document or journal line is applied from.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Appl.-from Item Entry";
+                Visible=FALSE;
+                ImplicitType=Integer }
+
+    { 3   ;2   ;Field     ;
+                Name="Appl.-to Item Entry";
+                ToolTipML=ENU=Specifies the number of the item ledger entry that the document or journal line is applied -to.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Appl.-to Item Entry";
+                Visible=FALSE;
+                ImplicitType=Integer }
+
+    { 2   ;2   ;Field     ;
+                Name="Shortcut Dimension 1 Code";
+                ToolTipML=ENU=Specifies the code for Shortcut Dimension 1, which is one of two global dimension codes that you set up in the General Ledger Setup window.;
+                ApplicationArea=#Dimensions;
+                SourceExpr="Shortcut Dimension 1 Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 1   ;2   ;Field     ;
+                Name="Shortcut Dimension 2 Code";
+                ToolTipML=ENU=Specifies the code for Shortcut Dimension 2, which is one of two global dimension codes that you set up in the General Ledger Setup window.;
+                ApplicationArea=#Dimensions;
+                SourceExpr="Shortcut Dimension 2 Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+  }
+  CODE
+  {
+
+    PROCEDURE ShowDimensions@1();
+    BEGIN
+      ShowDimensions;
+    END;
+
+    PROCEDURE ShowDocumentLineTracking@2();
+    VAR
+      DocumentLineTracking@1000 : Page "Document Line Tracking";
+    BEGIN
+      CLEAR(DocumentLineTracking);
+      DocumentLineTracking.SetDoc(2,"Document No.","Line No.","Blanket Order No.","Blanket Order Line No.",'',0);
+      DocumentLineTracking.RUNMODAL;
+    END;
+
+    PROCEDURE ShowLineComments@3();
+    BEGIN
+      ShowLineComments;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

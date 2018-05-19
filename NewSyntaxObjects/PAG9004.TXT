@@ -1,0 +1,818 @@
+OBJECT Page 9004 Bookkeeper Role Center
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161633.420T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[@@@="{Dependency=Match,""ProfileDescription_BOOKKEEPER""}";
+               ENU=Bookkeeper];
+    PageType=RoleCenter;
+    ActionList=ACTIONS
+    {
+      { 1900000006;0 ;ActionContainer;
+                      Name=ActionContainer1900000006;
+                      ActionContainerType=Reports }
+      { 34      ;1   ;Action    ;
+                      Name="Chart of Accounts";
+                      CaptionML=ENU=Chart of Accounts;
+                      ToolTipML=ENU=Analyze figures in general ledger accounts or compare general ledger entries with general ledger budget entries. For example, you can view the G/L entries as percentages of the budget entries. You use the Account Schedule window to set up account schedules.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Chart of Accounts" }
+      { 1400020 ;1   ;Action    ;
+                      Name="G/L Register";
+                      CaptionML=ENU=G/L Register;
+                      ToolTipML=ENU=View posted journal entries sorted and divided by each register.;
+                      RunObject=Report "G/L Register";
+                      Image=GLRegisters }
+      { 9       ;1   ;ActionGroup;
+                      Name="&Trial Balance";
+                      CaptionML=ENU=&Trial Balance;
+                      Image=Balance }
+      { 32      ;2   ;Action    ;
+                      Name="Trial Balance";
+                      CaptionML=ENU=Trial Balance;
+                      ToolTipML=ENU=View, print, or send a report that shows the balances for the general ledger accounts, including the debits and credits. You can use this report to ensure accurate accounting practices.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Trial Balance";
+                      Image=Report }
+      { 33      ;2   ;Action    ;
+                      Name="Bank &Detail Trial Balance";
+                      CaptionML=ENU=Bank &Detail Trial Balance;
+                      ToolTipML=ENU=View transactions for all bank accounts with subtotals per account. Each account shows the opening balance on the first line, the list of transactions for the account and a closing balance on the last line.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Bank Acc. - Detail Trial Bal.";
+                      Image=Report }
+      { 36      ;2   ;Action    ;
+                      Name="T&rial Balance/Budget";
+                      CaptionML=ENU=T&rial Balance/Budget;
+                      ToolTipML=ENU=View a trial balance in comparison to a budget. You can choose to see a trial balance for selected dimensions. You can use the report at the close of an accounting period or fiscal year.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Trial Balance/Budget";
+                      Image=Report }
+      { 37      ;2   ;Action    ;
+                      Name="Trial Balance by &Period";
+                      CaptionML=ENU=Trial Balance by &Period;
+                      ToolTipML=ENU=Show the opening balance by general ledger account, the movements in the selected period of month, quarter, or year, and the resulting closing balance.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Trial Balance by Period";
+                      Image=Report }
+      { 1400021 ;2   ;Action    ;
+                      Name="Trial Balance, Spread Periods";
+                      CaptionML=ENU=Trial Balance, Spread Periods;
+                      ToolTipML=ENU=View a trial balance with amounts shown in separate columns for each time period.;
+                      RunObject=Report "Trial Balance, Spread Periods";
+                      Image=Report }
+      { 1400018 ;2   ;Action    ;
+                      Name="Closing Trial Balance";
+                      CaptionML=ENU=Closing Trial Balance;
+                      ToolTipML=ENU=View this year's and last year's figures as an ordinary trial balance.;
+                      RunObject=Report "Closing Trial Balance";
+                      Image=Report }
+      { 1400019 ;2   ;Action    ;
+                      Name="Consol. Trial Balance";
+                      CaptionML=ENU=Consol. Trial Balance;
+                      ToolTipML=ENU=View the trial balance for a consolidated company.;
+                      RunObject=Report "Consolidated Trial Balance";
+                      Image=Report }
+      { 1480000 ;2   ;Action    ;
+                      Name="Trial Balance Detail/Summary";
+                      CaptionML=ENU=Trial Balance Detail/Summary;
+                      ToolTipML=ENU=View general ledger account balances and activities for all the selected accounts, one transaction per line. You can include general ledger accounts which have a balance and including the closing entries within the period.;
+                      RunObject=Report "Trial Balance Detail/Summary";
+                      Image=Report }
+      { 35      ;2   ;Action    ;
+                      Name="Trial Balance, per Global Dim.";
+                      CaptionML=ENU=Trial Balance, per Global Dim.;
+                      ToolTipML=ENU=View three types of departmental trial balances: current trial balance and trial balances which compare current amounts to either the prior year or to the current budget. Each department selected will have a separate trial balance generated.;
+                      RunObject=Report "Trial Balance, per Global Dim.";
+                      Image=Report }
+      { 43      ;2   ;Action    ;
+                      Name="Trial Balance, Spread G. Dim.";
+                      CaptionML=ENU=Trial Balance, Spread G. Dim.;
+                      ToolTipML=ENU=View the chart of accounts with balances or net changes, with each department in a separate column. This report can be used at the close of an accounting period or fiscal year.;
+                      RunObject=Report "Trial Balance, Spread G. Dim.";
+                      Image=Report }
+      { 46      ;1   ;Action    ;
+                      Name="&Fiscal Year Balance";
+                      CaptionML=ENU=&Fiscal Year Balance;
+                      ToolTipML=ENU=View, print, or send a report that shows balance sheet movements for selected periods. The report shows the closing balance by the end of the previous fiscal year for the selected ledger accounts. It also shows the fiscal year until this date, the fiscal year by the end of the selected period, and the balance by the end of the selected period, excluding the closing entries. The report can be used at the close of an accounting period or fiscal year.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Fiscal Year Balance";
+                      Image=Report }
+      { 47      ;1   ;Action    ;
+                      Name="Balance C&omp. . Prev. Year";
+                      CaptionML=ENU=Balance C&omp. . Prev. Year;
+                      ToolTipML=ENU=View a report that shows your company's assets, liabilities, and equity compared to the previous year.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Balance Comp. - Prev. Year";
+                      Image=Report }
+      { 44      ;1   ;Separator ;
+                      Name=Separator44 }
+      { 45      ;1   ;Action    ;
+                      Name="Account Schedule Layout";
+                      CaptionML=ENU=Account Schedule Layout;
+                      ToolTipML=ENU=Adjust the layout of the account schedule.;
+                      RunObject=Report "Account Schedule Layout";
+                      Image=Report }
+      { 60      ;1   ;Action    ;
+                      Name="Account Schedule";
+                      CaptionML=ENU=Account Schedule;
+                      ToolTipML=ENU=Set up the account schedule to analyze figures in general ledger accounts.;
+                      RunObject=Report "Account Schedule";
+                      Image=Report }
+      { 62      ;1   ;Action    ;
+                      Name="Account Balances by GIFI Code";
+                      CaptionML=ENU=Account Balances by GIFI Code;
+                      ToolTipML=ENU=Review your account balances by General Index of Financial Information (GIFI) codes.;
+                      RunObject=Report "Account Balances by GIFI Code";
+                      Image=Report }
+      { 49      ;1   ;Separator ;
+                      Name=Separator49 }
+      { 50      ;1   ;Action    ;
+                      Name="Aged Accounts Receivable";
+                      CaptionML=ENU=Aged Accounts Receivable;
+                      ToolTipML=ENU=View overdue customer payments.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Aged Accounts Receivable";
+                      Image=Report }
+      { 51      ;1   ;Action    ;
+                      Name="Aged Accou&nts Payable";
+                      CaptionML=ENU=Aged Accou&nts Payable;
+                      ToolTipML=ENU=View an overview of when your payables to vendors are due or overdue (divided into four periods). You must specify the date you want aging calculated from and the length of the period that each column will contain data for.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Aged Accounts Payable";
+                      Image=Report }
+      { 68      ;1   ;Action    ;
+                      Name="Projected Cash Receipts";
+                      CaptionML=ENU=Projected Cash Receipts;
+                      ToolTipML=ENU=View projections about cash receipts for up to four periods. You can specify the start date as well as the type of periods, such as days, weeks, months, or years.;
+                      RunObject=Report "Projected Cash Receipts";
+                      Image=Report }
+      { 69      ;1   ;Action    ;
+                      Name="Bank Account - Reconcile";
+                      CaptionML=ENU=Bank Account - Reconcile;
+                      ToolTipML=ENU=Reconcile bank transactions with bank account ledger entries to ensure that your bank account in Dynamics NAV reflects your actual liquidity.;
+                      RunObject=Report "Bank Account - Reconcile";
+                      Image=Report }
+      { 52      ;1   ;Action    ;
+                      Name="Reconcile Cust. and &Vend. Accs";
+                      CaptionML=ENU=Reconcile Cust. and &Vend. Accs;
+                      ToolTipML=ENU=View if a certain general ledger account reconciles the balance on a certain date for the corresponding posting group. The report shows the accounts that are included in the reconciliation with the general ledger balance and the customer or the vendor ledger balance for each account and shows any differences between the general ledger balance and the customer or vendor ledger balance.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Reconcile Cust. and Vend. Accs";
+                      Image=Report }
+      { 53      ;1   ;Separator ;
+                      Name=Separator53 }
+      { 70      ;1   ;Action    ;
+                      Name="Sales Tax Details";
+                      CaptionML=ENU=Sales Tax Details;
+                      ToolTipML=ENU=View a complete or partial list of all sales tax details. For each jurisdiction, all tax groups with their tax types and effective dates are listed.;
+                      RunObject=Report "Sales Tax Detail List";
+                      Image=Report }
+      { 71      ;1   ;Action    ;
+                      Name="Sales Tax Groups";
+                      CaptionML=ENU=Sales Tax Groups;
+                      ToolTipML=ENU=View a complete or partial list of sales tax groups.;
+                      RunObject=Report "Sales Tax Group List";
+                      Image=Report }
+      { 72      ;1   ;Action    ;
+                      Name="Sales Tax Jurisdictions";
+                      CaptionML=ENU=Sales Tax Jurisdictions;
+                      ToolTipML=ENU=View a list of sales tax jurisdictions that you can use to identify tax authorities for sales and purchases tax calculations. This report shows the codes that are associated with a report-to jurisdiction area. Each sales tax area is assigned a tax account for sales and a tax account for purchases. These accounts define the sales tax rates for each sales tax jurisdiction.;
+                      RunObject=Report "Sales Tax Jurisdiction List";
+                      Image=Report }
+      { 73      ;1   ;Action    ;
+                      Name="Sales Tax Areas";
+                      CaptionML=ENU=Sales Tax Areas;
+                      ToolTipML=ENU=View a complete or partial list of sales tax areas.;
+                      RunObject=Report "Sales Tax Area List";
+                      Image=Report }
+      { 79      ;1   ;Action    ;
+                      Name="Sales Tax Detail by Area";
+                      CaptionML=ENU=Sales Tax Detail by Area;
+                      ToolTipML=ENU=Verify that each sales tax area is set up correctly. Each sales tax area includes all of its jurisdictions. For each jurisdiction, all tax groups are listed with their tax types and effective dates. Note that the same sales tax jurisdiction, along with all of its details, may appear more than once since the jurisdiction may be used in more than one area.;
+                      RunObject=Report "Sales Tax Detail by Area";
+                      Image=Report }
+      { 54      ;1   ;Action    ;
+                      Name="Sales Taxes Collected";
+                      CaptionML=ENU=Sales Taxes Collected;
+                      ToolTipML=ENU=Use an EU tax number validation service to validated the tax number of a business partner.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Sales Taxes Collected";
+                      Image=Report }
+      { 1400017 ;1   ;Separator ;
+                      Name=Separator1400017 }
+      { 57      ;1   ;Action    ;
+                      Name="Inventory Valuation";
+                      CaptionML=ENU=Inventory Valuation;
+                      ToolTipML=ENU=View information to the customs and tax authorities for sales to other EU countries/regions. If the information must be printed to a file, you can use the VAT- VIES Declaration Disk report.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Inventory Valuation";
+                      Image=Report }
+      { 1900000011;0 ;ActionContainer;
+                      Name=ActionContainer1900000011;
+                      ToolTipML=ENU=Collect and make payments, prepare statements, and manage reminders.;
+                      ActionContainerType=HomeItems }
+      { 2       ;1   ;Action    ;
+                      Name=Action2;
+                      CaptionML=ENU=Chart of Accounts;
+                      ToolTipML=ENU=View the chart of accounts.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Chart of Accounts" }
+      { 63      ;1   ;Action    ;
+                      Name="Bank Accounts";
+                      CaptionML=ENU=Bank Accounts;
+                      ToolTipML=ENU=View or set up detailed information about your bank account, such as which currency to use, the format of bank files that you import and export as electronic payments, and the numbering of checks.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Bank Account List";
+                      Image=BankAccount }
+      { 12      ;1   ;Action    ;
+                      Name=Customers;
+                      CaptionML=ENU=Customers;
+                      ToolTipML=ENU=View or edit detailed information for the customers that you trade with. From each customer card, you can open related information, such as sales statistics and ongoing orders, and you can define special prices and line discounts that you grant if certain conditions are met.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Customer List";
+                      Image=Customer }
+      { 20      ;1   ;Action    ;
+                      Name=CustomersBalance;
+                      CaptionML=ENU=Balance;
+                      ToolTipML=ENU=View a summary of the bank account balance in different periods.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Customer List";
+                      RunPageView=WHERE("Balance (LCY)"=FILTER(<>0));
+                      Image=Balance }
+      { 3       ;1   ;Action    ;
+                      Name=Vendors;
+                      CaptionML=ENU=Vendors;
+                      ToolTipML=ENU=View or edit detailed information for the vendors that you trade with. From each vendor card, you can open related information, such as purchase statistics and ongoing orders, and you can define special prices and line discounts that the vendor grants you if certain conditions are met.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Vendor List";
+                      Image=Vendor }
+      { 5       ;1   ;Action    ;
+                      Name=VendorsBalance;
+                      CaptionML=ENU=Balance;
+                      ToolTipML=ENU=View a summary of the bank account balance in different periods.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Vendor List";
+                      RunPageView=WHERE("Balance (LCY)"=FILTER(<>0));
+                      Image=Balance }
+      { 83      ;1   ;Action    ;
+                      Name=VendorsPaymentonHold;
+                      CaptionML=ENU=Payment on Hold;
+                      ToolTipML=ENU=View a list of all vendor ledger entries on which the On Hold field is marked.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Vendor List";
+                      RunPageView=WHERE(Blocked=FILTER(Payment)) }
+      { 10      ;1   ;Action    ;
+                      Name="VAT Statements";
+                      CaptionML=ENU=VAT Statements;
+                      ToolTipML=ENU=View a statement of posted Tax amounts, calculate your Tax settlement amount for a certain period, such as a quarter, and prepare to send the settlement to the tax authorities.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "VAT Statement Names" }
+      { 91      ;1   ;Action    ;
+                      Name="Purchase Invoices";
+                      CaptionML=ENU=Purchase Invoices;
+                      ToolTipML=ENU=Create purchase invoices to mirror sales documents that vendors send to you. This enables you to record the cost of purchases and to track accounts payable. Posting purchase invoices dynamically updates inventory levels so that you can minimize inventory costs and provide better customer service. Purchase invoices can be created automatically from PDF or image files from your vendors by using the Incoming Documents feature.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Invoices" }
+      { 6       ;1   ;Action    ;
+                      Name="Purchase Orders";
+                      CaptionML=ENU=Purchase Orders;
+                      ToolTipML=ENU=Create purchase orders to mirror sales documents that vendors send to you. This enables you to record the cost of purchases and to track accounts payable. Posting purchase orders dynamically updates inventory levels so that you can minimize inventory costs and provide better customer service. Purchase orders allow partial receipts, unlike with purchase invoices, and enable drop shipment directly from your vendor to your customer. Purchase orders can be created automatically from PDF or image files from your vendors by using the Incoming Documents feature.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Order List" }
+      { 92      ;1   ;Action    ;
+                      Name="Sales Invoices";
+                      CaptionML=ENU=Sales Invoices;
+                      ToolTipML=ENU=Register your sales to customers and invite them to pay according to the delivery and payment terms by sending them a sales invoice document. Posting a sales invoice registers shipment and records an open receivable entry on the customer's account, which will be closed when payment is received. To manage the shipment process, use sales orders, in which sales invoicing is integrated.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Sales Invoice List";
+                      Image=Invoice }
+      { 14      ;1   ;Action    ;
+                      Name="Sales Orders";
+                      CaptionML=ENU=Sales Orders;
+                      ToolTipML=ENU=Record your agreements with customers to sell certain products on certain delivery and payment terms. Sales orders, unlike sales invoices, allow you to ship partially, deliver directly from your vendor to your customer, initiate warehouse handling, and print various customer-facing documents. Sales invoicing is integrated in the sales order process.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Sales Order List";
+                      Image=Order }
+      { 95      ;1   ;Action    ;
+                      Name=CashReceiptJournals;
+                      CaptionML=ENU=Cash Receipt Journals;
+                      ToolTipML=ENU=Register received payments by manually applying them to the related customer, vendor, or bank ledger entries. Then, post the payments to G/L accounts and thereby close the related ledger entries.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "General Journal Batches";
+                      RunPageView=WHERE("Template Type"=CONST("Cash Receipts"),
+                                        Recurring=CONST(false));
+                      Image=Journals }
+      { 96      ;1   ;Action    ;
+                      Name=PaymentJournals;
+                      CaptionML=ENU=Payment Journals;
+                      ToolTipML=ENU=Register payments to vendors. A payment journal is a type of general journal that is used to post outgoing payment transactions to G/L, bank, customer, vendor, employee, and fixed assets accounts. The Suggest Vendor Payments functions automatically fills the journal with payments that are due. When payments are posted, you can export the payments to a bank file for upload to your bank if your system is set up for electronic banking. You can also issue computer checks from the payment journal.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "General Journal Batches";
+                      RunPageView=WHERE("Template Type"=CONST(Payments),
+                                        Recurring=CONST(false));
+                      Image=Journals }
+      { 97      ;1   ;Action    ;
+                      Name=GeneralJournals;
+                      CaptionML=ENU=General Journals;
+                      ToolTipML=ENU=Post financial transactions directly to general ledger accounts and other accounts, such as bank, customer, vendor, and employee accounts. Posting with a general journal always creates entries on general ledger accounts. This is true even when, for example, you post a journal line to a customer account, because an entry is posted to a general ledger receivables account through a posting group.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "General Journal Batches";
+                      RunPageView=WHERE("Template Type"=CONST(General),
+                                        Recurring=CONST(false));
+                      Image=Journal }
+      { 98      ;1   ;Action    ;
+                      Name=RecurringGeneralJournals;
+                      CaptionML=ENU=Recurring General Journals;
+                      ToolTipML=ENU=Define how to post transactions that recur with few or no changes to general ledger, bank, customer, vendor, or fixed asset accounts;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "General Journal Batches";
+                      RunPageView=WHERE("Template Type"=CONST(General),
+                                        Recurring=CONST(true)) }
+      { 99      ;1   ;Action    ;
+                      Name="Intrastat Journals";
+                      CaptionML=ENU=Intrastat Journals;
+                      ToolTipML=ENU=Summarize the value of your purchases and sales with business partners in the EU for statistical purposes and prepare to send it to the relevant authority.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Intrastat Jnl. Batches" }
+      { 1900000012;0 ;ActionContainer;
+                      Name=ActionContainer1900000012;
+                      ActionContainerType=ActivityButtons }
+      { 39      ;1   ;ActionGroup;
+                      Name="Posted Documents";
+                      CaptionML=ENU=Posted Documents;
+                      ToolTipML=ENU=View posted invoices and credit memos, and analyze G/L registers.;
+                      Image=FiledPosted }
+      { 11      ;2   ;Action    ;
+                      Name="Posted Sales Shipments";
+                      CaptionML=ENU=Posted Sales Shipments;
+                      ToolTipML=ENU=Open the list of posted sales shipments.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Sales Shipments";
+                      Image=PostedShipment }
+      { 25      ;2   ;Action    ;
+                      Name="Posted Sales Invoices";
+                      CaptionML=ENU=Posted Sales Invoices;
+                      ToolTipML=ENU=Open the list of posted sales invoices.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Sales Invoices";
+                      Image=PostedOrder }
+      { 13      ;2   ;Action    ;
+                      Name="Posted Return Receipts";
+                      CaptionML=ENU=Posted Return Receipts;
+                      ToolTipML=ENU=Open the list of posted return receipts.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Return Receipts";
+                      Image=PostedReturnReceipt }
+      { 26      ;2   ;Action    ;
+                      Name="Posted Sales Credit Memos";
+                      CaptionML=ENU=Posted Sales Credit Memos;
+                      ToolTipML=ENU=Open the list of posted sales credit memos.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Sales Credit Memos";
+                      Image=PostedOrder }
+      { 100     ;2   ;Action    ;
+                      Name="Posted Purchase Receipts";
+                      CaptionML=ENU=Posted Purchase Receipts;
+                      ToolTipML=ENU=Open the list of posted purchase receipts.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Purchase Receipts" }
+      { 27      ;2   ;Action    ;
+                      Name="Posted Purchase Invoices";
+                      CaptionML=ENU=Posted Purchase Invoices;
+                      ToolTipML=ENU=Open the list of posted purchase invoices.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Purchase Invoices" }
+      { 101     ;2   ;Action    ;
+                      Name="Posted Return Shipments";
+                      CaptionML=ENU=Posted Return Shipments;
+                      ToolTipML=ENU=Open the list of posted return shipments.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Return Shipments" }
+      { 28      ;2   ;Action    ;
+                      Name="Posted Purchase Credit Memos";
+                      CaptionML=ENU=Posted Purchase Credit Memos;
+                      ToolTipML=ENU=Open the list of posted purchase credit memos.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Purchase Credit Memos" }
+      { 29      ;2   ;Action    ;
+                      Name="Issued Reminders";
+                      CaptionML=ENU=Issued Reminders;
+                      ToolTipML=ENU=View the list of issued reminders.;
+                      ApplicationArea=#Suite,#Advanced;
+                      RunObject=Page "Issued Reminder List";
+                      Image=OrderReminder }
+      { 30      ;2   ;Action    ;
+                      Name="Issued Fi. Charge Memos";
+                      CaptionML=ENU=Issued Fi. Charge Memos;
+                      ToolTipML=ENU=View the list of issued finance charge memos.;
+                      ApplicationArea=#Suite,#Advanced;
+                      RunObject=Page "Issued Fin. Charge Memo List" }
+      { 102     ;2   ;Action    ;
+                      Name="G/L Registers";
+                      CaptionML=ENU=G/L Registers;
+                      ToolTipML=ENU=View posted G/L entries.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "G/L Registers";
+                      Image=GLRegisters }
+      { 1400013 ;2   ;Action    ;
+                      Name="Posted Deposit List";
+                      CaptionML=ENU=Posted Deposit List;
+                      ToolTipML=ENU=View the posted deposit header, deposit header lines, deposit comments, and deposit dimensions.;
+                      RunObject=Page "Posted Deposit List" }
+      { 1400014 ;2   ;Action    ;
+                      Name="Posted Bank Rec. List";
+                      CaptionML=ENU=Posted Bank Rec. List;
+                      ToolTipML=ENU=View a list of the posted bank reconciliations (statements).;
+                      RunObject=Page "Posted Bank Rec. List" }
+      { 1020001 ;2   ;Action    ;
+                      Name="Bank Statements";
+                      CaptionML=ENU=Bank Statements;
+                      ToolTipML=ENU=View posted bank statements and reconciliations.;
+                      RunObject=Page "Bank Account Statement List" }
+      { 31      ;1   ;ActionGroup;
+                      Name=Administration;
+                      CaptionML=ENU=Administration;
+                      Image=Administration }
+      { 38      ;2   ;Action    ;
+                      Name=Currencies;
+                      CaptionML=ENU=Currencies;
+                      ToolTipML=ENU=View the different currencies that you trade in or update the exchange rates by getting the latest rates from an external service provider.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page Currencies;
+                      Image=Currency }
+      { 40      ;2   ;Action    ;
+                      Name="Accounting Periods";
+                      CaptionML=ENU=Accounting Periods;
+                      ToolTipML=ENU=Set up the number of accounting periods, such as 12 monthly periods, within the fiscal year and specify which period is the start of the new fiscal year.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Accounting Periods";
+                      Image=AccountingPeriods }
+      { 41      ;2   ;Action    ;
+                      Name="Number Series";
+                      CaptionML=ENU=Number Series;
+                      ToolTipML=ENU=View or edit the number series that are used to organize transactions;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "No. Series" }
+      { 1400004 ;2   ;Action    ;
+                      Name="IRS 1099 Form-Box";
+                      CaptionML=ENU=IRS 1099 Form-Box;
+                      ToolTipML=ENU=Set up 1099 tax forms to use on vendor cards, track posted amounts, and print or export 1099 information. After you have set up a 1099 code, you can enter it as a default 1099 form for a vendor.;
+                      RunObject=Page "IRS 1099 Form-Box";
+                      Image=1099Form }
+      { 1400005 ;2   ;Action    ;
+                      Name="GIFI Codes";
+                      CaptionML=ENU=GIFI Codes;
+                      ToolTipML=ENU=View or edit the General Index of Financial Information (GIFI) codes that you use to collect, validate, and process financial tax information.;
+                      RunObject=Page "GIFI Codes" }
+      { 1400006 ;2   ;Action    ;
+                      Name="Tax Areas";
+                      CaptionML=ENU=Tax Areas;
+                      ToolTipML=ENU=View a complete or partial list of sales tax areas.;
+                      RunObject=Page "Tax Area List" }
+      { 1400007 ;2   ;Action    ;
+                      Name="Tax Jurisdictions";
+                      CaptionML=ENU=Tax Jurisdictions;
+                      ToolTipML=ENU=View a list of sales tax jurisdictions that you can use to identify tax authorities for sales and purchases tax calculations. This report shows the codes that are associated with a report-to jurisdiction area. Each sales tax area is assigned a tax account for sales and a tax account for purchases. These accounts define the sales tax rates for each sales tax jurisdiction.;
+                      RunObject=Page "Tax Jurisdictions" }
+      { 1400008 ;2   ;Action    ;
+                      Name="Tax Groups";
+                      CaptionML=ENU=Tax Groups;
+                      ToolTipML=ENU=View a complete or partial list of sales tax groups.;
+                      RunObject=Page "Tax Groups" }
+      { 1400009 ;2   ;Action    ;
+                      Name="Tax Details";
+                      CaptionML=ENU=Tax Details;
+                      ToolTipML=ENU=View a complete or partial list of all sales tax details. For each jurisdiction, all tax groups with their tax types and effective dates are listed.;
+                      RunObject=Page "Tax Details" }
+      { 1400010 ;2   ;Action    ;
+                      Name="Tax  Business Posting Groups";
+                      CaptionML=ENU=Tax  Business Posting Groups;
+                      ToolTipML=ENU=View or edit trade-type posting groups that you assign to customer and vendor cards to link tax amounts with the appropriate general ledger account.;
+                      RunObject=Page "VAT Business Posting Groups" }
+      { 1400011 ;2   ;Action    ;
+                      Name="Tax Product Posting Groups";
+                      CaptionML=ENU=Tax Product Posting Groups;
+                      ToolTipML=ENU=View or edit item-type posting groups that you assign to customer and vendor cards to link tax amounts with the appropriate general ledger account.;
+                      RunObject=Page "VAT Product Posting Groups" }
+      { 1400000 ;1   ;ActionGroup;
+                      Name="Cash Management";
+                      CaptionML=ENU=Cash Management }
+      { 1400001 ;2   ;Action    ;
+                      Name=Action1400001;
+                      CaptionML=ENU=Bank Accounts;
+                      ToolTipML=ENU=View or set up your customers' and vendors' bank accounts. You can set up any number of bank accounts for each.;
+                      RunObject=Page "Bank Account List";
+                      Image=BankAccount }
+      { 1400002 ;2   ;Action    ;
+                      Name=Deposit;
+                      CaptionML=ENU=Deposit;
+                      ToolTipML=ENU="Create a new deposit. ";
+                      RunObject=Page Deposits;
+                      Image=DepositSlip }
+      { 1400003 ;2   ;Action    ;
+                      Name="Bank Rec.";
+                      CaptionML=ENU=Bank Rec.;
+                      ToolTipML=ENU=View or set up your customers' and vendors' bank accounts. You can set up any number of bank accounts for each.;
+                      RunObject=Page "Bank Acc. Reconciliation List" }
+      { 16      ;0   ;ActionContainer;
+                      Name=ActionContainer16;
+                      ActionContainerType=NewDocumentItems }
+      { 15      ;1   ;Action    ;
+                      Name="C&ustomer";
+                      CaptionML=ENU=C&ustomer;
+                      ToolTipML=ENU=Create a new customer card.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Customer Card";
+                      Promoted=false;
+                      Image=Customer;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 104     ;1   ;Action    ;
+                      Name="Sales &Invoice";
+                      CaptionML=ENU=Sales &Invoice;
+                      ToolTipML=ENU=Create a new invoice for the sales of items or services. Invoice quantities cannot be posted partially.;
+                      RunObject=Page "Sales Invoice";
+                      Promoted=false;
+                      Image=NewSalesInvoice;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 7       ;1   ;Action    ;
+                      Name="Sales Credit &Memo";
+                      CaptionML=ENU=Sales Credit &Memo;
+                      ToolTipML=ENU=Create a new sales credit memo to revert a posted sales invoice.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Sales Credit Memo";
+                      Promoted=false;
+                      Image=CreditMemo;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 4       ;1   ;Action    ;
+                      Name="Sales &Fin. Charge Memo";
+                      CaptionML=ENU=Sales &Fin. Charge Memo;
+                      ToolTipML=ENU=Create a new finance charge memo to fine a customer for late payment.;
+                      ApplicationArea=#Suite,#Advanced;
+                      RunObject=Page "Finance Charge Memo";
+                      Promoted=false;
+                      Image=FinChargeMemo;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 1       ;1   ;Action    ;
+                      Name="Sales &Reminder";
+                      CaptionML=ENU=Sales &Reminder;
+                      ToolTipML=ENU=Create a new reminder for a customer who has overdue payments.;
+                      ApplicationArea=#Suite,#Advanced;
+                      RunObject=Page Reminder;
+                      Promoted=false;
+                      Image=Reminder;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 554     ;1   ;Separator ;
+                      Name=Separator554 }
+      { 555     ;1   ;Action    ;
+                      Name="&Vendor";
+                      CaptionML=ENU=&Vendor;
+                      ToolTipML=ENU="Set up a new vendor from whom you buy goods or services. ";
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Vendor Card";
+                      Promoted=false;
+                      Image=Vendor;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 66      ;1   ;Action    ;
+                      Name="&Purchase Invoice";
+                      CaptionML=ENU=&Purchase Invoice;
+                      ToolTipML=ENU=Create a purchase invoice.;
+                      RunObject=Page "Purchase Invoice";
+                      Promoted=false;
+                      Image=NewPurchaseInvoice;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 67      ;1   ;Separator ;
+                      Name=Tasks;
+                      CaptionML=ENU=Tasks;
+                      IsHeader=true }
+      { 74      ;1   ;Action    ;
+                      Name="Cash Re&ceipt Journal";
+                      CaptionML=ENU=Cash Re&ceipt Journal;
+                      ToolTipML=ENU=Open the cash receipt journal to post incoming payments.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Cash Receipt Journal";
+                      Image=CashReceiptJournal }
+      { 75      ;1   ;Action    ;
+                      Name="Payment &Journal";
+                      CaptionML=ENU=Payment &Journal;
+                      ToolTipML=ENU=View or edit the payment journal where you can register payments to vendors.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Payment Journal";
+                      Image=PaymentJournal }
+      { 77      ;1   ;Separator ;
+                      Name=Separator77 }
+      { 78      ;1   ;Action    ;
+                      Name="Bank Account Reconciliations";
+                      CaptionML=ENU=Bank Account Reconciliations;
+                      ToolTipML=ENU=Reconcile entries in your bank account ledger entries with the actual transactions in your bank account, according to the latest bank statement.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Bank Acc. Reconciliation List";
+                      Image=BankAccountRec }
+      { 110     ;1   ;Action    ;
+                      Name="Adjust E&xchange Rates";
+                      Ellipsis=true;
+                      CaptionML=ENU=Adjust E&xchange Rates;
+                      ToolTipML=ENU=Adjust general ledger, customer, vendor, and bank account entries to reflect a more updated balance if the exchange rate has changed since the entries were posted.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Adjust Exchange Rates";
+                      Image=AdjustExchangeRates }
+      { 80      ;1   ;Action    ;
+                      Name="Reconcile AP to GL";
+                      CaptionML=ENU=Reconcile AP to GL;
+                      ToolTipML=ENU=List all items that have been received on purchase orders, but for which you have not been invoiced. The value of these items is not reflected in the general ledger because the cost is unknown until they are invoiced. The report gives an estimated value of the purchase orders, you can use as an accrual to your general ledger.;
+                      RunObject=Report "Reconcile AP to GL";
+                      Image=Report }
+      { 112     ;1   ;Action    ;
+                      Name="Post Inventor&y Cost to G/L";
+                      Ellipsis=true;
+                      CaptionML=ENU=Post Inventor&y Cost to G/L;
+                      ToolTipML=ENU=Post the quantity and value changes to the inventory in the item ledger entries and the value entries when you post inventory transactions, such as sales shipments or purchase receipts.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Post Inventory Cost to G/L";
+                      Image=PostInventoryToGL }
+      { 113     ;1   ;Action    ;
+                      Name="Calc. and Pos&t Tax Settlement";
+                      Ellipsis=true;
+                      CaptionML=ENU=Calc. and Pos&t Tax Settlement;
+                      ToolTipML=ENU=Close open Tax entries and transfers purchase and sales Tax amounts to the Tax settlement account. For every Tax posting group, the batch job finds all the Tax entries in the Tax Entry table that are included in the filters in the definition window.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Calc. and Post VAT Settlement";
+                      Image=SettleOpenTransactions }
+      { 84      ;1   ;Separator ;
+                      Name=Separator84;
+                      CaptionML=ENU=Administration;
+                      IsHeader=true }
+      { 85      ;1   ;Action    ;
+                      Name="General Ledger Setup";
+                      CaptionML=ENU=General Ledger Setup;
+                      ToolTipML=ENU=Define your general accounting policies, such as the allowed posting period and how payments are processed. Set up your default dimensions for financial analysis.;
+                      RunObject=Page "General Ledger Setup";
+                      Image=Setup }
+      { 86      ;1   ;Action    ;
+                      Name="Sa&les && Receivables Setup";
+                      CaptionML=ENU=Sa&les && Receivables Setup;
+                      ToolTipML=ENU=Define your general policies for sales invoicing and returns, such as when to show credit and stockout warnings and how to post sales discounts. Set up your number series for creating customers and different sales documents.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Sales & Receivables Setup";
+                      Image=Setup }
+      { 59      ;1   ;Action    ;
+                      Name="Inventory to G/L Reconcile";
+                      CaptionML=ENU=Inventory to G/L Reconcile;
+                      ToolTipML=ENU=Calculate Tax amounts from sales, and submit the amounts to a tax authority.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Inventory to G/L Reconcile" }
+      { 89      ;1   ;Separator ;
+                      Name=History;
+                      CaptionML=ENU=History;
+                      IsHeader=true }
+      { 90      ;1   ;Action    ;
+                      Name="Navi&gate";
+                      CaptionML=ENU=Navi&gate;
+                      ToolTipML=ENU=Find all entries and documents that exist for the document number and posting date on the selected entry or document.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page Navigate;
+                      Image=Navigate }
+      { 58      ;1   ;Action    ;
+                      Name="Export GIFI Info. to Excel";
+                      CaptionML=ENU=Export GIFI Info. to Excel;
+                      ToolTipML=ENU=Report your sales to other EU countries or regions to the customs and tax authorities. If the information must be printed out on a printer, you can use the Tax- VIES Declaration Tax Auth report. The information is shown in the same format as in the declaration list from the customs and tax authorities.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Export GIFI Info. to Excel" }
+      { 21      ;1   ;Action    ;
+                      Name=Approvals;
+                      CaptionML=ENU=Approvals;
+                      ToolTipML=ENU=View a list of the records that are waiting to be approved. For example, you can see who requested the record to be approved, when it was sent, and when it is due to be approved.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Requests to Approve";
+                      Image=Approvals }
+      { 1400015 ;1   ;Action    ;
+                      Name="Sales Order Shipment";
+                      CaptionML=ENU=Sales Order Shipment;
+                      ToolTipML=ENU=View or edit sales order shipments, reopen a shipment, post a shipment, print a test report, or post and print a shipment.;
+                      RunObject=Page "Sales Order Shipment List" }
+      { 1400016 ;1   ;Action    ;
+                      Name="Sales Order Invoice";
+                      CaptionML=ENU=Sales Order Invoice;
+                      ToolTipML=ENU=Create a sales order invoices, for example to calculate invoice discounts or reopen an invoice.;
+                      RunObject=Page "Sales Order Invoice List" }
+      { 22      ;1   ;ActionGroup;
+                      Name=ActionGroup22;
+                      CaptionML=ENU=Approvals;
+                      ToolTipML=ENU=Request approval of your documents, cards, or journal lines or, as the approver, approve requests made by other users. }
+      { 24      ;2   ;Action    ;
+                      Name="Requests Sent for Approval";
+                      CaptionML=ENU=Requests Sent for Approval;
+                      ToolTipML=ENU=View the approval requests that you have sent.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Approval Entries";
+                      RunPageView=SORTING("Record ID to Approve","Workflow Step Instance ID","Sequence No.")
+                                  ORDER(Ascending)
+                                  WHERE(Status=FILTER(Open));
+                      Image=Approvals }
+      { 23      ;2   ;Action    ;
+                      Name=RequestsToApprove;
+                      CaptionML=ENU=Requests to Approve;
+                      ToolTipML=ENU=Accept or reject other users' requests to create or change certain documents, cards, or journal lines that you must approve before they can proceed. The list is filtered to requests where you are set up as the approver.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Requests to Approve";
+                      Image=Approvals }
+      { 19      ;1   ;Action    ;
+                      Name="Payment Registration";
+                      CaptionML=ENU=Payment Registration;
+                      ToolTipML=ENU=Apply customer payments observed on your bank account to non-posted sales documents to record that payment is made.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Payment Registration";
+                      Image=Payment }
+      { 135     ;1   ;Action    ;
+                      Name="Payment Reconciliation Journals";
+                      CaptionML=ENU=Payment Reconciliation Journals;
+                      ToolTipML=ENU=Reconcile unpaid documents automatically with their related bank transactions by importing a bank statement feed or file. In the payment reconciliation journal, incoming or outgoing payments on your bank are automatically, or semi-automatically, applied to their related open customer or vendor ledger entries. Any open bank account ledger entries related to the applied customer or vendor ledger entries will be closed when you choose the Post Payments and Reconcile Bank Account action. This means that the bank account is automatically reconciled for payments that you post with the journal.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Pmt. Reconciliation Journals";
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=ApplyEntries;
+                      RunPageMode=View }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000008;0;Container;
+                Name=Control1900000008;
+                ContainerType=RoleCenterArea }
+
+    { 1900724808;1;Group  ;
+                Name=Control1900724808 }
+
+    { 1901197008;2;Part   ;
+                Name=Control1901197008;
+                ApplicationArea=#Advanced;
+                PagePartID="Bookkeeper Activities";
+                PartType=Page }
+
+    { 1907692008;2;Part   ;
+                Name=Control1907692008;
+                ApplicationArea=#Advanced;
+                PagePartID="My Customers";
+                PartType=Page }
+
+    { 1900724708;1;Group  ;
+                Name=Control1900724708 }
+
+    { 17  ;2   ;Part      ;
+                Name=Control17;
+                ApplicationArea=#Advanced;
+                PagePartID="My Job Queue";
+                Visible=false;
+                PartType=Page }
+
+    { 1902476008;2;Part   ;
+                Name=Control1902476008;
+                ApplicationArea=#Advanced;
+                PagePartID="My Vendors";
+                PartType=Page }
+
+    { 18  ;2   ;Part      ;
+                Name=Control18;
+                ApplicationArea=#Advanced;
+                PagePartID="Report Inbox Part";
+                PartType=Page }
+
+    { 1903012608;2;Part   ;
+                Name=Control1903012608;
+                ApplicationArea=#Advanced;
+                PagePartID="Connect Online";
+                Visible=FALSE;
+                PartType=Page }
+
+    { 1901377608;2;Part   ;
+                Name=Control1901377608;
+                ApplicationArea=#Advanced;
+                PartType=System;
+                SystemPartID=MyNotes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

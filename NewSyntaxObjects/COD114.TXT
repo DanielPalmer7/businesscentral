@@ -1,0 +1,49 @@
+OBJECT Codeunit 114 Empl. Entry-Edit
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Employee Ledger Entry";
+    Permissions=TableData "Employee Ledger Entry"=m,
+                TableData "Detailed Employee Ledger Entry"=m;
+    OnRun=BEGIN
+            EmplLedgEntry := Rec;
+            EmplLedgEntry.LOCKTABLE;
+            EmplLedgEntry.FIND;
+            if EmplLedgEntry.Open then begin
+              EmplLedgEntry."Applies-to ID" := "Applies-to ID";
+              EmplLedgEntry.VALIDATE("Payment Method Code","Payment Method Code");
+              EmplLedgEntry.VALIDATE("Amount to Apply","Amount to Apply");
+              EmplLedgEntry.VALIDATE("Applying Entry","Applying Entry");
+              EmplLedgEntry.VALIDATE("Message to Recipient","Message to Recipient");
+            end;
+            EmplLedgEntry.VALIDATE("Exported to Payment File","Exported to Payment File");
+            EmplLedgEntry.VALIDATE("Creditor No.","Creditor No.");
+            EmplLedgEntry.VALIDATE("Payment Reference","Payment Reference");
+            OnBeforeEmplLedgEntryModify(EmplLedgEntry,Rec);
+            EmplLedgEntry.TESTFIELD("Entry No.","Entry No.");
+            EmplLedgEntry.MODIFY;
+            Rec := EmplLedgEntry;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      EmplLedgEntry@1000 : Record "Employee Ledger Entry";
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeEmplLedgEntryModify@1(VAR EmplLedgEntry@1000 : Record "Employee Ledger Entry";FromEmplLedgEntry@1001 : Record "Employee Ledger Entry");
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,55 @@
+OBJECT Codeunit 6309 PBI Sales Pipeline Chart Calc.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      SalesPipelineChartMgt@1000 : Codeunit "Sales Pipeline Chart Mgt.";
+
+    PROCEDURE GetValues@3(VAR TempPowerBIChartBuffer@1001 : TEMPORARY Record "Power BI Chart Buffer");
+    VAR
+      TempSalesCycleStage@1005 : TEMPORARY Record "Sales Cycle Stage";
+      SalesCycle@1000 : Record "Sales Cycle";
+    BEGIN
+      if SalesCycle.FINDSET then begin
+        repeat
+          SalesPipelineChartMgt.InsertTempSalesCycleStage(TempSalesCycleStage,SalesCycle);
+          if TempSalesCycleStage.FINDSET then
+            repeat
+              InsertToBuffer(TempPowerBIChartBuffer,TempSalesCycleStage);
+            until TempSalesCycleStage.NEXT = 0;
+        until SalesCycle.NEXT = 0;
+      end;
+    END;
+
+    LOCAL PROCEDURE InsertToBuffer@27(VAR TempPowerBIChartBuffer@1000 : TEMPORARY Record "Power BI Chart Buffer";TempSalesCycleStage@1001 : TEMPORARY Record "Sales Cycle Stage");
+    BEGIN
+      with TempPowerBIChartBuffer do begin
+        if FINDLAST then
+          ID += 1
+        else
+          ID := 1;
+        "Row No." := FORMAT(TempSalesCycleStage.Stage);
+        Value := SalesPipelineChartMgt.GetOppEntryCount(TempSalesCycleStage."Sales Cycle Code",TempSalesCycleStage.Stage);
+        "Measure Name" := TempSalesCycleStage.Description;
+        "Measure No." := TempSalesCycleStage."Sales Cycle Code";
+        INSERT;
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

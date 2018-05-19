@@ -1,0 +1,43 @@
+OBJECT Table 1259 Bank Data Conv. Bank
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160125.137T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Bank Data Conv. Bank;
+    LookupPageID="Bank Name - Data Conv. List";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Bank                ;Text50        ;CaptionML=ENU=Bank;
+                                                   Editable=false }
+    { 2   ;   ;Bank Name           ;Text50        ;CaptionML=ENU=Bank Name;
+                                                   Editable=false }
+    { 3   ;   ;Country/Region Code ;Code10        ;CaptionML=ENU=Country/Region Code;
+                                                   Editable=false }
+    { 4   ;   ;Last Update Date    ;Date          ;CaptionML=ENU=Last Update Date;
+                                                   Editable=false }
+    { 5   ;   ;Index               ;Integer       ;AutoIncrement=true;
+                                                   CaptionML=ENU=Index }
+  }
+  KEYS
+  {
+    {    ;Bank,Index                              ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Bank                                     }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

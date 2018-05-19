@@ -1,0 +1,34 @@
+OBJECT Table 27012 SAT Use Code
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160238.443T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+    CaptionML=ENU=SAT Use Code;
+  }
+  FIELDS
+  {
+    { 1   ;   ;SAT Use Code        ;Code10        ;CaptionML=ENU=SAT Use Code }
+    { 2   ;   ;Description         ;Text100       ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;"SAT Use Code"                          ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

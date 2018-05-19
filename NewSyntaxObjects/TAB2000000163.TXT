@@ -1,0 +1,33 @@
+OBJECT Table 2000000163 NAV App Object Prerequisites
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.830T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Package ID          ;GUID           }
+    { 2   ;   ;Type                ;Option        ;OptionString=TableData,Table,,Report,,Codeunit,XMLport,MenuSuite,Page,Query }
+    { 3   ;   ;ID                  ;Integer        }
+  }
+  KEYS
+  {
+    {    ;"Package ID",Type,ID                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

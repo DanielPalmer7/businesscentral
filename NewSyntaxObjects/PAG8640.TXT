@@ -1,0 +1,96 @@
+OBJECT Page 8640 Config. Table Processing Rules
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161633.167T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Config. Table Processing Rules;
+    SourceTable="Config. Table Processing Rule";
+    DelayedInsert=true;
+    PopulateAllFields=true;
+    DataCaptionFields="Table ID","Package Code";
+    PageType=List;
+    AutoSplitKey=true;
+    ShowFilter=false;
+    OnAfterGetRecord=BEGIN
+                       CustomCodeunitIdEditable := Action = Action::Custom;
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 3       ;    ;ActionContainer;
+                      Name=ActionContainer3;
+                      ActionContainerType=RelatedInformation }
+      { 7       ;1   ;ActionGroup;
+                      Name=Filter;
+                      CaptionML=ENU=Filter }
+      { 4       ;2   ;Action    ;
+                      Name=ProcessingFilters;
+                      CaptionML=ENU=Processing Filters;
+                      ToolTipML=ENU=View or edit the filters that are used to process data.;
+                      ApplicationArea=#Basic,#Suite,#Advanced;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Filter;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 ShowFilters;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 6   ;2   ;Field     ;
+                Name=Action;
+                ToolTipML=ENU=Specifies an action that is related to the custom processing rule.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                SourceExpr=Action;
+                OnValidate=BEGIN
+                             CustomCodeunitIdEditable := Action = Action::Custom;
+                           END;
+
+                ImplicitType=Option }
+
+    { 5   ;2   ;Field     ;
+                Name=FilterInfo;
+                CaptionML=ENU=Filter;
+                ToolTipML=ENU=Specifies any filters that are set.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                SourceExpr=GetFilterInfo;
+                Editable=FALSE;
+                ImplicitType=Text }
+
+    { 8   ;2   ;Field     ;
+                Name="Custom Processing Codeunit ID";
+                ToolTipML=ENU=Specifies the custom processing codeunit.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                BlankZero=true;
+                SourceExpr="Custom Processing Codeunit ID";
+                Editable=CustomCodeunitIdEditable;
+                ImplicitType=Integer }
+
+  }
+  CODE
+  {
+    VAR
+      CustomCodeunitIdEditable@1000 : Boolean;
+
+    BEGIN
+    END.
+  }
+}
+

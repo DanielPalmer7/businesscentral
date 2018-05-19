@@ -1,0 +1,49 @@
+OBJECT Page 9823 User Plan Members FactBox
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161710.900T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Users in Plan;
+    SourceTable="User Plan";
+    PageType=ListPart;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="User Name";
+                ToolTipML=ENU=Specifies the short name for the user.;
+                ApplicationArea=#All;
+                SourceExpr="User Name";
+                ImplicitType=Code50 }
+
+    { 5   ;2   ;Field     ;
+                Name="Plan Name";
+                ToolTipML=ENU=Specifies the subscription plan.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Plan Name";
+                ImplicitType=Text50 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,72 @@
+OBJECT Codeunit 10401 Print Check Helper
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    PROCEDURE PrintSettledLoopHelper@1020000(VAR CustLedgEntry@1020008 : Record "Cust. Ledger Entry";VAR VendLedgEntry@1020007 : Record "Vendor Ledger Entry";VAR GenJnlLine@1020009 : Record "Gen. Journal Line";BalancingType@1020006 : '"G/L Account",Customer,Vendor,"Bank Account",,,Employee';BalancingNo@1020005 : Code[20];VAR FoundLast@1020004 : Boolean;TestPrint@1020003 : Boolean;FirstPage@1020002 : Boolean;VAR FoundNegative@1020001 : Boolean;ApplyMethod@1020000 : 'Payment,OneLineOneEntry,OneLineID,MoreLinesOneEntry');
+    BEGIN
+      if not TestPrint then
+        if FirstPage then begin
+          FoundLast := true;
+          case ApplyMethod of
+            ApplyMethod::OneLineOneEntry:
+              FoundLast := false;
+            ApplyMethod::OneLineID:
+              case BalancingType of
+                BalancingType::Customer:
+                  begin
+                    CustLedgEntry.RESET;
+                    CustLedgEntry.SETCURRENTKEY("Customer No.",Open,Positive);
+                    CustLedgEntry.SETRANGE("Customer No.",BalancingNo);
+                    CustLedgEntry.SETRANGE(Open,true);
+                    CustLedgEntry.SETRANGE(Positive,true);
+                    CustLedgEntry.SETRANGE("Applies-to ID",GenJnlLine."Applies-to ID");
+                    FoundLast := not CustLedgEntry.FIND('-');
+                    if FoundLast then begin
+                      CustLedgEntry.SETRANGE(Positive,false);
+                      FoundLast := not CustLedgEntry.FIND('-');
+                      FoundNegative := true;
+                    end else
+                      FoundNegative := false;
+                  end;
+                BalancingType::Vendor:
+                  begin
+                    VendLedgEntry.RESET;
+                    VendLedgEntry.SETCURRENTKEY("Vendor No.",Open,Positive);
+                    VendLedgEntry.SETRANGE("Vendor No.",BalancingNo);
+                    VendLedgEntry.SETRANGE(Open,true);
+                    VendLedgEntry.SETRANGE(Positive,true);
+                    VendLedgEntry.SETRANGE("Applies-to ID",GenJnlLine."Applies-to ID");
+                    FoundLast := not VendLedgEntry.FIND('-');
+                    if FoundLast then begin
+                      VendLedgEntry.SETRANGE(Positive,false);
+                      FoundLast := not VendLedgEntry.FIND('-');
+                      FoundNegative := true;
+                    end else
+                      FoundNegative := false;
+                  end;
+              end;
+            ApplyMethod::MoreLinesOneEntry:
+              FoundLast := false;
+          end;
+        end else
+          FoundLast := false;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

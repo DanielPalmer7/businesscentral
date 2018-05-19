@@ -1,0 +1,36 @@
+OBJECT Table 1240 Positive Pay Header
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160124.687T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Positive Pay Header;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Data Exch. Entry No.;Integer       ;TableRelation="Data Exch."."Entry No.";
+                                                   CaptionML=ENU=Data Exch. Entry No. }
+    { 2   ;   ;Company Name        ;Text30        ;CaptionML=ENU=Company Name }
+    { 3   ;   ;Account Number      ;Text30        ;CaptionML=ENU=Account Number }
+    { 4   ;   ;Date of File        ;Date          ;CaptionML=ENU=Date of File }
+  }
+  KEYS
+  {
+    {    ;"Data Exch. Entry No."                  ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,54 @@
+OBJECT Page 1809 Data Migrators
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161355.413T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Data Migrators;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    LinksAllowed=false;
+    SourceTable="Data Migrator Registration";
+    PageType=List;
+    ShowFilter=false;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the involved entry or record, according to the specified number series.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                Visible=FALSE;
+                ImplicitType=Integer }
+
+    { 5   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the record.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

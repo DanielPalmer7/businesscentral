@@ -1,0 +1,179 @@
+OBJECT Page 2803 Native - Contact
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161412.640T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Native - Contact;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable=Contact;
+    DelayedInsert=true;
+    PageType=List;
+    OnOpenPage=BEGIN
+                 SetFilterForGETStatement;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       ClearCalculatedFields;
+                       SetXrmID;
+                       SetCustomerID;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 8   ;2   ;Field     ;
+                Name=number;
+                CaptionML=[@@@={Locked};
+                           ENU=number];
+                ApplicationArea=#All;
+                SourceExpr="No.";
+                ImplicitType=Code20 }
+
+    { 6   ;2   ;Field     ;
+                Name=xrmId;
+                CaptionML=[@@@={Locked};
+                           ENU=xrmId];
+                ApplicationArea=#All;
+                SourceExpr="Xrm Id";
+                ImplicitType=GUID }
+
+    { 3   ;2   ;Field     ;
+                Name=displayName;
+                CaptionML=[@@@={Locked};
+                           ENU=displayName];
+                ApplicationArea=#All;
+                SourceExpr=Name;
+                ImplicitType=Text50 }
+
+    { 4   ;2   ;Field     ;
+                Name=phoneNumber;
+                CaptionML=[@@@={Locked};
+                           ENU=phoneNumber];
+                ApplicationArea=#All;
+                SourceExpr="Phone No.";
+                ImplicitType=Text30 }
+
+    { 5   ;2   ;Field     ;
+                Name=email;
+                CaptionML=[@@@={Locked};
+                           ENU=email];
+                ApplicationArea=#All;
+                SourceExpr="E-Mail";
+                ImplicitType=Text80 }
+
+    { 7   ;2   ;Field     ;
+                Name=customerId;
+                CaptionML=[@@@={Locked};
+                           ENU=customerId];
+                ToolTipML=ENU=Specifies the Customer Id.;
+                ApplicationArea=#All;
+                SourceExpr=CustomerID;
+                ImplicitType=GUID }
+
+  }
+  CODE
+  {
+    VAR
+      CustomerID@1000 : GUID;
+      CannotCreateCustomerErr@1001 : TextConst 'ENU=Cannot create a customer from the contact.';
+
+    LOCAL PROCEDURE SetXrmID@4();
+    VAR
+      GraphIntegrationRecord@1002 : Record "Graph Integration Record";
+      IntegrationRecord@1001 : Record "Integration Record";
+      GraphID@1000 : Text[250];
+    BEGIN
+      if not GraphIntegrationRecord.FindIDFromRecordID(RECORDID,GraphID) then
+        exit;
+
+      IntegrationRecord.SETRANGE("Record ID",RECORDID);
+      if not IntegrationRecord.FINDFIRST then
+        exit;
+
+      if not GraphIntegrationRecord.GET(GraphID,IntegrationRecord."Integration ID") then
+        exit;
+
+      "Xrm Id" := GraphIntegrationRecord.XRMId;
+    END;
+
+    LOCAL PROCEDURE SetCustomerID@8();
+    VAR
+      Customer@1001 : Record Customer;
+      GraphIntContact@1000 : Codeunit "Graph Int. - Contact";
+    BEGIN
+      if not GraphIntContact.FindCustomerFromContact(Customer,Rec) then
+        exit;
+
+      CustomerID := Customer.Id;
+    END;
+
+    LOCAL PROCEDURE ClearCalculatedFields@3();
+    BEGIN
+      CLEAR(CustomerID);
+      CLEAR("Xrm Id");
+    END;
+
+    LOCAL PROCEDURE SetFilterForGETStatement@6();
+    VAR
+      Contact@1002 : Record Contact;
+      GraphIntContact@1001 : Codeunit "Graph Int. - Contact";
+      xrmIDFilter@1000 : Text[250];
+    BEGIN
+      xrmIDFilter := COPYSTR(GETFILTER("Xrm Id"),1,MAXSTRLEN(xrmIDFilter));
+      if xrmIDFilter = '' then
+        exit;
+
+      if not GraphIntContact.FindContactFromGraphId(xrmIDFilter,Contact) then
+        SETFILTER("No.",'<>*')
+      else
+        SETRANGE("No.",Contact."No.");
+
+      SETRANGE("Xrm Id");
+    END;
+
+    [ServiceEnabled]
+    [External]
+    PROCEDURE MakeCustomer@15(VAR ActionContext@1000 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.WebServiceActionContext");
+    VAR
+      Customer@1001 : Record Customer;
+      GraphIntContact@1002 : Codeunit "Graph Int. - Contact";
+    BEGIN
+      if not ISNULLGUID(CustomerID) then begin
+        Customer.SETRANGE(Id,CustomerID);
+        Customer.FINDFIRST;
+      end else
+        if not GraphIntContact.FindOrCreateCustomerFromGraphContactSafe("Xrm Id",Customer,Rec) then
+          ERROR(CannotCreateCustomerErr);
+
+      SetActionResponse(ActionContext,Customer);
+    END;
+
+    LOCAL PROCEDURE SetActionResponse@47(VAR ActionContext@1004 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.WebServiceActionContext";VAR Customer@1000 : Record Customer);
+    VAR
+      ODataActionManagement@1003 : Codeunit "OData Action Management";
+    BEGIN
+      ODataActionManagement.AddKey(Customer.FIELDNO(Id),Customer.Id);
+      ODataActionManagement.SetDeleteResponseLocation(ActionContext,PAGE::"Native - Customer Entity")
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,704 @@
+OBJECT Page 1752 Data Classification Wizard
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161353.633T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Data Classification Assisted Setup Guide;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    LinksAllowed=false;
+    SourceTable="Data Privacy Entities";
+    PageType=NavigatePage;
+    SourceTableTemporary=true;
+    RefreshOnActivate=true;
+    ShowFilter=false;
+    OnInit=BEGIN
+             LoadTopBanners;
+           END;
+
+    OnOpenPage=BEGIN
+                 ResetControls;
+                 ShowWorksheet := true;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       if Status = Status::"Review Needed" then
+                         StatusStyle := 'UnFavorable'
+                       else
+                         StatusStyle := 'Favorable';
+
+                       if "Status 2" = "Status 2"::"Review Needed" then
+                         SimilarFieldsStatusStyle := 'UnFavorable'
+                       else
+                         SimilarFieldsStatusStyle := 'Favorable';
+
+                       LedgerEntriesDefaultClassification := LedgerEntriesDefaultClassification::"Company Confidential";
+                       TemplatesDefaultClassification := TemplatesDefaultClassification::Normal;
+                       SetupTablesDefaultClassification := SetupTablesDefaultClassification::Normal;
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 16      ;0   ;ActionContainer;
+                      Name=ActionContainer16;
+                      ActionContainerType=NewDocumentItems }
+      { 15      ;1   ;Action    ;
+                      Name=ActionBack;
+                      CaptionML=ENU=Back;
+                      ApplicationArea=#All;
+                      Enabled=BackEnabled;
+                      InFooterBar=true;
+                      Image=PreviousRecord;
+                      OnAction=BEGIN
+                                 if Step = Step::Verify then
+                                   RESET;
+                                 NextStep(true);
+                               END;
+                                }
+      { 14      ;1   ;Action    ;
+                      Name=ActionNext;
+                      CaptionML=ENU=Next;
+                      ApplicationArea=#All;
+                      Enabled=NextEnabled;
+                      InFooterBar=true;
+                      Image=NextRecord;
+                      OnAction=VAR
+                                 DataSensitivity@1001 : Record "Data Sensitivity";
+                                 DataClassificationMgt@1000 : Codeunit "Data Classification Mgt.";
+                               BEGIN
+                                 case Step of
+                                   Step::"Choose Mode":
+                                     begin
+                                       if ImportModeSelected then begin
+                                         DataClassificationMgt.ImportExcelSheet;
+                                         Step := Step::Finish;
+                                         ResetControls;
+                                         exit;
+                                       end;
+                                       if ExportModeSelected then begin
+                                         DataClassificationMgt.ExportToExcelSheet;
+                                         Step := Step::Finish;
+                                         ResetControls;
+                                         exit;
+                                       end;
+                                       if ExpertModeSelected then begin
+                                         DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+                                         if DataSensitivity.ISEMPTY then
+                                           DataClassificationMgt.FillDataSensitivityTable;
+                                       end;
+                                     end;
+                                   Step::Apply:
+                                     begin
+                                       DataClassificationMgt.SetTableClassifications(Rec);
+                                       SETRANGE(Include,true);
+                                     end;
+                                   Step::"Set Rules":
+                                     begin
+                                       DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+                                       DataSensitivity.SETRANGE("Data Sensitivity",DataSensitivity."Data Sensitivity"::Unclassified);
+                                       DataSensitivity.SETFILTER("Table No",DataClassificationMgt.GetTableNoFilterForTablesWhoseNameContains('Entry'));
+                                       DataClassificationMgt.SetSensitivities(DataSensitivity,LedgerEntriesDefaultClassification);
+                                       DataSensitivity.SETFILTER("Table No",DataClassificationMgt.GetTableNoFilterForTablesWhoseNameContains('Template'));
+                                       DataClassificationMgt.SetSensitivities(DataSensitivity,TemplatesDefaultClassification);
+                                       DataSensitivity.SETFILTER("Table No",DataClassificationMgt.GetTableNoFilterForTablesWhoseNameContains('Setup'));
+                                       DataClassificationMgt.SetSensitivities(DataSensitivity,SetupTablesDefaultClassification);
+                                     end;
+                                 end;
+
+                                 NextStep(false);
+                               END;
+                                }
+      { 13      ;1   ;Action    ;
+                      Name=ActionFinish;
+                      CaptionML=ENU=Finish;
+                      ApplicationArea=#All;
+                      Enabled=FinishEnabled;
+                      InFooterBar=true;
+                      Image=Approve;
+                      OnAction=BEGIN
+                                 if ShowWorksheet then
+                                   PAGE.RUN(PAGE::"Data Classification Worksheet");
+                                 CurrPage.CLOSE;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 42  ;1   ;Group     ;
+                Name=Control42;
+                Visible=TopBannerVisible AND NOT FinishEnabled;
+                Editable=FALSE;
+                GroupType=Group }
+
+    { 41  ;2   ;Field     ;
+                Name=MediaResourcesStandard;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=MediaResourcesStandard."Media Reference";
+                Editable=FALSE;
+                ShowCaption=false }
+
+    { 40  ;1   ;Group     ;
+                Name=Control40;
+                Visible=TopBannerVisible AND FinishEnabled;
+                Editable=FALSE;
+                GroupType=Group }
+
+    { 39  ;2   ;Field     ;
+                Name=MediaResourcesDone;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=MediaResourcesDone."Media Reference";
+                Editable=FALSE;
+                ShowCaption=false }
+
+    { 2   ;1   ;Group     ;
+                Name=Control2;
+                Visible=Step = Step::Welcome;
+                GroupType=Group }
+
+    { 9   ;2   ;Group     ;
+                Name="Welcome to the Data Classification Assisted Setup Guide";
+                CaptionML=ENU=Welcome to the Data Classification Assisted Setup Guide;
+                GroupType=Group;
+                InstructionalTextML=ENU="Data classification is an important part of protecting the privacy of personal and sensitive data, and is often required by data privacy laws. Classification can make it easier to retrieve personal data, for example, in response to a request, and it can add another layer of protection. This guide helps you classify the sensitivity of the data in tables and fields. " }
+
+    { 12  ;2   ;Group     ;
+                Name="Classifications include:";
+                CaptionML=ENU=Classifications include:;
+                GroupType=Group;
+                Layout=Rows }
+
+    { 48  ;3   ;Field     ;
+                Name="- Sensitive - Private data, such as political or religious beliefs.";
+                CaptionML=ENU=- Sensitive - Private data, such as political or religious beliefs.;
+                ApplicationArea=#All }
+
+    { 49  ;3   ;Field     ;
+                Name="- Personal - Any data that can be used to identify someone.";
+                CaptionML=ENU=- Personal - Any data that can be used to identify someone.;
+                ApplicationArea=#All }
+
+    { 50  ;3   ;Field     ;
+                Name="- Company Confidential - Business data that you do not want to expose. For example, ledger entries.";
+                CaptionML=ENU=- Company Confidential - Business data that you do not want to expose. For example, ledger entries.;
+                ApplicationArea=#All }
+
+    { 51  ;3   ;Field     ;
+                Name="- Normal - Data that does not belong to other classifications.";
+                CaptionML=ENU=- Normal - Data that does not belong to other classifications.;
+                ApplicationArea=#All }
+
+    { 6   ;2   ;Field     ;
+                Name=HelpLbl;
+                DrillDown=true;
+                ApplicationArea=#All;
+                SourceExpr=HelpLbl;
+                Editable=FALSE;
+                Style=StandardAccent;
+                StyleExpr=TRUE;
+                OnDrillDown=BEGIN
+                              HYPERLINK(HelpUrlTxt);
+                            END;
+
+                ImplicitType=TextConst;
+                ShowCaption=false }
+
+    { 3   ;1   ;Group     ;
+                Name=Control3;
+                Visible=Step = Step::"Choose Mode";
+                GroupType=Group }
+
+    { 43  ;2   ;Group     ;
+                Name="Let's Get Started";
+                CaptionML=ENU=Let's Get Started;
+                GroupType=Group;
+                InstructionalTextML=ENU=You can export data to an Excel worksheet, add the classifications, and then import the worksheet. For example, this is great for: }
+
+    { 44  ;3   ;Field     ;
+                Name="- Adding classifications in bulk.";
+                CaptionML=ENU=- Adding classifications in bulk.;
+                ApplicationArea=#All;
+                Importance=Additional;
+                MultiLine=true }
+
+    { 7   ;3   ;Field     ;
+                Name="- Sharing data with a partner who is classifying data for you.";
+                CaptionML=ENU=- Sharing data with a partner who is classifying data for you.;
+                ApplicationArea=#All }
+
+    { 10  ;3   ;Field     ;
+                Name="- Importing the classifications from another company.";
+                CaptionML=ENU=- Importing the classifications from another company.;
+                ApplicationArea=#All }
+
+    { 47  ;3   ;Field     ;
+                Name=<ExportModeSelected>;
+                CaptionML=ENU=Export Classification Data to Excel;
+                ApplicationArea=#All;
+                SourceExpr=ExportModeSelected;
+                OnValidate=BEGIN
+                             if ExportModeSelected = true then begin
+                               ExpertModeSelected := false;
+                               ImportModeSelected := false;
+                             end;
+
+                             NextEnabled := ImportModeSelected or ExpertModeSelected or ExportModeSelected;
+                           END;
+
+                ImplicitType=Boolean }
+
+    { 8   ;3   ;Field     ;
+                Name=ImportModeSelected;
+                CaptionML=ENU=Import Classification Data from Excel;
+                ApplicationArea=#All;
+                SourceExpr=ImportModeSelected;
+                OnValidate=BEGIN
+                             if ImportModeSelected = true then begin
+                               ExpertModeSelected := false;
+                               ExportModeSelected := false;
+                             end;
+
+                             NextEnabled := ImportModeSelected or ExpertModeSelected or ExportModeSelected;
+                           END;
+
+                ImplicitType=Boolean }
+
+    { 11  ;3   ;Group     ;
+                Name=Control11;
+                GroupType=Group;
+                InstructionalTextML=ENU=You can also view lists of tables and fields and manually classify your data. }
+
+    { 17  ;4   ;Field     ;
+                Name=ExpertModeSelected;
+                CaptionML=ENU=Classify Data Manually;
+                ApplicationArea=#All;
+                SourceExpr=ExpertModeSelected;
+                OnValidate=BEGIN
+                             if ExpertModeSelected = true then begin
+                               ImportModeSelected := false;
+                               ExportModeSelected := false;
+                             end;
+
+                             NextEnabled := ImportModeSelected or ExpertModeSelected or ExportModeSelected;
+                           END;
+
+                ImplicitType=Boolean }
+
+    { 33  ;1   ;Group     ;
+                Name=Control33;
+                Visible=Step = Step::"Set Rules";
+                GroupType=Group }
+
+    { 61  ;2   ;Group     ;
+                Name="Bulk-classify data based on its use";
+                CaptionML=ENU=Bulk-classify data based on its use;
+                GroupType=Group }
+
+    { 57  ;3   ;Group     ;
+                Name="Examples:";
+                CaptionML=ENU=Examples:;
+                GroupType=Group;
+                InstructionalTextML=ENU=Data from posting includes G/L entries. Data on templates used to create customers, vendors, or items. Data on setup tables that configure functionality. These classifications apply only to fields that are currently Unclassified. We recommend that you review the fields before you apply the classifications. }
+
+    { 53  ;3   ;Group     ;
+                Name=Control53;
+                GroupType=Group;
+                Layout=Columns }
+
+    { 54  ;4   ;Field     ;
+                Name=LedgerEntriesDefaultClassification;
+                CaptionML=ENU=Data from posting is:;
+                ApplicationArea=#All;
+                SourceExpr=LedgerEntriesDefaultClassification;
+                ImplicitType=Option }
+
+    { 59  ;4   ;Field     ;
+                Name=ViewFieldsLbl;
+                DrillDown=true;
+                ApplicationArea=#All;
+                SourceExpr=ViewFieldsLbl;
+                Editable=FALSE;
+                Style=StrongAccent;
+                StyleExpr=TRUE;
+                OnDrillDown=VAR
+                              DataSensitivity@1000 : Record "Data Sensitivity";
+                              DataClassificationMgt@1001 : Codeunit "Data Classification Mgt.";
+                            BEGIN
+                              DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+                              DataSensitivity.SETFILTER("Table No",DataClassificationMgt.GetTableNoFilterForTablesWhoseNameContains('Entry'));
+                              PAGE.RUN(PAGE::"Data Classification Worksheet",DataSensitivity);
+                            END;
+
+                ImplicitType=TextConst }
+
+    { 55  ;4   ;Field     ;
+                Name=TemplatesDefaultClassification;
+                CaptionML=ENU=Data on templates is:;
+                ApplicationArea=#All;
+                SourceExpr=TemplatesDefaultClassification;
+                ImplicitType=Option }
+
+    { 38  ;4   ;Field     ;
+                Name=Control38;
+                DrillDown=true;
+                ApplicationArea=#All;
+                SourceExpr=ViewFieldsLbl;
+                Editable=FALSE;
+                Style=StrongAccent;
+                StyleExpr=TRUE;
+                OnDrillDown=VAR
+                              DataSensitivity@1001 : Record "Data Sensitivity";
+                              DataClassificationMgt@1000 : Codeunit "Data Classification Mgt.";
+                            BEGIN
+                              DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+                              DataSensitivity.SETFILTER("Table No",DataClassificationMgt.GetTableNoFilterForTablesWhoseNameContains('Template'));
+                              PAGE.RUN(PAGE::"Data Classification Worksheet",DataSensitivity);
+                            END;
+
+                ImplicitType=TextConst }
+
+    { 58  ;4   ;Field     ;
+                Name=SetupTablesDefaultClassification;
+                CaptionML=ENU=Data on setup tables is:;
+                ApplicationArea=#All;
+                SourceExpr=SetupTablesDefaultClassification;
+                ImplicitType=Option }
+
+    { 56  ;4   ;Field     ;
+                Name=Control56;
+                DrillDown=true;
+                ApplicationArea=#All;
+                SourceExpr=ViewFieldsLbl;
+                Editable=FALSE;
+                Style=StrongAccent;
+                StyleExpr=TRUE;
+                OnDrillDown=VAR
+                              DataSensitivity@1001 : Record "Data Sensitivity";
+                              DataClassificationMgt@1000 : Codeunit "Data Classification Mgt.";
+                            BEGIN
+                              DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+                              DataSensitivity.SETFILTER("Table No",DataClassificationMgt.GetTableNoFilterForTablesWhoseNameContains('Setup'));
+                              PAGE.RUN(PAGE::"Data Classification Worksheet",DataSensitivity);
+                            END;
+
+                ImplicitType=TextConst }
+
+    { 4   ;1   ;Group     ;
+                Name=Control4;
+                Visible=Step = Step::Apply;
+                GroupType=Group }
+
+    { 18  ;2   ;Group     ;
+                Name="Choose the tables that you want to classify";
+                CaptionML=ENU=Choose the tables that you want to classify;
+                GroupType=Group;
+                InstructionalTextML=ENU=When you classify a table, the classification applies to all fields in the table. You can choose a table to change classifications for individual fields. }
+
+    { 19  ;3   ;Field     ;
+                Name=Control19;
+                ApplicationArea=#All }
+
+    { 20  ;3   ;Group     ;
+                Name=Control20;
+                GroupType=Repeater }
+
+    { 21  ;4   ;Field     ;
+                Name=Include;
+                ApplicationArea=#All;
+                SourceExpr=Include;
+                ImplicitType=Boolean }
+
+    { 5   ;4   ;Field     ;
+                Name=Entity;
+                DrillDown=false;
+                CaptionML=ENU=Data Subject;
+                ApplicationArea=#All;
+                SourceExpr="Table Caption";
+                Editable=FALSE;
+                ImplicitType=Text80 }
+
+    { 23  ;4   ;Field     ;
+                Name=Default Data Sensitivity;
+                ApplicationArea=#All;
+                SourceExpr="Default Data Sensitivity";
+                ImplicitType=Option }
+
+    { 24  ;1   ;Group     ;
+                Name=Control24;
+                Visible=Step = Step::Verify;
+                GroupType=Group }
+
+    { 28  ;2   ;Group     ;
+                Name="Good work! Now classify individual fields";
+                CaptionML=ENU=Good work! Now classify individual fields;
+                GroupType=Group;
+                InstructionalTextML=ENU="The default classification has been added to the tables. Now you can classify individual fields in the tables, and  the entities that relate to the tables. " }
+
+    { 45  ;2   ;Group     ;
+                Name="Review the classifications for all the entities before you continue!";
+                CaptionML=ENU=Review the classifications for all the entities before you continue!;
+                GroupType=Group }
+
+    { 25  ;2   ;Group     ;
+                Name=Control25;
+                GroupType=Repeater }
+
+    { 26  ;3   ;Field     ;
+                Name=Entity 2;
+                DrillDown=false;
+                CaptionML=ENU=Data Subject;
+                ApplicationArea=#All;
+                SourceExpr="Table Caption";
+                Editable=FALSE;
+                ImplicitType=Text80 }
+
+    { 32  ;3   ;Field     ;
+                Name=Fields;
+                ApplicationArea=#All;
+                SourceExpr=Fields;
+                Editable=FALSE;
+                Style=StandardAccent;
+                StyleExpr=TRUE;
+                OnDrillDown=VAR
+                              DataSensitivity@1000 : Record "Data Sensitivity";
+                            BEGIN
+                              DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+                              DataSensitivity.FILTERGROUP(2);
+                              DataSensitivity.SETRANGE("Table No","Table No.");
+                              PAGE.RUNMODAL(PAGE::"Data Classification Worksheet",DataSensitivity);
+
+                              Reviewed := true;
+                              Status := Status::Reviewed;
+                              CurrPage.UPDATE;
+                            END;
+
+                ImplicitType=Integer }
+
+    { 34  ;3   ;Field     ;
+                Name=Status;
+                ApplicationArea=#All;
+                SourceExpr=Status;
+                Editable=FALSE;
+                StyleExpr=StatusStyle;
+                OnDrillDown=VAR
+                              DataSensitivity@1000 : Record "Data Sensitivity";
+                            BEGIN
+                              DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+                              DataSensitivity.FILTERGROUP(2);
+                              DataSensitivity.SETRANGE("Table No","Table No.");
+                              PAGE.RUNMODAL(PAGE::"Data Classification Worksheet",DataSensitivity);
+
+                              Reviewed := true;
+                              Status := Status::Reviewed;
+                              CurrPage.UPDATE;
+                            END;
+
+                ImplicitType=Option }
+
+    { 36  ;1   ;Group     ;
+                Name=Control36;
+                Visible=Step = Step::"Verify Related Fields";
+                GroupType=Group }
+
+    { 37  ;2   ;Group     ;
+                Name="We're getting there!";
+                CaptionML=ENU=We're getting there!;
+                GroupType=Group;
+                InstructionalTextML=ENU=Review the classifications for similar fields before you continue. }
+
+    { 52  ;2   ;Group     ;
+                Name=Control52;
+                GroupType=Repeater }
+
+    { 35  ;3   ;Field     ;
+                Name="Similar Fields Label";
+                CaptionML=ENU=Fields;
+                ApplicationArea=#All;
+                SourceExpr="Similar Fields Label";
+                Editable=FALSE;
+                OnDrillDown=VAR
+                              DataSensitivity@1002 : Record "Data Sensitivity";
+                              DataClassificationMgt@1000 : Codeunit "Data Classification Mgt.";
+                            BEGIN
+                              DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+                              DataSensitivity.SETRANGE("Table No","Table No.");
+                              DataSensitivity.SETFILTER("Data Sensitivity",STRSUBSTNO('%1|%2',
+                                  DataSensitivity."Data Sensitivity"::Personal,
+                                  DataSensitivity."Data Sensitivity"::Sensitive));
+                              DataClassificationMgt.FindSimilarFields(DataSensitivity);
+                              PAGE.RUNMODAL(PAGE::"Data Classification Worksheet",DataSensitivity);
+
+                              "Similar Fields Reviewed" := true;
+                              "Status 2" := "Status 2"::Reviewed;
+                              CurrPage.UPDATE;
+                            END;
+
+                ImplicitType=Text120 }
+
+    { 22  ;3   ;Field     ;
+                Name=Status 2;
+                CaptionML=ENU=Status;
+                ApplicationArea=#All;
+                SourceExpr="Status 2";
+                Editable=FALSE;
+                StyleExpr=SimilarFieldsStatusStyle;
+                OnDrillDown=VAR
+                              DataSensitivity@1000 : Record "Data Sensitivity";
+                              DataClassificationMgt@1001 : Codeunit "Data Classification Mgt.";
+                            BEGIN
+                              DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+                              DataSensitivity.SETRANGE("Table No","Table No.");
+                              DataSensitivity.SETFILTER("Data Sensitivity",STRSUBSTNO('%1|%2',
+                                  DataSensitivity."Data Sensitivity"::Personal,
+                                  DataSensitivity."Data Sensitivity"::Sensitive));
+                              DataClassificationMgt.FindSimilarFields(DataSensitivity);
+                              PAGE.RUNMODAL(PAGE::"Data Classification Worksheet",DataSensitivity);
+
+                              "Similar Fields Reviewed" := true;
+                              "Status 2" := "Status 2"::Reviewed;
+                              CurrPage.UPDATE;
+                            END;
+
+                ImplicitType=Option }
+
+    { 29  ;1   ;Group     ;
+                Name=Control29;
+                Visible=(Step = Step::Finish) AND NOT ExportModeSelected;
+                GroupType=Group }
+
+    { 30  ;2   ;Group     ;
+                Name="That's it";
+                CaptionML=ENU=That's it;
+                GroupType=Group;
+                InstructionalTextML=ENU=We have applied the classifications to your data. If you want, you can review and update the classifications in the Data Classification Worksheet. }
+
+    { 31  ;3   ;Field     ;
+                Name=<Control30>;
+                CaptionML=ENU=Open Data Classification Worksheet;
+                ApplicationArea=#All;
+                SourceExpr=ShowWorksheet;
+                ImplicitType=Boolean }
+
+    { 27  ;1   ;Group     ;
+                Name=Control27;
+                Visible=(Step = Step::Finish) AND ExportModeSelected;
+                GroupType=Group }
+
+    { 46  ;2   ;Group     ;
+                Name=Control46;
+                CaptionML=ENU=That's it;
+                GroupType=Group;
+                InstructionalTextML=ENU=The Excel worksheet is ready, and you can start classifying your data.  When you are done, run this guide again to import the updated Excel worksheet and apply the classifications. }
+
+  }
+  CODE
+  {
+    VAR
+      HelpUrlTxt@1000 : TextConst '@@@=Locked;ENU="https://go.microsoft.com/fwlink/?linkid=869249"';
+      HelpLbl@1003 : TextConst 'ENU=Learn more';
+      ReviewFieldsErr@1015 : TextConst 'ENU=You must review the classifications for fields before you can continue.';
+      ReviewSimilarFieldsErr@1016 : TextConst 'ENU=You must review the classifications for similar fields before you can continue.';
+      MediaRepositoryStandard@1022 : Record "Media Repository";
+      MediaRepositoryDone@1021 : Record "Media Repository";
+      MediaResourcesStandard@1020 : Record "Media Resources";
+      MediaResourcesDone@1019 : Record "Media Resources";
+      ClientTypeManagement@1024 : Codeunit ClientTypeManagement;
+      TopBannerVisible@1018 : Boolean;
+      Step@1010 : 'Welcome,"Choose Mode","Set Rules",Apply,Verify,"Verify Related Fields",Finish';
+      StatusStyle@1001 : Text;
+      SimilarFieldsStatusStyle@1002 : Text;
+      NextEnabled@1008 : Boolean;
+      BackEnabled@1007 : Boolean;
+      FinishEnabled@1006 : Boolean;
+      ShowWorksheet@1005 : Boolean;
+      ImportModeSelected@1027 : Boolean;
+      ExpertModeSelected@1028 : Boolean;
+      ExportModeSelected@1011 : Boolean;
+      LedgerEntriesDefaultClassification@1009 : 'Unclassified,Sensitive,Personal,"Company Confidential",Normal';
+      SetupTablesDefaultClassification@1012 : 'Unclassified,Sensitive,Personal,"Company Confidential",Normal';
+      TemplatesDefaultClassification@1013 : 'Unclassified,Sensitive,Personal,"Company Confidential",Normal';
+      ViewFieldsLbl@1031 : TextConst 'ENU=View fields';
+
+    LOCAL PROCEDURE NextStep@18(Backward@1000 : Boolean);
+    BEGIN
+      if not Backward then
+        CheckMandatoryActions;
+
+      if Backward then begin
+        if (Step = Step::Finish) and (ImportModeSelected or ExportModeSelected) then
+          Step := Step::"Choose Mode"
+        else
+          Step += -1;
+      end else
+        Step += 1;
+      ResetControls;
+    END;
+
+    LOCAL PROCEDURE ResetControls@25();
+    VAR
+      DataClassificationMgt@1000 : Codeunit "Data Classification Mgt.";
+    BEGIN
+      BackEnabled := true;
+      NextEnabled := true;
+      FinishEnabled := false;
+      RESET;
+
+      if ISEMPTY then
+        DataClassificationMgt.OnGetPrivacyMasterTables(Rec);
+
+      case Step of
+        Step::Welcome:
+          BackEnabled := false;
+        Step::"Choose Mode":
+          NextEnabled := ImportModeSelected or ExpertModeSelected or ExportModeSelected;
+        Step::Verify,
+        Step::"Verify Related Fields":
+          SETRANGE(Include,true);
+        Step::Finish:
+          begin
+            FinishEnabled := true;
+            NextEnabled := false;
+          end;
+      end;
+    END;
+
+    LOCAL PROCEDURE CheckMandatoryActions@4();
+    BEGIN
+      if Step = Step::"Verify Related Fields" then begin
+        SETRANGE("Similar Fields Reviewed",false);
+        if FINDFIRST then
+          ERROR(ReviewSimilarFieldsErr);
+      end;
+      if Step = Step::Verify then begin
+        SETRANGE(Reviewed,false);
+        if FINDFIRST then
+          ERROR(ReviewFieldsErr);
+      end;
+    END;
+
+    LOCAL PROCEDURE LoadTopBanners@40();
+    BEGIN
+      if MediaRepositoryStandard.GET('AssistedSetup-NoText-400px.png',FORMAT(ClientTypeManagement.GetCurrentClientType)) and
+         MediaRepositoryDone.GET('AssistedSetupDone-NoText-400px.png',FORMAT(ClientTypeManagement.GetCurrentClientType))
+      then
+        if MediaResourcesStandard.GET(MediaRepositoryStandard."Media Resources Ref") and
+           MediaResourcesDone.GET(MediaRepositoryDone."Media Resources Ref")
+        then
+          TopBannerVisible := MediaResourcesDone."Media Reference".HASVALUE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

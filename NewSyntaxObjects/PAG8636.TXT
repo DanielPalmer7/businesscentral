@@ -1,0 +1,48 @@
+OBJECT Page 8636 Config. Field Mapping
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161632.890T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Config. Field Mapping;
+    SourceTable="Config. Field Mapping";
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="Old Value";
+                ToolTipML=ENU=Specifies the old value in the data that you want to map to new value. Usually, the value is one that is based on an option list.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                SourceExpr="Old Value";
+                ImplicitType=Text250 }
+
+    { 4   ;2   ;Field     ;
+                Name="New Value";
+                ToolTipML=ENU=Specifies the value in the data in Business Central to which you want to map the old value. Usually, the value is one that is in an existing option list.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                SourceExpr="New Value";
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

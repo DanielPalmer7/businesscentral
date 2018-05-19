@@ -1,0 +1,168 @@
+OBJECT Page 10144 Posted Deposit Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161723.60T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Posted Deposit Subform;
+    SourceTable="Posted Deposit Line";
+    PageType=ListPart;
+    AutoSplitKey=true;
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 1907935204;1 ;ActionGroup;
+                      Name="&Line";
+                      CaptionML=ENU=&Line;
+                      Image=Line }
+      { 1900295204;2 ;Action    ;
+                      Name=AccountCard;
+                      ShortCutKey=Shift+F7;
+                      CaptionML=ENU=Account &Card;
+                      ToolTipML=ENU=View or change detailed information about the account on the deposit line.;
+                      ApplicationArea=#Basic,#Suite;
+                      OnAction=BEGIN
+                                 ShowAccountCard;
+                               END;
+                                }
+      { 1902937104;2 ;Action    ;
+                      Name=AccountLedgerEntries;
+                      ShortCutKey=Ctrl+F7;
+                      CaptionML=ENU=Account Ledger E&ntries;
+                      ToolTipML=ENU=View ledger entries that are posted for the account on the deposit line.;
+                      ApplicationArea=#Basic,#Suite;
+                      OnAction=BEGIN
+                                 ShowAccountLedgerEntries;
+                               END;
+                                }
+      { 1907070804;2 ;Action    ;
+                      Name=Dimensions;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=ENU=Dimensions;
+                      ToolTipML=ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                      ApplicationArea=#Suite;
+                      Image=Dimensions;
+                      OnAction=BEGIN
+                                 ShowDimensions;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name="Account Type";
+                ToolTipML=ENU=Specifies the account type from which the deposit was received.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Account Type";
+                ImplicitType=Option }
+
+    { 4   ;2   ;Field     ;
+                Name="Account No.";
+                ToolTipML=ENU=Specifies the account number from which the deposit was received.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Account No.";
+                ImplicitType=Code20 }
+
+    { 6   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the transaction on the deposit line.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+    { 8   ;2   ;Field     ;
+                Name="Document Date";
+                ToolTipML=ENU=Specifies the date of the deposit document.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document Date";
+                ImplicitType=Date }
+
+    { 10  ;2   ;Field     ;
+                Name="Document Type";
+                ToolTipML=ENU=Specifies the document number of the document (usually a check) that was deposited.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document Type";
+                ImplicitType=Option }
+
+    { 12  ;2   ;Field     ;
+                Name="Document No.";
+                ToolTipML=ENU=Specifies the number of the document (usually a check) that was deposited.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document No.";
+                ImplicitType=Code20 }
+
+    { 14  ;2   ;Field     ;
+                Name=Amount;
+                ToolTipML=ENU=Specifies the amount of the item, such as a check, that was deposited.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Amount;
+                ImplicitType=Decimal }
+
+    { 16  ;2   ;Field     ;
+                Name="Shortcut Dimension 1 Code";
+                ToolTipML=ENU=Specifies the value assigned to this dimension for this deposit line.;
+                ApplicationArea=#Suite;
+                SourceExpr="Shortcut Dimension 1 Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 18  ;2   ;Field     ;
+                Name="Shortcut Dimension 2 Code";
+                ToolTipML=ENU=Specifies the value assigned to this dimension for this deposit line.;
+                ApplicationArea=#Suite;
+                SourceExpr="Shortcut Dimension 2 Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 1020000;2;Field     ;
+                Name="Entry No.";
+                ToolTipML=ENU=Specifies the entry number from the general ledger account entry.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Entry No.";
+                Visible=FALSE;
+                ImplicitType=Integer }
+
+  }
+  CODE
+  {
+
+    [External]
+    PROCEDURE ShowDimensions@8();
+    BEGIN
+      ShowDimensions;
+    END;
+
+    [External]
+    PROCEDURE ShowAccountCard@1020001();
+    BEGIN
+      ShowAccountCard;
+    END;
+
+    [External]
+    PROCEDURE ShowAccountLedgerEntries@1020002();
+    BEGIN
+      ShowAccountLedgerEntries;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,74 @@
+OBJECT Page 6315 PBI Top 5 Opportunities
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161545.670T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=PBI Top 5 Opportunities;
+    SourceTable="Power BI Chart Buffer";
+    PageType=List;
+    SourceTableTemporary=true;
+    OnOpenPage=VAR
+                 PBITopOpportunitiesCalc@1000 : Codeunit "PBI Top Opportunities Calc.";
+               BEGIN
+                 PBITopOpportunitiesCalc.GetValues(Rec);
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=ID;
+                CaptionML=ENU=ID;
+                ToolTipML=ENU=Specifies the ID.;
+                ApplicationArea=#All;
+                SourceExpr=ID;
+                ImplicitType=Integer }
+
+    { 5   ;2   ;Field     ;
+                Name="Measure No.";
+                CaptionML=ENU=Opportunity No.;
+                ToolTipML=ENU=Specifies the opportunity.;
+                ApplicationArea=#All;
+                SourceExpr="Measure No.";
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=Value;
+                CaptionML=ENU=Value;
+                ToolTipML=ENU=Specifies the value.;
+                ApplicationArea=#All;
+                SourceExpr=Value;
+                ImplicitType=Decimal }
+
+    { 7   ;2   ;Field     ;
+                Name="Measure Name";
+                CaptionML=ENU=Measure Name;
+                ToolTipML=ENU=Specifies the name.;
+                ApplicationArea=#All;
+                SourceExpr="Measure Name";
+                ImplicitType=Text120 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

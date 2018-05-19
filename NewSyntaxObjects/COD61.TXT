@@ -1,0 +1,33 @@
+OBJECT Codeunit 61 Sales-Disc. (Yes/No)
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160531.367T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Sales Line";
+    OnRun=BEGIN
+            SalesLine.COPY(Rec);
+            with SalesLine do begin
+              if CONFIRM(Text000,false) then
+                CODEUNIT.RUN(CODEUNIT::"Sales-Calc. Discount",SalesLine);
+            end;
+            Rec := SalesLine;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'ENU=Do you want to calculate the invoice discount?';
+      SalesLine@1001 : Record "Sales Line";
+
+    BEGIN
+    END.
+  }
+}
+

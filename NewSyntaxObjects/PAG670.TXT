@@ -1,0 +1,77 @@
+OBJECT Page 670 Concurrent Session List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161308.793T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Concurrent Session List;
+    SourceTable="Active Session";
+    SourceTableView=WHERE("Client Type"=FILTER(<>"Web Service"&<>"Management Client"&<>NAS&<>"Client Service"));
+    PageType=List;
+    ShowFilter=false;
+    OnOpenPage=BEGIN
+                 SETRANGE("Server Instance ID",SERVICEINSTANCEID);
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=CurrentSession;
+                CaptionML=ENU=Current Session;
+                ToolTipML=ENU=Specifies if the line describes the current session.;
+                ApplicationArea=#Suite;
+                SourceExpr=IsCurrentSession }
+
+    { 4   ;2   ;Field     ;
+                Name="Session ID";
+                ApplicationArea=#Suite;
+                SourceExpr="Session ID";
+                ImplicitType=Integer }
+
+    { 5   ;2   ;Field     ;
+                Name="User ID";
+                ApplicationArea=#Suite;
+                SourceExpr="User ID";
+                ImplicitType=Text132 }
+
+    { 6   ;2   ;Field     ;
+                Name="Client Type";
+                ApplicationArea=#Suite;
+                SourceExpr="Client Type";
+                ImplicitType=Option }
+
+    { 7   ;2   ;Field     ;
+                Name="Client Computer Name";
+                ApplicationArea=#Suite;
+                SourceExpr="Client Computer Name";
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+
+    LOCAL PROCEDURE IsCurrentSession@1() : Boolean;
+    BEGIN
+      exit("Session ID" = SESSIONID);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

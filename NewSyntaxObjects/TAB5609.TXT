@@ -1,0 +1,35 @@
+OBJECT Table 5609 FA Location
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160150.867T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=FA Location;
+    LookupPageID="FA Locations";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Name                ;Text50        ;CaptionML=ENU=Name }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

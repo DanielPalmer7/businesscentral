@@ -1,0 +1,34 @@
+OBJECT Table 1280 Bank Clearing Standard
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160125.447T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Bank Clearing Standard;
+    LookupPageID="Bank Clearing Standards";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Text50        ;CaptionML=ENU=Code }
+    { 2   ;   ;Description         ;Text80        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

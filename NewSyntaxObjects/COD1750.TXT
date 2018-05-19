@@ -1,0 +1,1448 @@
+OBJECT Codeunit 1750 Data Classification Mgt.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160709.487T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      CountryRegion@1017 : Record "Country/Region";
+      CountryCodeFilter@1014 : Text;
+      ImportTitleTxt@1002 : TextConst 'ENU=Choose the Excel worksheet where data classifications have been added.';
+      DataSensitivityOptionStringTxt@1003 : TextConst '@@@=It needs to be translated as the field Data Sensitivity on Page 1751 Data Classification WorkSheet and field Data Sensitivity of Table 1180 Data Sensitivity Entities;ENU=Unclassified,Sensitive,Personal,Company Confidential,Normal';
+      DataClassNotifActionTxt@1004 : TextConst 'ENU=Open Data Classification Guide';
+      DataClassNotifMessageMsg@1005 : TextConst '@@@="%1=Data Subject";ENU=Looks like you have %1 in the EU. Have you classified your data? We can help you do that.';
+      ExcelFileNameTxt@1001 : TextConst 'ENU=Classifications.xlsx';
+      CustomerFilterTxt@1009 : TextConst '@@@={Locked};ENU="WHERE(Partner Type=FILTER(Person))"';
+      VendorFilterTxt@1008 : TextConst '@@@={Locked};ENU="WHERE(Partner Type=FILTER(Person))"';
+      ContactFilterTxt@1007 : TextConst '@@@={Locked};ENU="WHERE(Type=FILTER(Person))"';
+      ResourceFilterTxt@1006 : TextConst '@@@={Locked};ENU="WHERE(Type=FILTER(Person))"';
+      SyncFieldsInFieldTableMsg@1010 : TextConst '@@@="%1=Number of days";ENU=Your fields are %1 days old.';
+      SyncAllFieldsTxt@1011 : TextConst 'ENU=Synchronize all fields';
+      UnclassifiedFieldsExistMsg@1013 : TextConst 'ENU=You have unclassified fields that require your attention.';
+      OpenWorksheetActionLbl@1012 : TextConst 'ENU=Open worksheet';
+      VendorsTok@1018 : TextConst 'ENU=vendors';
+      CustomersTok@1019 : TextConst 'ENU=customers';
+      ContactsTok@1020 : TextConst 'ENU=contacts';
+      EmployeesTok@1021 : TextConst 'ENU=employees';
+      ResourcesTok@1022 : TextConst 'ENU=resources';
+      DontShowAgainTok@1023 : TextConst 'ENU=Don''t show me again';
+      WrongFormatExcelFileErr@1025 : TextConst 'ENU=Looks like the Excel worksheet you provided is not formatted correctly.';
+      WrongSensitivityValueErr@1024 : TextConst '@@@="%1=Given Sensitivity %2=Available Options";ENU=%1 is not a valid classification. Classifications can be %2.';
+
+    PROCEDURE FillDataSensitivityTable@12();
+    VAR
+      Field@1000 : Record Field;
+      DataSensitivity@1001 : Record "Data Sensitivity";
+      FieldsSyncStatus@1002 : Record "Fields Sync Status";
+    BEGIN
+      Field.SETRANGE(Enabled,true);
+      Field.SETFILTER(
+        DataClassification,
+        STRSUBSTNO('%1|%2|%3',
+          Field.DataClassification::CustomerContent,
+          Field.DataClassification::EndUserIdentifiableInformation,
+          Field.DataClassification::EndUserPseudonymousIdentifiers));
+      Field.FINDSET;
+      repeat
+        DataSensitivity.INIT;
+        DataSensitivity."Company Name" := COMPANYNAME;
+        DataSensitivity."Table No" := Field.TableNo;
+        DataSensitivity."Field No" := Field."No.";
+        DataSensitivity."Data Sensitivity" := DataSensitivity."Data Sensitivity"::Unclassified;
+        DataSensitivity.INSERT;
+      until Field.NEXT = 0;
+      if FieldsSyncStatus.GET then begin
+        FieldsSyncStatus."Last Sync Date Time" := CURRENTDATETIME;
+        FieldsSyncStatus.MODIFY;
+      end else begin
+        FieldsSyncStatus."Last Sync Date Time" := CURRENTDATETIME;
+        FieldsSyncStatus.INSERT;
+      end;
+    END;
+
+    PROCEDURE ImportExcelSheet@3();
+    VAR
+      TempExcelBuffer@1002 : TEMPORARY Record "Excel Buffer";
+      DataSensitivity@1013 : Record "Data Sensitivity";
+      TypeHelper@1000 : Codeunit "Type Helper";
+      FileManagement@1017 : Codeunit "File Management";
+      DataClassificationWorksheet@1003 : Page "Data Classification Worksheet";
+      ExcelStream@1007 : InStream;
+      RecordRef@1016 : RecordRef;
+      FieldRef@1014 : FieldRef;
+      FileName@1001 : Text;
+      Class@1015 : Integer;
+      TableNoColumn@1004 : Integer;
+      FieldNoColumn@1005 : Integer;
+      ClassColumn@1006 : Integer;
+      Rows@1009 : Integer;
+      Columns@1018 : Integer;
+      Index@1010 : Integer;
+      TableNo@1011 : Integer;
+      FieldNo@1012 : Integer;
+      ShouldUploadFile@1008 : Boolean;
+    BEGIN
+      DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+      if DataSensitivity.ISEMPTY then
+        FillDataSensitivityTable;
+
+      ShouldUploadFile := true;
+      OnUploadExcelSheet(TempExcelBuffer,ShouldUploadFile);
+      if ShouldUploadFile then begin
+        FileName := '';
+        UPLOADINTOSTREAM(
+          ImportTitleTxt,
+          '',
+          FileManagement.GetToFilterText('',ExcelFileNameTxt),
+          FileName,
+          ExcelStream);
+
+        if FileName = '' then
+          ERROR('');
+        TempExcelBuffer.OpenBookStream(ExcelStream,DataClassificationWorksheet.CAPTION);
+        TempExcelBuffer.ReadSheet;
+      end;
+
+      if TempExcelBuffer.FINDLAST then;
+
+      Rows := TempExcelBuffer."Row No.";
+      Columns := TempExcelBuffer."Column No.";
+      if (Rows < 2) or (Columns < 6) then
+        ERROR(WrongFormatExcelFileErr);
+
+      TableNoColumn := 1;
+      FieldNoColumn := 2;
+      ClassColumn := 6;
+
+      for Index := 2 to Rows do
+        if TempExcelBuffer.GET(Index,TableNoColumn) then begin
+          EVALUATE(TableNo,TempExcelBuffer."Cell Value as Text");
+
+          if TempExcelBuffer.GET(Index,FieldNoColumn) then begin;
+            EVALUATE(FieldNo,TempExcelBuffer."Cell Value as Text");
+
+            if TempExcelBuffer.GET(Index,ClassColumn) then
+              if DataSensitivity.GET(COMPANYNAME,TableNo,FieldNo) then begin
+                Class := TypeHelper.GetOptionNo(TempExcelBuffer."Cell Value as Text",DataSensitivityOptionStringTxt);
+                if Class < 0 then begin
+                  // Try the English version
+                  RecordRef.OPEN(DATABASE::"Data Sensitivity");
+                  FieldRef := RecordRef.FIELD(DataSensitivity.FIELDNO("Data Sensitivity"));
+                  Class := TypeHelper.GetOptionNo(TempExcelBuffer."Cell Value as Text",FieldRef.OPTIONSTRING);
+                  RecordRef.CLOSE;
+                end;
+                if Class < 0 then
+                  ERROR(STRSUBSTNO(WrongSensitivityValueErr,TempExcelBuffer."Cell Value as Text",DataSensitivityOptionStringTxt));
+                if Class <> DataSensitivity."Data Sensitivity"::Unclassified then begin
+                  DataSensitivity.VALIDATE("Data Sensitivity",Class);
+                  DataSensitivity.VALIDATE("Last Modified By",USERSECURITYID);
+                  DataSensitivity.VALIDATE("Last Modified",CURRENTDATETIME);
+                  DataSensitivity.MODIFY(true);
+                end;
+              end;
+          end;
+        end;
+
+      TempExcelBuffer.CloseBook;
+    END;
+
+    PROCEDURE ExportToExcelSheet@16();
+    VAR
+      TempExcelBuffer@1001 : TEMPORARY Record "Excel Buffer";
+      DataSensitivity@1000 : Record "Data Sensitivity";
+      DataClassificationWorksheet@1002 : Page "Data Classification Worksheet";
+      ShouldOpenFile@1003 : Boolean;
+    BEGIN
+      DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+      if not DataSensitivity.FINDSET then
+        FillDataSensitivityTable;
+
+      TempExcelBuffer.CreateNewBook(DataClassificationWorksheet.CAPTION);
+      TempExcelBuffer.NewRow;
+      TempExcelBuffer.AddColumn(
+        DataSensitivity.FIELDNAME("Table No"),false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+      TempExcelBuffer.AddColumn(
+        DataSensitivity.FIELDNAME("Field No"),false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+      TempExcelBuffer.AddColumn(
+        DataSensitivity.FIELDNAME("Table Caption"),false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+      TempExcelBuffer.AddColumn(
+        DataSensitivity.FIELDNAME("Field Caption"),false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+      TempExcelBuffer.AddColumn(
+        DataSensitivity.FIELDNAME("Field Type"),false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+      TempExcelBuffer.AddColumn(
+        DataSensitivity.FIELDNAME("Data Sensitivity"),false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+      repeat
+        DataSensitivity.CALCFIELDS("Table Caption");
+        DataSensitivity.CALCFIELDS("Field Caption");
+        DataSensitivity.CALCFIELDS("Field Type");
+        if (DataSensitivity."Table Caption" <> '') and (DataSensitivity."Field Caption" <> '') then begin
+          TempExcelBuffer.NewRow;
+          TempExcelBuffer.AddColumn(
+            DataSensitivity."Table No",false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Number);
+          TempExcelBuffer.AddColumn(
+            DataSensitivity."Field No",false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Number);
+          TempExcelBuffer.AddColumn(
+            DataSensitivity."Table Caption",false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+          TempExcelBuffer.AddColumn(
+            DataSensitivity."Field Caption",false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+          case DataSensitivity."Field Type" of
+            DataSensitivity."Field Type"::BigInteger:
+              TempExcelBuffer.AddColumn(
+                'BigInteger',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::Binary:
+              TempExcelBuffer.AddColumn(
+                'Binary',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::BLOB:
+              TempExcelBuffer.AddColumn(
+                'BLOB',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::Boolean:
+              TempExcelBuffer.AddColumn(
+                'Boolean',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::Code:
+              TempExcelBuffer.AddColumn(
+                'Code',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::Date:
+              TempExcelBuffer.AddColumn(
+                'Date',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::DateFormula:
+              TempExcelBuffer.AddColumn(
+                'DateFormula',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::DateTime:
+              TempExcelBuffer.AddColumn(
+                'DateTime',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::Decimal:
+              TempExcelBuffer.AddColumn(
+                'Decimal',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::Duration:
+              TempExcelBuffer.AddColumn(
+                'Duration',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::GUID:
+              TempExcelBuffer.AddColumn(
+                'GUID',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::Integer:
+              TempExcelBuffer.AddColumn(
+                'Integer',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::Media:
+              TempExcelBuffer.AddColumn(
+                'Media',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::MediaSet:
+              TempExcelBuffer.AddColumn(
+                'MediaSet',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::OemCode:
+              TempExcelBuffer.AddColumn(
+                'OemCode',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::OemText:
+              TempExcelBuffer.AddColumn(
+                'OemText',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::Option:
+              TempExcelBuffer.AddColumn(
+                'Option',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::RecordID:
+              TempExcelBuffer.AddColumn(
+                'RecordID',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::TableFilter:
+              TempExcelBuffer.AddColumn(
+                'TableFilter',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::Text:
+              TempExcelBuffer.AddColumn(
+                'Text',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+            DataSensitivity."Field Type"::Time:
+              TempExcelBuffer.AddColumn(
+                'Time',false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+          end;
+          TempExcelBuffer.AddColumn(
+            DataSensitivity."Data Sensitivity",false,'',false,false,false,'',TempExcelBuffer."Cell Type"::Text);
+        end;
+      until DataSensitivity.NEXT = 0;
+
+      TempExcelBuffer.WriteSheet(DataClassificationWorksheet.CAPTION,COMPANYNAME,USERID);
+      TempExcelBuffer.CloseBook;
+
+      ShouldOpenFile := true;
+      OnOpenExcelSheet(TempExcelBuffer,ShouldOpenFile);
+      if ShouldOpenFile then
+        TempExcelBuffer.OpenExcelWithName(ExcelFileNameTxt);
+    END;
+
+    [EventSubscriber(Codeunit,1750,OnGetPrivacyMasterTables)]
+    LOCAL PROCEDURE OnGetPrivacyMasterTablesSubscriber@5(VAR DataPrivacyEntities@1000 : Record "Data Privacy Entities");
+    VAR
+      DummyCustomer@1001 : Record Customer;
+      DummyVendor@1002 : Record Vendor;
+      DummyContact@1003 : Record Contact;
+      DummyResource@1004 : Record Resource;
+      DummyUser@1005 : Record User;
+      DummyEmployee@1006 : Record Employee;
+      DummySalespersonPurchaser@1007 : Record "Salesperson/Purchaser";
+    BEGIN
+      DataPrivacyEntities.InsertRow(
+        DATABASE::Customer,
+        PAGE::"Customer List",
+        DummyCustomer.FIELDNO("No."),
+        CustomerFilterTxt);
+      DataPrivacyEntities.InsertRow(
+        DATABASE::Vendor,
+        PAGE::"Vendor List",
+        DummyVendor.FIELDNO("No."),
+        VendorFilterTxt);
+      DataPrivacyEntities.InsertRow(
+        DATABASE::"Salesperson/Purchaser",
+        PAGE::"Salespersons/Purchasers",
+        DummySalespersonPurchaser.FIELDNO(Code),
+        ContactFilterTxt);
+      DataPrivacyEntities.InsertRow(
+        DATABASE::Contact,
+        PAGE::"Contact List",
+        DummyContact.FIELDNO("No."),
+        ContactFilterTxt);
+      DataPrivacyEntities.InsertRow(
+        DATABASE::Employee,
+        PAGE::"Employee List",
+        DummyEmployee.FIELDNO("No."),
+        '');
+      DataPrivacyEntities.InsertRow(
+        DATABASE::User,
+        PAGE::Users,
+        DummyUser.FIELDNO("User Name"),
+        '');
+      DataPrivacyEntities.InsertRow(
+        DATABASE::Resource,
+        PAGE::"Resource List",
+        DummyResource.FIELDNO("No."),
+        ResourceFilterTxt);
+    END;
+
+    [Integration]
+    PROCEDURE OnGetPrivacyMasterTables@6(VAR DataPrivacyEntities@1000 : Record "Data Privacy Entities");
+    BEGIN
+    END;
+
+    PROCEDURE SetTableClassifications@4(VAR DataPrivacyEntities@1000 : Record "Data Privacy Entities");
+    BEGIN
+      DataPrivacyEntities.SETRANGE(Include,true);
+      if DataPrivacyEntities.FINDSET then
+        repeat
+          SetFieldsClassifications(DataPrivacyEntities."Table No.",DataPrivacyEntities."Default Data Sensitivity");
+        until DataPrivacyEntities.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE SetFieldsClassifications@8(TableNo@1000 : Integer;Class@1001 : Option);
+    VAR
+      DataSensitivity@1002 : Record "Data Sensitivity";
+    BEGIN
+      DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+      DataSensitivity.SETRANGE("Table No",TableNo);
+      SetSensitivities(DataSensitivity,Class);
+    END;
+
+    LOCAL PROCEDURE FireDataClassificationNotification@15(EntityName@1001 : Text);
+    VAR
+      DataClassNotification@1000 : Notification;
+    BEGIN
+      DataClassNotification.ID := GetDataClassificationNotificationId;
+      DataClassNotification.ADDACTION(DataClassNotifActionTxt,CODEUNIT::"Data Classification Mgt.",'OpenDataClassificationWizard');
+      DataClassNotification.MESSAGE(STRSUBSTNO(DataClassNotifMessageMsg,EntityName));
+      DataClassNotification.ADDACTION(DontShowAgainTok,CODEUNIT::"Data Classification Mgt.",'DisableNotifications');
+      DataClassNotification.SEND;
+    END;
+
+    LOCAL PROCEDURE FireSyncFieldsNotification@21(DaysSinceLastSync@1003 : Integer);
+    VAR
+      SyncFieldsNotification@1000 : Notification;
+    BEGIN
+      SyncFieldsNotification.ID := GetSyncFieldsNotificationId;
+      SyncFieldsNotification.MESSAGE := STRSUBSTNO(SyncFieldsInFieldTableMsg,DaysSinceLastSync);
+      SyncFieldsNotification.ADDACTION(SyncAllFieldsTxt,CODEUNIT::"Data Classification Mgt.",'SyncAllFieldsFromNotification');
+      SyncFieldsNotification.ADDACTION(DontShowAgainTok,CODEUNIT::"Data Classification Mgt.",'DisableNotifications');
+      SyncFieldsNotification.SEND;
+    END;
+
+    LOCAL PROCEDURE FireUnclassifiedFieldsNotification@27();
+    VAR
+      Notification@1000 : Notification;
+    BEGIN
+      Notification.ID := GetUnclassifiedFieldsNotificationId;
+      Notification.MESSAGE := UnclassifiedFieldsExistMsg;
+      Notification.ADDACTION(OpenWorksheetActionLbl,CODEUNIT::"Data Classification Mgt.",'OpenClassificationWorksheetPage');
+      Notification.ADDACTION(DontShowAgainTok,CODEUNIT::"Data Classification Mgt.",'DisableNotifications');
+      Notification.SEND;
+    END;
+
+    PROCEDURE GetDataClassificationNotificationId@19() : GUID;
+    BEGIN
+      exit('23593a8e-947b-4b09-8382-36a8aaf89e01');
+    END;
+
+    PROCEDURE GetSyncFieldsNotificationId@42() : GUID;
+    BEGIN
+      exit('3bce2004-361a-4e7f-9ae6-2df91f29a195');
+    END;
+
+    PROCEDURE GetUnclassifiedFieldsNotificationId@43() : GUID;
+    BEGIN
+      exit('fe7fc3ad-2382-4cbd-93f8-79bcd5b538ae');
+    END;
+
+    PROCEDURE OpenDataClassificationWizard@23(Notification@1000 : Notification);
+    BEGIN
+      PAGE.RUN(PAGE::"Data Classification Wizard");
+    END;
+
+    PROCEDURE FindSimilarFields@13(VAR DataSensitivity@1000 : Record "Data Sensitivity");
+    VAR
+      TempDataPrivacyEntities@1002 : TEMPORARY Record "Data Privacy Entities";
+      FieldNameFilter@1003 : Text;
+      TableNoFilter@1004 : Text;
+      PrevTableNo@1001 : Integer;
+    BEGIN
+      if DataSensitivity.FINDSET then begin
+        repeat
+          if PrevTableNo <> DataSensitivity."Table No" then begin
+            GetRelatedTablesForTable(TempDataPrivacyEntities,DataSensitivity."Table No");
+            PrevTableNo := DataSensitivity."Table No";
+          end;
+          DataSensitivity.CALCFIELDS("Field Caption");
+          FieldNameFilter += STRSUBSTNO('*%1*|',DELCHR(DataSensitivity."Field Caption",'=','()'));
+        until DataSensitivity.NEXT = 0;
+
+        FieldNameFilter := COPYSTR(FieldNameFilter,1,STRLEN(FieldNameFilter) - 1);
+        DataSensitivity.RESET;
+        DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+        DataSensitivity.FILTERGROUP(2);
+        DataSensitivity.SETFILTER("Field Caption",FieldNameFilter);
+
+        if TempDataPrivacyEntities.FINDSET then begin
+          repeat
+            TableNoFilter += STRSUBSTNO('%1|',TempDataPrivacyEntities."Table No.");
+          until TempDataPrivacyEntities.NEXT = 0;
+
+          TableNoFilter := COPYSTR(TableNoFilter,1,STRLEN(TableNoFilter) - 1);
+          DataSensitivity.SETFILTER("Table No",TableNoFilter);
+        end;
+      end;
+    END;
+
+    PROCEDURE GetRelatedTablesForTable@18(VAR TempDataPrivacyEntitiesOut@1000 : TEMPORARY Record "Data Privacy Entities";TableNo@1001 : Integer);
+    VAR
+      TableRelationsMetadata@1002 : Record "Table Relations Metadata";
+    BEGIN
+      TableRelationsMetadata.SETRANGE("Related Table ID",TableNo);
+      if TableRelationsMetadata.FINDSET then
+        repeat
+          TempDataPrivacyEntitiesOut.InsertRow(TableRelationsMetadata."Table ID",0,0,'');
+        until TableRelationsMetadata.NEXT = 0;
+    END;
+
+    PROCEDURE GetTableNoFilterForTablesWhoseNameContains@9(Name@1001 : Text) : Text;
+    VAR
+      Field@1000 : Record Field;
+      PrevTableNo@1002 : Integer;
+      TableNoFilter@1003 : Text;
+    BEGIN
+      PrevTableNo := 0;
+      Field.SETRANGE(DataClassification,Field.DataClassification::CustomerContent);
+      Field.SETFILTER(TableName,STRSUBSTNO('*%1*',Name));
+      if Field.FINDSET then begin
+        repeat
+          if PrevTableNo <> Field.TableNo then
+            TableNoFilter += STRSUBSTNO('%1|',Field.TableNo);
+        until Field.NEXT = 0;
+
+        TableNoFilter := COPYSTR(TableNoFilter,1,STRLEN(TableNoFilter) - 1);
+      end;
+      exit(TableNoFilter);
+    END;
+
+    PROCEDURE PopulateFieldValue@25(FieldRef@1005 : FieldRef;VAR FieldContentBuffer@1000 : Record "Field Content Buffer");
+    VAR
+      FieldValueText@1001 : Text;
+    BEGIN
+      if IsFlowField(FieldRef) then
+        FieldRef.CALCFIELD;
+      EVALUATE(FieldValueText,FORMAT(FieldRef.VALUE,0,9));
+      if FieldValueText <> '' then
+        if not FieldContentBuffer.GET(FieldValueText) then begin
+          FieldContentBuffer.INIT;
+          FieldContentBuffer.Value := COPYSTR(FieldValueText,1,250);
+          FieldContentBuffer.INSERT;
+        end;
+    END;
+
+    LOCAL PROCEDURE IsFlowField@26(FieldRef@1000 : FieldRef) : Boolean;
+    VAR
+      OptionVar@1001 : 'Normal,FlowFilter,FlowField';
+    BEGIN
+      EVALUATE(OptionVar,FORMAT(FieldRef.CLASS));
+      exit(OptionVar = OptionVar::FlowField);
+    END;
+
+    PROCEDURE SyncAllFieldsFromNotification@41(Notification@1000 : Notification);
+    BEGIN
+      SyncAllFields;
+      CheckForUnclassifiedFields;
+    END;
+
+    PROCEDURE SyncAllFields@39();
+    VAR
+      Field@1000 : Record Field;
+    BEGIN
+      RunSync(Field);
+    END;
+
+    LOCAL PROCEDURE CheckForUnclassifiedFields@51();
+    VAR
+      DataSensitivity@1001 : Record "Data Sensitivity";
+      CompanyInformation@1002 : Record "Company Information";
+    BEGIN
+      if not DataSensitivity.WRITEPERMISSION then
+        exit;
+
+      DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+      DataSensitivity.SETRANGE("Data Sensitivity",DataSensitivity."Data Sensitivity"::Unclassified);
+      if DataSensitivity.ISEMPTY then
+        exit;
+
+      if CompanyInformation.GET then;
+      if CompanyInformation."Demo Company" then
+        exit;
+
+      FireUnclassifiedFieldsNotification;
+    END;
+
+    [EventSubscriber(Page,2501,OnAfterActionEvent,Install,Skip,Skip)]
+    LOCAL PROCEDURE AfterExtensionIsInstalled@74(VAR Rec@1000 : Record "NAV App");
+    VAR
+      DataSensitivity@1001 : Record "Data Sensitivity";
+      NAVAppObjectMetadata@1002 : Record "NAV App Object Metadata";
+      Field@1003 : Record Field;
+      FilterText@1004 : Text;
+    BEGIN
+      DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+      if DataSensitivity.ISEMPTY then
+        exit;
+
+      NAVAppObjectMetadata.SETRANGE("App Package ID",Rec."Package ID");
+      NAVAppObjectMetadata.SETRANGE("Object Type",NAVAppObjectMetadata."Object Type"::Table);
+      if NAVAppObjectMetadata.FINDSET then begin
+        repeat
+          FilterText += STRSUBSTNO('%1|',NAVAppObjectMetadata."Object ID");
+        until NAVAppObjectMetadata.NEXT = 0;
+
+        // Remove the last '|' character
+        FilterText := COPYSTR(FilterText,1,STRLEN(FilterText) - 1);
+        Field.SETFILTER(TableNo,FilterText);
+        SetFilterOnField(Field);
+        if Field.FINDSET then begin
+          repeat
+            if not DataSensitivity.GET(COMPANYNAME,Field.TableNo,Field."No.") then begin
+              DataSensitivity.INIT;
+              DataSensitivity."Company Name" := COMPANYNAME;
+              DataSensitivity."Table No" := Field.TableNo;
+              DataSensitivity."Field No" := Field."No.";
+              DataSensitivity."Data Sensitivity" := DataSensitivity."Data Sensitivity"::Unclassified;
+              DataSensitivity.INSERT;
+            end;
+          until Field.NEXT = 0;
+          CheckForUnclassifiedFields;
+        end;
+      end;
+    END;
+
+    [EventSubscriber(Page,2501,OnAfterActionEvent,Uninstall,Skip,Skip)]
+    LOCAL PROCEDURE AfterExtensionIsUninstalled@20(VAR Rec@1000 : Record "NAV App");
+    VAR
+      DataSensitivity@1001 : Record "Data Sensitivity";
+      NAVAppObjectMetadata@1003 : Record "NAV App Object Metadata";
+      FilterText@1002 : Text;
+    BEGIN
+      DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+      if DataSensitivity.ISEMPTY then
+        exit;
+
+      // Remove the fields from the Data Sensitivity table without a confirmation through a notification
+      // as it should be quite fast to do so.
+      NAVAppObjectMetadata.SETRANGE("App Package ID",Rec."Package ID");
+      NAVAppObjectMetadata.SETRANGE("Object Type",NAVAppObjectMetadata."Object Type"::Table);
+      if NAVAppObjectMetadata.FINDSET then begin
+        repeat
+          FilterText += STRSUBSTNO('%1|',NAVAppObjectMetadata."Object ID");
+        until NAVAppObjectMetadata.NEXT = 0;
+
+        // Remove the last '|' character
+        FilterText := COPYSTR(FilterText,1,STRLEN(FilterText) - 1);
+
+        DataSensitivity.SETFILTER("Table No",FilterText);
+        DataSensitivity.SETRANGE("Data Sensitivity",DataSensitivity."Data Sensitivity"::Unclassified);
+        DataSensitivity.DELETEALL;
+      end;
+    END;
+
+    PROCEDURE OpenClassificationWorksheetPage@32(Notification@1001 : Notification);
+    VAR
+      DataSensitivity@1000 : Record "Data Sensitivity";
+    BEGIN
+      DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+      DataSensitivity.SETRANGE("Data Sensitivity",DataSensitivity."Data Sensitivity"::Unclassified);
+      PAGE.RUN(PAGE::"Data Classification Worksheet",DataSensitivity);
+    END;
+
+    LOCAL PROCEDURE SetFilterOnField@44(VAR Field@1000 : Record Field);
+    BEGIN
+      Field.SETRANGE(Enabled,true);
+      Field.SETRANGE(Class,Field.Class::Normal);
+      Field.SETFILTER(DataClassification,STRSUBSTNO('%1|%2|%3',
+          Field.DataClassification::CustomerContent,
+          Field.DataClassification::EndUserIdentifiableInformation,
+          Field.DataClassification::EndUserPseudonymousIdentifiers));
+    END;
+
+    PROCEDURE RunSync@77(Field@1000 : Record Field);
+    VAR
+      DataSensitivity@1005 : Record "Data Sensitivity";
+      TempDataSensitivity@1004 : TEMPORARY Record "Data Sensitivity";
+      FieldsSyncStatus@1002 : Record "Fields Sync Status";
+    BEGIN
+      DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+      if DataSensitivity.ISEMPTY then begin
+        FillDataSensitivityTable;
+        exit;
+      end;
+
+      SetFilterOnField(Field);
+      if Field.FINDSET then begin
+        // Read all records from Data Sensitivity into Temp var
+        if DataSensitivity.FINDSET then
+          repeat
+            TempDataSensitivity.TRANSFERFIELDS(DataSensitivity,true);
+            TempDataSensitivity.INSERT;
+          until DataSensitivity.NEXT = 0;
+
+        repeat
+          if not TempDataSensitivity.GET(COMPANYNAME,Field.TableNo,Field."No.") then begin
+            DataSensitivity.INIT;
+            DataSensitivity."Company Name" := COMPANYNAME;
+            DataSensitivity."Table No" := Field.TableNo;
+            DataSensitivity."Field No" := Field."No.";
+            DataSensitivity."Data Sensitivity" := DataSensitivity."Data Sensitivity"::Unclassified;
+            DataSensitivity.INSERT;
+          end else
+            TempDataSensitivity.DELETE;
+        until Field.NEXT = 0;
+      end;
+
+      if TempDataSensitivity.FINDSET then
+        repeat
+          if TempDataSensitivity."Data Sensitivity" = DataSensitivity."Data Sensitivity"::Unclassified then begin
+            DataSensitivity.GET(TempDataSensitivity."Company Name",DataSensitivity."Table No",DataSensitivity."Field No");
+            DataSensitivity.DELETE;
+          end;
+        until TempDataSensitivity.NEXT = 0;
+
+      if FieldsSyncStatus.GET then begin
+        FieldsSyncStatus."Last Sync Date Time" := CURRENTDATETIME;
+        FieldsSyncStatus.MODIFY;
+      end else begin
+        FieldsSyncStatus."Last Sync Date Time" := CURRENTDATETIME;
+        FieldsSyncStatus.INSERT;
+      end;
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnOpenExcelSheet@1(VAR ExcelBuffer@1000 : Record "Excel Buffer";VAR ShouldOpenFile@1001 : Boolean);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnUploadExcelSheet@22(VAR ExcelBuffer@1000 : Record "Excel Buffer";VAR ShouldUploadFile@1001 : Boolean);
+    BEGIN
+    END;
+
+    PROCEDURE ShowNotifications@10();
+    VAR
+      DataSensitivity@1000 : Record "Data Sensitivity";
+      Vendor@1003 : Record Vendor;
+      Customer@1004 : Record Customer;
+      Employee@1005 : Record Employee;
+      Contact@1006 : Record Contact;
+      Resource@1007 : Record Resource;
+      DataClassNotifSetup@1008 : Record "Data Class. Notif. Setup";
+      CompanyInformation@1009 : Record "Company Information";
+      IdentityManagement@1002 : Codeunit "Identity Management";
+    BEGIN
+      if IdentityManagement.IsInvAppId then
+        exit;
+
+      if not DataClassNotifSetup.ShowNotifications then
+        exit;
+
+      if not DataSensitivity.WRITEPERMISSION then
+        exit;
+
+      if CompanyInformation.GET then;
+      if CompanyInformation."Demo Company" then
+        exit;
+
+      DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+      if DataSensitivity.ISEMPTY then begin
+        if CountryRegion.FINDSET then begin
+          repeat
+            if CountryRegion."EU Country/Region Code" <> '' then
+              CountryCodeFilter += STRSUBSTNO('%1|',CountryRegion.Code);
+          until CountryRegion.NEXT = 0;
+
+          CountryCodeFilter := COPYSTR(CountryCodeFilter,1,STRLEN(CountryCodeFilter) - 1);
+        end;
+
+        Vendor.SETRANGE("Partner Type",Vendor."Partner Type"::Person);
+        Vendor.SETFILTER("Country/Region Code",CountryCodeFilter);
+        if Vendor.FINDFIRST then begin
+          FireDataClassificationNotification(VendorsTok);
+          exit;
+        end;
+
+        Customer.SETRANGE("Partner Type",Customer."Partner Type"::Person);
+        Customer.SETFILTER("Country/Region Code",CountryCodeFilter);
+        if Customer.FINDFIRST then begin
+          FireDataClassificationNotification(CustomersTok);
+          exit;
+        end;
+
+        Contact.SETRANGE(Type,Contact.Type::Person);
+        Contact.SETFILTER("Country/Region Code",CountryCodeFilter);
+        if Contact.FINDFIRST then begin
+          FireDataClassificationNotification(ContactsTok);
+          exit;
+        end;
+
+        Resource.SETRANGE(Type,Resource.Type::Person);
+        Resource.SETFILTER("Country/Region Code",CountryCodeFilter);
+        if Resource.FINDFIRST then begin
+          FireDataClassificationNotification(ResourcesTok);
+          exit;
+        end;
+
+        Employee.SETFILTER("Country/Region Code",CountryCodeFilter);
+        if Employee.FINDFIRST then begin
+          FireDataClassificationNotification(EmployeesTok);
+          exit;
+        end;
+        exit;
+      end;
+
+      DataSensitivity.SETRANGE("Data Sensitivity",DataSensitivity."Data Sensitivity"::Unclassified);
+      if DataSensitivity.FINDFIRST then begin
+        FireUnclassifiedFieldsNotification;
+        exit;
+      end;
+
+      ShowSyncFieldsNotification;
+    END;
+
+    PROCEDURE DisableNotifications@33(Notification@1000 : Notification);
+    VAR
+      DataClassNotifSetup@1001 : Record "Data Class. Notif. Setup";
+    BEGIN
+      DataClassNotifSetup.DisableNotifications;
+    END;
+
+    PROCEDURE ShowSyncFieldsNotification@28();
+    VAR
+      FieldsSyncStatus@1001 : Record "Fields Sync Status";
+      CompanyInformation@1002 : Record "Company Information";
+      DataClassNotifSetup@1008 : Record "Data Class. Notif. Setup";
+      DaysSinceLastSync@1000 : Integer;
+    BEGIN
+      if not DataClassNotifSetup.ShowNotifications then
+        exit;
+
+      if not FieldsSyncStatus.WRITEPERMISSION then
+        exit;
+
+      if CompanyInformation.GET then;
+      if CompanyInformation."Demo Company" then
+        exit;
+
+      if FieldsSyncStatus.GET then begin
+        DaysSinceLastSync := ROUND((CURRENTDATETIME - FieldsSyncStatus."Last Sync Date Time") / 1000 / 3600 / 24,1);
+        if DaysSinceLastSync > 30 then
+          FireSyncFieldsNotification(DaysSinceLastSync);
+      end;
+    END;
+
+    LOCAL PROCEDURE ClassifyTableFields@17(TableNo@1003 : Integer;Class@1000 : Option);
+    VAR
+      DataSensitivity@1002 : Record "Data Sensitivity";
+    BEGIN
+      DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+      DataSensitivity.SETRANGE("Table No",TableNo);
+      DataSensitivity.MODIFYALL("Data Sensitivity",Class);
+    END;
+
+    LOCAL PROCEDURE ClassifyField@7(TableNo@1000 : Integer;FieldNo@1001 : Integer;Class@1002 : Option);
+    VAR
+      DataSensitivity@1003 : Record "Data Sensitivity";
+    BEGIN
+      if not DataSensitivity.GET(COMPANYNAME,TableNo,FieldNo) then
+        exit;
+      DataSensitivity.VALIDATE("Data Sensitivity",Class);
+      DataSensitivity.MODIFY(true);
+    END;
+
+    PROCEDURE CreateDemoData@2();
+    VAR
+      DataSensitivity@1002 : Record "Data Sensitivity";
+      Field@1000 : Record Field;
+    BEGIN
+      // Set Everything to Normal and override later
+      Field.SETFILTER(DataClassification,STRSUBSTNO('%1|%2|%3',
+          Field.DataClassification::CustomerContent,
+          Field.DataClassification::EndUserIdentifiableInformation,
+          Field.DataClassification::EndUserPseudonymousIdentifiers));
+      if Field.FINDSET then
+        repeat
+          DataSensitivity."Company Name" := COMPANYNAME;
+          DataSensitivity."Table No" := Field.TableNo;
+          DataSensitivity."Field No" := Field."No.";
+          DataSensitivity."Data Sensitivity" := DataSensitivity."Data Sensitivity"::Normal;
+          if DataSensitivity.INSERT(true) then;
+        until Field.NEXT = 0;
+
+      SetSensitivitiesForTablesWithASingleClassification;
+      SetSensitivitiesForMasterTables;
+      SetSensitivitiesForDocuments;
+      SetSensitivitiesForLines;
+      SetSensitivitiesForEntries;
+      SetSensitivitiesForRest;
+
+      // All EUII and EUPI Fields are set to Personal
+      DataSensitivity.SETFILTER("Data Classification",
+        STRSUBSTNO('%1|%2',
+          DataSensitivity."Data Classification"::EndUserIdentifiableInformation,
+          DataSensitivity."Data Classification"::EndUserPseudonymousIdentifiers));
+      DataSensitivity.MODIFYALL("Data Sensitivity",DataSensitivity."Data Sensitivity"::Personal);
+    END;
+
+    LOCAL PROCEDURE SetSensitivitiesForTablesWithASingleClassification@11();
+    VAR
+      DataSensitivity@1000 : Record "Data Sensitivity";
+    BEGIN
+      ClassifyTableFields(DATABASE::"SEPA Direct Debit Mandate",DataSensitivity."Data Sensitivity"::"Company Confidential");
+      ClassifyTableFields(DATABASE::"Employee Qualification",DataSensitivity."Data Sensitivity"::"Company Confidential");
+      ClassifyTableFields(DATABASE::"Employee Absence",DataSensitivity."Data Sensitivity"::"Company Confidential");
+    END;
+
+    LOCAL PROCEDURE SetSensitivitiesForMasterTables@24();
+    VAR
+      DataSensitivity@1000 : Record "Data Sensitivity";
+      I@1001 : Integer;
+    BEGIN
+      // Name
+      ClassifyField(DATABASE::"Salesperson/Purchaser",2,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"IC Partner",2,DataSensitivity."Data Sensitivity"::Personal);
+
+      // First Name,Middle Name,Last Name
+      for I := 2 to 4 do
+        ClassifyField(DATABASE::Employee,I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Name,Search Name,Name 2,Address,Address 2, City, Contact,Phone No.,Telex No.
+      for I := 2 to 10 do begin
+        ClassifyField(DATABASE::Customer,I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::Vendor,I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::Contact,I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Name,Search Name,Name 2,Address,Address 2,City
+      for I := 3 to 8 do
+        ClassifyField(DATABASE::Resource,I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Attendee Name
+      ClassifyField(DATABASE::Attendee,6,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Search Name,Address,Address 2,City,Post Code,County,Phone No.,Mobile Phone No.,E-Mail,
+      for I := 7 to 15 do
+        ClassifyField(DATABASE::Employee,I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Social Security No.
+      ClassifyField(DATABASE::Resource,9,DataSensitivity."Data Sensitivity"::Sensitive);
+      // Education
+      ClassifyField(DATABASE::Resource,11,DataSensitivity."Data Sensitivity"::Sensitive);
+      // Employment Date
+      ClassifyField(DATABASE::Resource,13,DataSensitivity."Data Sensitivity"::Sensitive);
+
+      // Picture,Birth Date
+      for I := 19 to 20 do
+        ClassifyField(DATABASE::Employee,I,DataSensitivity."Data Sensitivity"::Personal);
+      // Social Security No.,Union Code,Union Membership No.,Gender
+      for I := 21 to 24 do
+        ClassifyField(DATABASE::Employee,I,DataSensitivity."Data Sensitivity"::Sensitive);
+      // Employment Date
+      ClassifyField(DATABASE::Employee,29,DataSensitivity."Data Sensitivity"::Sensitive);
+      // Status,Inactive Date
+      for I := 31 to 32 do
+        ClassifyField(DATABASE::Employee,I,DataSensitivity."Data Sensitivity"::Sensitive);
+      // Termination Date
+      ClassifyField(DATABASE::Employee,34,DataSensitivity."Data Sensitivity"::Sensitive);
+      // Extension
+      ClassifyField(DATABASE::Employee,46,DataSensitivity."Data Sensitivity"::Personal);
+      // Pager,Fax No.,Company E-Mail
+      for I := 48 to 50 do
+        ClassifyField(DATABASE::Employee,I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Picture,Post Code,County
+      for I := 52 to 54 do
+        ClassifyField(DATABASE::Resource,I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Bank Branch No.,Bank Account No.,IBAN
+      for I := 56 to 58 do
+        ClassifyField(DATABASE::Employee,I,DataSensitivity."Data Sensitivity"::Personal);
+      // Fax No.,Telex Answer Back,VAT Registration No.
+      for I := 84 to 86 do begin
+        ClassifyField(DATABASE::Customer,I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::Vendor,I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::Contact,I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Picture,GLN,Post Code,Country
+      for I := 89 to 92 do begin
+        ClassifyField(DATABASE::Contact,I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::Customer,I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::Vendor,I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // E-Mail,Home Page
+      for I := 102 to 103 do begin
+        ClassifyField(DATABASE::Vendor,I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::Customer,I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::Contact,I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Tax Area Code
+      ClassifyField(DATABASE::Customer,108,DataSensitivity."Data Sensitivity"::"Company Confidential");
+      ClassifyField(DATABASE::Vendor,108,DataSensitivity."Data Sensitivity"::"Company Confidential");
+      // Image
+      ClassifyField(DATABASE::Customer,140,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::Resource,140,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::Vendor,140,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::Contact,140,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Salesperson/Purchaser",140,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::Employee,140,DataSensitivity."Data Sensitivity"::Personal);
+      // Creditor No.
+      ClassifyField(DATABASE::Vendor,170,DataSensitivity."Data Sensitivity"::Personal);
+
+      // First Name,Middle Name,Surname
+      for I := 5054 to 5056 do
+        ClassifyField(DATABASE::Contact,I,DataSensitivity."Data Sensitivity"::Personal);
+      // Extension No.,Mobile Phone No.,Pager
+      for I := 5060 to 5062 do
+        ClassifyField(DATABASE::Contact,I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Search E-Mail
+      ClassifyField(DATABASE::Contact,5102,DataSensitivity."Data Sensitivity"::Personal);
+      // E-mail 2
+      ClassifyField(DATABASE::Contact,5105,DataSensitivity."Data Sensitivity"::Personal);
+
+      // E-Mail
+      ClassifyField(DATABASE::"Salesperson/Purchaser",5052,DataSensitivity."Data Sensitivity"::Personal);
+      // Phone No.
+      ClassifyField(DATABASE::"Salesperson/Purchaser",5053,DataSensitivity."Data Sensitivity"::Personal);
+      // Job Title
+      ClassifyField(DATABASE::"Salesperson/Purchaser",5062,DataSensitivity."Data Sensitivity"::"Company Confidential");
+      // Search E-mail
+      ClassifyField(DATABASE::"Salesperson/Purchaser",5085,DataSensitivity."Data Sensitivity"::Personal);
+      // E-Mail 2
+      ClassifyField(DATABASE::"Salesperson/Purchaser",5086,DataSensitivity."Data Sensitivity"::Personal);
+    END;
+
+    LOCAL PROCEDURE SetSensitivitiesForDocuments@31();
+    VAR
+      DataSensitivity@1000 : Record "Data Sensitivity";
+      I@1001 : Integer;
+    BEGIN
+      // Name,Name 2,Address,Address 2,Post Code,City,County
+      for I := 3 to 9 do begin
+        ClassifyField(DATABASE::"Reminder Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Issued Reminder Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Finance Charge Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Issued Fin. Charge Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Bill/Pay-to Name,Bill/Pay-to Name 2,Bill/Pay-to Address,Bill/Pay-to Address 2,Bill/Pay-to City,Bill/Pay-to Contact
+      for I := 5 to 10 do begin
+        ClassifyField(DATABASE::"Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purchase Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Rcpt. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Inv. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Cr. Memo Hdr.",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Header Archive",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purchase Header Archive",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Return Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Return Receipt Header",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Name,Address,Address 2,Post Code,City,Contact Name
+      for I := 8 to 13 do
+        ClassifyField(DATABASE::"Filed Service Contract Header",I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Contact
+      ClassifyField(DATABASE::"Reminder Header",13,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Issued Reminder Header",13,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Finance Charge Memo Header",13,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Issued Fin. Charge Memo Header",13,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Ship-to Name
+      ClassifyField(DATABASE::"IC Outbox Sales Header",13,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Handled IC Outbox Sales Header",13,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"IC Inbox Sales Header",13,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Handled IC Inbox Sales Header",13,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Contract Header",13,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"IC Outbox Purchase Header",13,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Handled IC Outbox Purch. Hdr",13,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"IC Inbox Purchase Header",13,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Handled IC Inbox Purch. Header",13,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Ship-to Name,Ship-to Name 2,Ship-to Address,Ship-to Address 2,Ship-to City,Ship-to Contact
+      for I := 13 to 18 do begin
+        ClassifyField(DATABASE::"Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purchase Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Rcpt. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Inv. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Cr. Memo Hdr.",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Header Archive",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purchase Header Archive",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Return Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Return Receipt Header",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Ship-to Address,Ship-to Address 2,Ship-to City
+      for I := 15 to 17 do begin
+        ClassifyField(DATABASE::"IC Outbox Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Handled IC Outbox Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"IC Inbox Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Handled IC Inbox Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"IC Outbox Purchase Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Handled IC Outbox Purch. Hdr",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"IC Inbox Purchase Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Handled IC Inbox Purch. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Bill-to Name,Bill-to Address,Bill-to Address 2,Bill-to Post Code,Bill-to City
+      for I := 17 to 21 do
+        ClassifyField(DATABASE::"Filed Service Contract Header",I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // VAT Registation No.
+      ClassifyField(DATABASE::"Reminder Header",19,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Issued Reminder Header",19,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Finance Charge Memo Header",19,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Issued Fin. Charge Memo Header",19,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Ship-to Name,Ship-to Address,Ship-to Address 2,Ship-to Post Code,Ship-to City
+      for I := 23 to 27 do
+        ClassifyField(DATABASE::"Filed Service Contract Header",I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Tax Area Code
+      ClassifyField(DATABASE::"Reminder Header",41,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Issued Reminder Header",41,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Finance Charge Memo Header",41,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Issued Fin. Charge Memo Header",41,DataSensitivity."Data Sensitivity"::Personal);
+      // VAT Registration No.
+      ClassifyField(DATABASE::"Sales Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purchase Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Shipment Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Invoice Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Cr.Memo Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purch. Rcpt. Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purch. Inv. Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purch. Cr. Memo Hdr.",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Header Archive",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purchase Header Archive",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Shipment Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Invoice Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Cr.Memo Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Return Shipment Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Return Receipt Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      // Creditor No.
+      ClassifyField(DATABASE::"Purchase Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purch. Inv. Header",70,DataSensitivity."Data Sensitivity"::Personal);
+      // VAT Registration No.
+      ClassifyField(DATABASE::"Sales Invoice Entity Aggregate",70,DataSensitivity."Data Sensitivity"::Personal);
+      // Sell-to Customer Name
+      ClassifyField(DATABASE::"O365 Sales Document",79,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Invoice Entity Aggregate",79,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purch. Inv. Entity Aggregate",79,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Sell-to/Buy-from Customer/Vendor Name,Sell-to/Buy-from Customer/Vendor Name 2,Sell-to Address,Sell-to/Buy-from Address 2,
+      // Sell-to/Buy-from City,Sell-to/Buy-from Contact,Bill-to/Buy-from Post Code,Bill-to/Buy-from County
+      for I := 79 to 86 do begin
+        ClassifyField(DATABASE::"Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purchase Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Rcpt. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Inv. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Cr. Memo Hdr.",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Header Archive",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purchase Header Archive",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Return Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Return Receipt Header",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Sell-to/Buy-from Address,Sell-to/Buy-from Address 2,Sell-to/Buy-from City,Sell-to/Buy-from Contact
+      for I := 81 to 84 do begin
+        ClassifyField(DATABASE::"Sales Invoice Entity Aggregate",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Inv. Entity Aggregate",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Sell-to Contact
+      ClassifyField(DATABASE::"O365 Sales Document",84,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Phone No.,Fax No.,E-mail
+      for I := 86 to 88 do
+        ClassifyField(DATABASE::"Service Contract Header",I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Phone No.,Fax No.,E-Mail,Bill-to County,County,Ship-to County
+      for I := 86 to 91 do
+        ClassifyField(DATABASE::"Filed Service Contract Header",I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Sell-to/Buy-from Post Code, Sell-to/Buy-from Country
+      for I := 88 to 89 do begin
+        ClassifyField(DATABASE::"Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purchase Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Rcpt. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Inv. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Cr. Memo Hdr.",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Header Archive",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purchase Header Archive",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Return Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Return Receipt Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Invoice Entity Aggregate",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Inv. Entity Aggregate",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Ship-to Post Code, Ship-to Country
+      for I := 91 to 92 do begin
+        ClassifyField(DATABASE::"Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purchase Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Rcpt. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Inv. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purch. Cr. Memo Hdr.",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Sales Header Archive",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Purchase Header Archive",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Return Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Return Receipt Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"IC Outbox Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Handled IC Outbox Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"IC Inbox Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Handled IC Inbox Sales Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"IC Outbox Purchase Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Handled IC Outbox Purch. Hdr",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"IC Inbox Purchase Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Handled IC Inbox Purch. Header",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Name 2,Bill-to Name 2,Ship-to Name 2
+      for I := 95 to 97 do
+        ClassifyField(DATABASE::"Filed Service Contract Header",I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Filled By
+      ClassifyField(DATABASE::"Filed Service Contract Header",103,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Tax Area Code
+      ClassifyField(DATABASE::"Sales Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purchase Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Shipment Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Invoice Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Cr.Memo Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purch. Rcpt. Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purch. Inv. Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purch. Cr. Memo Hdr.",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Header Archive",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purchase Header Archive",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Shipment Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Invoice Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Cr.Memo Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Return Shipment Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Return Receipt Header",114,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Invoice Entity Aggregate",114,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Bill-to Contact
+      ClassifyField(DATABASE::"Service Contract Header",5052,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Filed Service Contract Header",5052,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Phone No.,E-Mail,Phone No. 2,Fax No.
+      for I := 5915 to 5918 do begin
+        ClassifyField(DATABASE::"Service Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Ship-to Fax No.,Ship-to E-Mail,Ship-to Phone,Ship-to Phone 2
+      for I := 5955 to 5959 do begin
+        ClassifyField(DATABASE::"Service Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Shipment Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Invoice Header",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Service Cr.Memo Header",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Contact Graph Id
+      ClassifyField(DATABASE::"Sales Invoice Entity Aggregate",9633,DataSensitivity."Data Sensitivity"::Personal);
+    END;
+
+    LOCAL PROCEDURE SetSensitivitiesForLines@35();
+    VAR
+      DataSensitivity@1000 : Record "Data Sensitivity";
+      I@1001 : Integer;
+    BEGIN
+      // Tax Area Code
+      ClassifyField(DATABASE::"Sales Shipment Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Invoice Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Cr.Memo Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purch. Rcpt. Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purch. Inv. Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purch. Cr. Memo Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Sales Line Archive",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Purchase Line Archive",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Shipment Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Invoice Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Service Cr.Memo Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Return Shipment Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Return Receipt Line",85,DataSensitivity."Data Sensitivity"::Personal);
+      // Wizard Contact Name
+      ClassifyField(DATABASE::"Segment Line",9502,DataSensitivity."Data Sensitivity"::Personal);
+      // Related-Party Name
+      ClassifyField(DATABASE::"Bank Acc. Reconciliation Line",15,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Posted Payment Recon. Line",15,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Related-Party Bank Acc. No.,Related-Party Address,Related-Party City
+      for I := 24 to 26 do
+        ClassifyField(DATABASE::"Bank Acc. Reconciliation Line",I,DataSensitivity."Data Sensitivity"::Personal);
+    END;
+
+    LOCAL PROCEDURE SetSensitivitiesForEntries@40();
+    VAR
+      DataSensitivity@1000 : Record "Data Sensitivity";
+      Field@1001 : Record Field;
+    BEGIN
+      // All fields of tables that contain Entry in their name are set to Company Confidential
+      Field.SETRANGE(Enabled,true);
+      Field.SETFILTER(
+        DataClassification,
+        STRSUBSTNO('%1|%2|%3',
+          Field.DataClassification::CustomerContent,
+          Field.DataClassification::EndUserIdentifiableInformation,
+          Field.DataClassification::EndUserPseudonymousIdentifiers));
+      Field.SETFILTER(TableName,'*Entry*');
+      if Field.FINDSET then
+        repeat
+          DataSensitivity.GET(COMPANYNAME,Field.TableNo,Field."No.");
+          DataSensitivity.VALIDATE("Data Sensitivity",DataSensitivity."Data Sensitivity"::"Company Confidential");
+          DataSensitivity.MODIFY(true);
+        until Field.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE SetSensitivitiesForRest@46();
+    VAR
+      DataSensitivity@1000 : Record "Data Sensitivity";
+      I@1001 : Integer;
+    BEGIN
+      // VAT Registration No.
+      ClassifyField(DATABASE::"Gen. Journal Line",119,DataSensitivity."Data Sensitivity"::Personal);
+      // E-Mail
+      ClassifyField(DATABASE::"User Setup",17,DataSensitivity."Data Sensitivity"::"Company Confidential");
+
+      ClassifyTableFields(DATABASE::"Employee Relative",DataSensitivity."Data Sensitivity"::"Company Confidential");
+      ClassifyTableFields(DATABASE::"Contact Alt. Address",DataSensitivity."Data Sensitivity"::Personal);
+
+      // Contact No.,Code
+      for I := 1 to 2 do
+        ClassifyField(DATABASE::"Contact Alt. Address",I,DataSensitivity."Data Sensitivity"::Normal);
+
+      // Name
+      ClassifyField(DATABASE::"Customer Bank Account",3,DataSensitivity."Data Sensitivity"::Personal);
+      ClassifyField(DATABASE::"Vendor Bank Account",3,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Name,Phone No.
+      for I := 3 to 4 do begin
+        ClassifyField(DATABASE::"My Customer",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"My Vendor",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Name,Search Name,Name 2,Address,Address 2,City,Post Code
+      for I := 3 to 9 do
+        ClassifyField(DATABASE::"Work Center",I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Name,Name 2,Address,Address 2,City,Contact,Phone No.,Telex No.
+      for I := 3 to 10 do begin
+        ClassifyField(DATABASE::"Ship-to Address",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Order Address",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Field Description
+      ClassifyField(DATABASE::"Confidential Information",4,DataSensitivity."Data Sensitivity"::"Company Confidential");
+
+      // Field First Name,Field Middle Name,Field Last Name,Field Birth Date,Field Phone No.
+      for I := 4 to 8 do
+        ClassifyField(DATABASE::"Employee Relative",I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Name
+      ClassifyField(DATABASE::"Communication Method",5,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Name 2,Address,Address 2,City,Post Code,Contact,Phone No.,Telex No.,Bank Branch No.,Bank Account No.,Transit No.
+      for I := 5 to 14 do begin
+        ClassifyField(DATABASE::"Customer Bank Account",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Vendor Bank Account",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Service Agent Name,ServiceAgent Phone No.,Service Agent Mobile Phone
+      for I := 6 to 8 do
+        ClassifyField(DATABASE::"Maintenance Registration",I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Contact Name
+      ClassifyField(DATABASE::"Office Contact Associations",6,DataSensitivity."Data Sensitivity"::Personal);
+      // City
+      ClassifyField(DATABASE::"Mini Vendor Template",7,DataSensitivity."Data Sensitivity"::Personal);
+
+      // E-Mail
+      ClassifyField(DATABASE::"Communication Method",7,DataSensitivity."Data Sensitivity"::Personal);
+      // Last Date Modified
+      ClassifyField(DATABASE::"Contact Alt. Address",21,DataSensitivity."Data Sensitivity"::Normal);
+
+      // Country/Region Code,County,Fax No.,Telex Answer Back
+      for I := 17 to 20 do begin
+        ClassifyField(DATABASE::"Customer Bank Account",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Vendor Bank Account",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // E-Mail,Home Page,IBAN
+      for I := 22 to 24 do begin
+        ClassifyField(DATABASE::"Customer Bank Account",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Vendor Bank Account",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+
+      // Vendor Name,Vendor VAT Registration No.,Vendor IBAN
+      for I := 23 to 25 do
+        ClassifyField(DATABASE::"Incoming Document",I,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Vendor Bank Branch No.,Vendor Bank Account No.
+      for I := 27 to 28 do
+        ClassifyField(DATABASE::"Incoming Document",I,DataSensitivity."Data Sensitivity"::Personal);
+
+      ClassifyField(DATABASE::"Incoming Document",57,DataSensitivity."Data Sensitivity"::Personal);
+
+      // VAT Registration No.
+      ClassifyField(DATABASE::"VAT Report Line",55,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Bill-to Name,Bill-to Address,Bill-to Address 2,Bill-to City
+      for I := 58 to 61 do
+        ClassifyField(DATABASE::Job,I,DataSensitivity."Data Sensitivity"::Personal);
+      // Bill-to County
+      ClassifyField(DATABASE::Job,63,DataSensitivity."Data Sensitivity"::Personal);
+      // Bill-to Post Code
+      ClassifyField(DATABASE::Job,64,DataSensitivity."Data Sensitivity"::Personal);
+      // Bill-to Name 2
+      ClassifyField(DATABASE::Job,68,DataSensitivity."Data Sensitivity"::Personal);
+      // Country
+      ClassifyField(DATABASE::"Work Center",83,DataSensitivity."Data Sensitivity"::Personal);
+
+      // Fax No.,Telex Answer Back
+      for I := 84 to 85 do begin
+        ClassifyField(DATABASE::"Ship-to Address",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Order Address",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+      // Post Code,Country
+      for I := 91 to 92 do begin
+        ClassifyField(DATABASE::"Ship-to Address",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Order Address",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Mini Vendor Template",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+      // E-Mail,Home Page
+      for I := 102 to 103 do begin
+        ClassifyField(DATABASE::"Ship-to Address",I,DataSensitivity."Data Sensitivity"::Personal);
+        ClassifyField(DATABASE::"Order Address",I,DataSensitivity."Data Sensitivity"::Personal);
+      end;
+      // Tax Area Code
+      ClassifyField(DATABASE::"Ship-to Address",108,DataSensitivity."Data Sensitivity"::Personal);
+      // Bill-to Contact
+      ClassifyField(DATABASE::Job,1003,DataSensitivity."Data Sensitivity"::Personal);
+      // Profile Questionnaire Value
+      ClassifyField(DATABASE::"Contact Profile Answer",5088,DataSensitivity."Data Sensitivity"::Sensitive);
+      // Wizard Contact Name
+      ClassifyField(DATABASE::Opportunity,9507,DataSensitivity."Data Sensitivity"::Personal);
+      // Wizard Contact Name
+      ClassifyField(DATABASE::"To-do",9509,DataSensitivity."Data Sensitivity"::Personal);
+    END;
+
+    PROCEDURE GetDataSensitivityOptionString@14() : Text;
+    BEGIN
+      exit(DataSensitivityOptionStringTxt);
+    END;
+
+    PROCEDURE SetSensitivities@29(VAR DataSensitivity@1000 : Record "Data Sensitivity";Sensitivity@1001 : Option);
+    VAR
+      Now@1002 : DateTime;
+    BEGIN
+      // MODIFYALL does not result in a bulk query for this table, looping through the records perfoms faster
+      // and eliminates issues with the filters of the record
+      Now := CURRENTDATETIME;
+      if DataSensitivity.FINDSET then
+        repeat
+          DataSensitivity."Data Sensitivity" := Sensitivity;
+          DataSensitivity."Last Modified By" := USERSECURITYID;
+          DataSensitivity."Last Modified" := Now;
+          DataSensitivity.MODIFY;
+        until DataSensitivity.NEXT = 0;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

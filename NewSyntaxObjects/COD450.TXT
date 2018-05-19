@@ -1,0 +1,58 @@
+OBJECT Codeunit 450 Job Queue Error Handler
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Job Queue Entry";
+    OnRun=BEGIN
+            if not DoesExistLocked then
+              exit;
+            SetError(GETLASTERRORTEXT);
+            LogError(Rec);
+          END;
+
+  }
+  CODE
+  {
+
+    LOCAL PROCEDURE LogError@1(JobQueueEntry@1000 : Record "Job Queue Entry");
+    VAR
+      JobQueueLogEntry@1002 : Record "Job Queue Log Entry";
+    BEGIN
+      OnBeforeLogError(JobQueueLogEntry,JobQueueEntry);
+
+      with JobQueueLogEntry do begin
+        SETRANGE(ID,JobQueueEntry.ID);
+        SETRANGE(Status,Status::"In Process");
+        if FINDFIRST then begin
+          SetErrorMessage(JobQueueEntry.GetErrorMessage);
+          Status := Status::Error;
+          MODIFY;
+        end else begin
+          JobQueueEntry.InsertLogEntry(JobQueueLogEntry);
+          JobQueueEntry.FinalizeLogEntry(JobQueueLogEntry);
+        end;
+      end;
+      OnAfterLogError(JobQueueEntry);
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterLogError@3(VAR JobQueueEntry@1000 : Record "Job Queue Entry");
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeLogError@2(VAR JobQueueLogEntry@1001 : Record "Job Queue Log Entry";VAR JobQueueEntry@1000 : Record "Job Queue Entry");
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,112 @@
+OBJECT Codeunit 10201 Transfer Custom Fields
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    [External]
+    PROCEDURE GenJnlLineTOGenLedgEntry@1020000(VAR GenJnlLine@1020000 : Record "Gen. Journal Line";VAR GenLedgEntry@1020001 : Record "G/L Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE GenJnlLineTOTaxEntry@1020001(VAR GenJnlLine@1020000 : Record "Gen. Journal Line";VAR TaxEntry@1020001 : Record "VAT Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE GenJnlLineTOCustLedgEntry@1020002(VAR GenJnlLine@1020000 : Record "Gen. Journal Line";VAR CustLedgEntry@1020001 : Record "Cust. Ledger Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE GenJnlLineTOVendLedgEntry@1020003(VAR GenJnlLine@1020000 : Record "Gen. Journal Line";VAR VendLedgEntry@1020001 : Record "Vendor Ledger Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE GenJnlLineTOBankAccLedgEntry@1020004(VAR GenJnlLine@1020000 : Record "Gen. Journal Line";VAR BankAccLedgEntry@1020001 : Record "Bank Account Ledger Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE BankAccLedgEntryTOChkLedgEntry@1020006(VAR BankAccLedgEntry@1020000 : Record "Bank Account Ledger Entry";VAR CheckLedgEntry@1020001 : Record "Check Ledger Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE VendLedgEntryTOCVLedgEntryBuf@1020008(VAR VendLedgEntry@1020000 : Record "Vendor Ledger Entry";VAR CVLedgEntryBuf@1020001 : Record "CV Ledger Entry Buffer");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE CVLedgEntryBufTOVendLedgEntry@1020009(VAR CVLedgEntryBuf@1020000 : Record "CV Ledger Entry Buffer";VAR VendLedgEntry@1020001 : Record "Vendor Ledger Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE CustLedgEntryTOCVLedgEntryBuf@1020010(VAR CustLedgEntry@1020001 : Record "Cust. Ledger Entry";VAR CVLedgEntryBuf@1020000 : Record "CV Ledger Entry Buffer");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE CVLedgEntryBufTOCustLedgEntry@1020011(VAR CVLedgEntryBuf@1020001 : Record "CV Ledger Entry Buffer";VAR CustLedgEntry@1020000 : Record "Cust. Ledger Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE ItemJnlLineTOItemLedgEntry@1020014(VAR ItemJnlLine@1020000 : Record "Item Journal Line";VAR ItemLedgEntry@1020001 : Record "Item Ledger Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE ItemJnlLineTOPhysInvtLedgEntry@1020015(VAR ItemJnlLine@1020001 : Record "Item Journal Line";VAR PhysInvtLedgEntry@1020000 : Record "Phys. Inventory Ledger Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE ItemJnlLineTOValueEntry@1020016(VAR ItemJnlLine@1020001 : Record "Item Journal Line";VAR ValueEntry@1020000 : Record "Value Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE JobJnlLineTOResJnlLine@1020020(VAR JobJnlLine@1020000 : Record "Job Journal Line";VAR ResJnlLine@1020001 : Record "Res. Journal Line");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE JobJnlLineTOItemJnlLine@1020021(VAR JobJnlLine@1020000 : Record "Job Journal Line";VAR ItemJnlLine@1020001 : Record "Item Journal Line");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE JobJnlLineTOGenJnlLine@1020022(VAR JobJnlLine@1020000 : Record "Job Journal Line";VAR GenJnlLine@1020001 : Record "Gen. Journal Line");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE JobJnlLineTOJobLedgEntry@1020023(VAR JobJnlLine@1020000 : Record "Job Journal Line";VAR JobLedgEntry@1020001 : Record "Job Ledger Entry");
+    BEGIN
+    END;
+
+    [External]
+    PROCEDURE ResJnlLineTOResLedgEntry@1020025(VAR ResJnlLine@1020000 : Record "Res. Journal Line";VAR ResLedgEntry@1020001 : Record "Res. Ledger Entry");
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,35 @@
+OBJECT Table 7305 Special Equipment
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160220.100T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Special Equipment;
+    LookupPageID="Special Equipment";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

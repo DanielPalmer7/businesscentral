@@ -1,0 +1,35 @@
+OBJECT Table 143 ECSL VAT Report Line Relation
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160102.840T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=ECSL Tax Report Line Relation;
+  }
+  FIELDS
+  {
+    { 1   ;   ;VAT Entry No.       ;Integer       ;CaptionML=ENU=Tax Entry No. }
+    { 2   ;   ;ECSL Line No.       ;Integer       ;CaptionML=ENU=ECSL Line No. }
+    { 3   ;   ;ECSL Report No.     ;Code20        ;CaptionML=ENU=ECSL Report No. }
+  }
+  KEYS
+  {
+    {    ;"VAT Entry No.","ECSL Line No.","ECSL Report No.";
+                                                   Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

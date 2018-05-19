@@ -1,0 +1,46 @@
+OBJECT Codeunit 10337 Exp. Mapping Foot EFT MX
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Data Exch.";
+    OnRun=VAR
+            ACHCecobanFooter@1010 : Record "ACH Cecoban Footer";
+            DataExch@1009 : Record "Data Exch.";
+            DataExchLineDef@1006 : Record "Data Exch. Line Def";
+            EFTExportMgt@1000 : Codeunit "EFT Export Mgt";
+            RecordRef@1004 : RecordRef;
+            LineNo@1003 : Integer;
+          BEGIN
+            // Range through the Footer record
+            LineNo := 1;
+            DataExchLineDef.INIT;
+            DataExchLineDef.SETRANGE("Data Exch. Def Code","Data Exch. Def Code");
+            DataExchLineDef.SETRANGE("Line Type",DataExchLineDef."Line Type"::Footer);
+            if DataExchLineDef.FINDFIRST then begin
+              DataExch.SETRANGE("Entry No.","Entry No.");
+              if DataExch.FINDFIRST then
+                if ACHCecobanFooter.GET("Entry No.") then begin
+                  RecordRef.GETTABLE(ACHCecobanFooter);
+                  EFTExportMgt.InsertDataExchLineForFlatFile(
+                    DataExch,
+                    LineNo,
+                    RecordRef);
+                end;
+            end;
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

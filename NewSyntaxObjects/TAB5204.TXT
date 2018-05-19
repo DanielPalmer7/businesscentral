@@ -1,0 +1,36 @@
+OBJECT Table 5204 Relative
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160140.823T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Relative;
+    LookupPageID=Relatives;
+    DrillDownPageID=Relatives;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

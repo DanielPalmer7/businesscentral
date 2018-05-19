@@ -1,0 +1,91 @@
+OBJECT Page 6307 PBI Aged Acc. Payable
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161545.257T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=PBI Aged Acc. Payable;
+    SourceTable="Power BI Chart Buffer";
+    PageType=List;
+    SourceTableTemporary=true;
+    OnOpenPage=VAR
+                 PBIAgedAccCalc@1000 : Codeunit "PBI Aged Acc. Calc";
+                 ChartManagement@1001 : Codeunit "Chart Management";
+               BEGIN
+                 PBIAgedAccCalc.GetValues(Rec,CODEUNIT::"Aged Acc. Payable",ChartManagement.AgedAccPayableName);
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 8   ;1   ;Group     ;
+                Name=Control8;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name=ID;
+                CaptionML=ENU=ID;
+                ToolTipML=ENU=Specifies the ID.;
+                ApplicationArea=#All;
+                SourceExpr=ID;
+                ImplicitType=Integer }
+
+    { 3   ;2   ;Field     ;
+                Name=Value;
+                CaptionML=ENU=Value;
+                ToolTipML=ENU=Specifies the value.;
+                ApplicationArea=#All;
+                SourceExpr=Value;
+                ImplicitType=Decimal }
+
+    { 4   ;2   ;Field     ;
+                Name="Period Type";
+                CaptionML=ENU=Period Type;
+                ToolTipML=ENU=Specifies the type.;
+                ApplicationArea=#All;
+                SourceExpr="Period Type";
+                ImplicitType=Option }
+
+    { 5   ;2   ;Field     ;
+                Name=Date;
+                CaptionML=ENU=Date;
+                ToolTipML=ENU=Specifies the date.;
+                ApplicationArea=#All;
+                SourceExpr=Date;
+                ImplicitType=Text30 }
+
+    { 6   ;2   ;Field     ;
+                Name="Date Sorting";
+                CaptionML=ENU=Date Sorting;
+                ToolTipML=ENU=Specifies the sorting.;
+                ApplicationArea=#All;
+                SourceExpr="Date Sorting";
+                ImplicitType=Integer }
+
+    { 7   ;2   ;Field     ;
+                Name="Period Type Sorting";
+                CaptionML=ENU=Period Type Sorting;
+                ToolTipML=ENU=Specifies the sorting.;
+                ApplicationArea=#All;
+                SourceExpr="Period Type Sorting";
+                ImplicitType=Integer }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

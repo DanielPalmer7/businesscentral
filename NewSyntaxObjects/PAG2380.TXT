@@ -1,0 +1,100 @@
+OBJECT Page 2380 O365 Export Customer Data
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161410.783T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Export Customer Data;
+    SourceTable=Customer;
+    PageType=StandardDialog;
+    OnOpenPage=VAR
+                 User@1001 : Record User;
+                 CompanyInformation@1000 : Record "Company Information";
+               BEGIN
+                 if GETFILTERS <> '' then
+                   if FINDFIRST then
+                     SETRECFILTER;
+
+                 if User.GET(USERSECURITYID) then
+                   SendToEmail := User."Contact Email";
+                 if SendToEmail = '' then
+                   if CompanyInformation.GET then
+                     SendToEmail := CompanyInformation."E-Mail";
+               END;
+
+    OnQueryClosePage=BEGIN
+                       if CloseAction <> ACTION::OK then
+                         exit;
+                       if SendToEmail = '' then
+                         ERROR(EmailAddressErr);
+
+                       if SendToEmail = "E-Mail" then // sending directly to the customer?
+                         if not CONFIRM(STRSUBSTNO(CustomerEmailQst,SendToEmail),false) then
+                           ERROR('');
+
+                       O365EmailCustomerData.ExportDataToExcelAndEmail(Rec,SendToEmail);
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Control2;
+                GroupType=Group }
+
+    { 3   ;2   ;Field     ;
+                Name=CustomerNo;
+                CaptionML=ENU=Customer Number;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="No.";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=CustomerName;
+                CaptionML=ENU=Customer Name;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Name;
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 5   ;2   ;Field     ;
+                Name=Email;
+                ExtendedDatatype=E-Mail;
+                CaptionML=ENU=Send to Email;
+                ToolTipML=ENU=Specifies the email recipients for the exported invoices;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=SendToEmail;
+                OnValidate=BEGIN
+                             if SendToEmail = '' then
+                               exit;
+
+                             MailManagement.CheckValidEmailAddress(SendToEmail);
+                           END;
+
+                ImplicitType=Text }
+
+  }
+  CODE
+  {
+    VAR
+      MailManagement@1007 : Codeunit "Mail Management";
+      O365EmailCustomerData@1006 : Codeunit "O365 Email Customer Data";
+      SendToEmail@1002 : Text;
+      EmailAddressErr@1003 : TextConst 'ENU=The email address is required.';
+      CustomerEmailQst@1000 : TextConst '@@@="%1 = an email address.";ENU=Warning: The email (%1) is the same as specified on the customer. Note that the data may contain information that is internal to your company.\Do you want to send the email anyway?';
+
+    BEGIN
+    END.
+  }
+}
+

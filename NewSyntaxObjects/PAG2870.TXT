@@ -1,0 +1,94 @@
+OBJECT Page 2870 Native - Languages
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161415.573T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Native - Languages;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable="Windows Language";
+    PageType=List;
+    SourceTableTemporary=true;
+    OnOpenPage=VAR
+                 LanguageManagement@1000 : Codeunit LanguageManagement;
+               BEGIN
+                 LanguageManagement.GetApplicationLanguages(Rec);
+               END;
+
+    OnAfterGetRecord=VAR
+                       UserPersonalization@1001 : Record "User Personalization";
+                       CultureInfo@1000 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Globalization.CultureInfo";
+                     BEGIN
+                       CultureInfo := CultureInfo.CultureInfo("Language ID");
+                       LanguageCode := CultureInfo.Name;
+
+                       Default := false;
+                       UserPersonalization.GET(USERSECURITYID);
+                       if UserPersonalization."Language ID" = "Language ID" then
+                         Default := true;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=languageId;
+                CaptionML=[@@@={Locked};
+                           ENU=languageId];
+                ApplicationArea=#All;
+                SourceExpr="Language ID";
+                ImplicitType=Integer }
+
+    { 6   ;2   ;Field     ;
+                Name=languageCode;
+                CaptionML=ENU=languageCode;
+                ToolTipML=ENU=Specifies the language code.;
+                ApplicationArea=#All;
+                SourceExpr=LanguageCode;
+                Editable=FALSE;
+                ImplicitType=Text }
+
+    { 5   ;2   ;Field     ;
+                Name=displayName;
+                CaptionML=[@@@={Locked};
+                           ENU=displayName];
+                ApplicationArea=#All;
+                SourceExpr=Name;
+                ImplicitType=Text80 }
+
+    { 4   ;2   ;Field     ;
+                Name=default;
+                CaptionML=ENU=default;
+                ToolTipML=ENU=Specifies if the language is the default.;
+                ApplicationArea=#All;
+                SourceExpr=Default;
+                Editable=FALSE;
+                ImplicitType=Boolean }
+
+  }
+  CODE
+  {
+    VAR
+      LanguageCode@1000 : Text;
+      Default@1001 : Boolean;
+
+    BEGIN
+    END.
+  }
+}
+

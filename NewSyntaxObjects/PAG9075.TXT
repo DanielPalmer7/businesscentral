@@ -1,0 +1,109 @@
+OBJECT Page 9075 RapidStart Services Activities
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161636.313T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Activities;
+    SourceTable="RapidStart Services Cue";
+    PageType=CardPart;
+    RefreshOnActivate=true;
+    OnOpenPage=BEGIN
+                 RESET;
+                 if not GET then begin
+                   INIT;
+                   INSERT;
+                 end;
+
+                 SETFILTER("User ID Filter",USERID);
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Tables;
+                CaptionML=ENU=Tables;
+                GroupType=CueGroup }
+
+    { 6   ;2   ;Field     ;
+                Name=Promoted;
+                ToolTipML=ENU=Specifies the number of configuration tables that have been promoted. The documents are filtered by today's date.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                SourceExpr=Promoted;
+                DrillDownPageID="Config. Tables";
+                ImplicitType=Integer }
+
+    { 7   ;2   ;Field     ;
+                Name="Not Started";
+                ToolTipML=ENU=Specifies the number of configuration tables that have not been started. The documents are filtered by today's date.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                SourceExpr="Not Started";
+                DrillDownPageID="Config. Tables";
+                ImplicitType=Integer }
+
+    { 1   ;2   ;Field     ;
+                Name="In Progress";
+                ToolTipML=ENU=Specifies the number of configuration tables that are in progress. The documents are filtered by today's date.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                SourceExpr="In Progress";
+                DrillDownPageID="Config. Tables";
+                ImplicitType=Integer }
+
+    { 4   ;2   ;Field     ;
+                Name=Completed;
+                ToolTipML=ENU=Specifies the number of configuration tables that have been completed. The documents are filtered by today's date.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                SourceExpr=Completed;
+                DrillDownPageID="Config. Tables";
+                ImplicitType=Integer }
+
+    { 5   ;2   ;Field     ;
+                Name=Ignored;
+                ToolTipML=ENU=Specifies the number of configuration tables that you have designated to be ignored. The documents are filtered by today's date.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                SourceExpr=Ignored;
+                DrillDownPageID="Config. Tables";
+                ImplicitType=Integer }
+
+    { 3   ;2   ;Field     ;
+                Name=Blocked;
+                ToolTipML=ENU=Specifies that the related record is blocked from being posted in transactions, for example a customer that is declared insolvent or an item that is placed in quarantine.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                SourceExpr=Blocked;
+                DrillDownPageID="Config. Tables";
+                ImplicitType=Integer }
+
+    { 9   ;1   ;Group     ;
+                Name="My User Tasks";
+                CaptionML=ENU=My User Tasks;
+                GroupType=CueGroup }
+
+    { 8   ;2   ;Field     ;
+                Name="Pending Tasks";
+                CaptionML=ENU=Pending User Tasks;
+                ToolTipML=ENU=Specifies the number of pending tasks that are assigned to you.;
+                ApplicationArea=#Basic,#Suite,#Advanced;
+                SourceExpr="Pending Tasks";
+                DrillDownPageID="User Task List";
+                ImplicitType=Integer;
+                Image=Checklist }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

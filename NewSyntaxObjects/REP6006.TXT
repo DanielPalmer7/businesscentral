@@ -1,0 +1,65 @@
+OBJECT Report 6006 Delete Service Email Queue
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160412.430T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Delete Service Email Queue;
+    ProcessingOnly=true;
+  }
+  DATASET
+  {
+    { 2218;    ;DataItem;Service Email Queue ;
+               DataItemTable="Service Email Queue";
+               DataItemTableView=SORTING(Status,"Sending Date");
+               OnPreDataItem=BEGIN
+                               i := 0;
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  i := i + 1;
+                                  DELETE;
+                                END;
+
+               OnPostDataItem=BEGIN
+                                if i > 1 then
+                                  MESSAGE(Text000,i)
+                                else
+                                  MESSAGE(Text001,i);
+                              END;
+
+               ReqFilterFields=Status,"Sending Date" }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'ENU=%1 entries were deleted.';
+      Text001@1001 : TextConst 'ENU=%1 entry was deleted.';
+      i@1002 : Integer;
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

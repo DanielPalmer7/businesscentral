@@ -1,0 +1,43 @@
+OBJECT Page 9628 Available Table Selection List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161707.760T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Select Table;
+    SourceTable="Table Metadata";
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Control2;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=Name;
+                CaptionML=ENU=Name;
+                ToolTipML=ENU=Specifies the names of the available Windows languages.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Name;
+                ImplicitType=Text30 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,27 @@
+OBJECT Codeunit 235 G/L Reg.-Gen. Ledger
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="G/L Register";
+    OnRun=BEGIN
+            GLEntry.SETRANGE("Entry No.","From Entry No.","To Entry No.");
+            PAGE.RUN(PAGE::"General Ledger Entries",GLEntry);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      GLEntry@1000 : Record "G/L Entry";
+
+    BEGIN
+    END.
+  }
+}
+

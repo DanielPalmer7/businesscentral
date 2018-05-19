@@ -1,0 +1,148 @@
+OBJECT Page 1486 Role Center Overview
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161347.273T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Role Center Overview;
+    PageType=NavigatePage;
+    OnInit=VAR
+             Profile@1001 : Record Profile;
+             ConfPersonalizationMgt@1000 : Codeunit "Conf./Personalization Mgt.";
+           BEGIN
+             if CurrProfileID = '' then
+               CurrProfileID := ConfPersonalizationMgt.GetCurrentProfileIDNoError;
+
+             if CurrProfileID <> '' then
+               Profile.SETRANGE("Profile ID",CurrProfileID);
+
+             if not Profile.FINDFIRST then
+               exit;
+
+             CurrProfileID := Profile."Profile ID";
+             CurrRoleCenterID := Profile."Role Center ID";
+           END;
+
+    ActionList=ACTIONS
+    {
+      { 6       ;    ;ActionContainer;
+                      Name=ActionContainer6;
+                      ActionContainerType=ActionItems }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=control;
+                ContainerType=ContentArea }
+
+    { 5   ;1   ;Field     ;
+                Name=ControlAddin;
+                ApplicationArea=#All;
+                ControlAddIn=[Microsoft.Dynamics.Nav.Client.RoleCenterSelector;PublicKeyToken=31bf3856ad364e35] }
+
+  }
+  CODE
+  {
+    VAR
+      CurrProfileID@1002 : Code[30];
+      CurrRoleCenterID@1005 : Integer;
+      SkipSessionUpdateRequest@1000 : Boolean;
+      AcceptAction@1003 : Boolean;
+
+    PROCEDURE DelaySessionUpdateRequest@1();
+    BEGIN
+      SkipSessionUpdateRequest := true;
+    END;
+
+    PROCEDURE SetSelectedProfileID@3(SelectedProfileID@1000 : Code[30]);
+    BEGIN
+      CurrProfileID := SelectedProfileID;
+    END;
+
+    PROCEDURE GetSelectedProfileID@2() : Code[30];
+    BEGIN
+      exit(CurrProfileID);
+    END;
+
+    LOCAL PROCEDURE ChangeProfile@5(NewProfileID@1000 : Code[30]);
+    VAR
+      UserPersonalization@1001 : Record "User Personalization";
+      ConfPersonalizationMgt@1002 : Codeunit "Conf./Personalization Mgt.";
+      SessionSet@1003 : SessionSettings;
+    BEGIN
+      if ConfPersonalizationMgt.GetCurrentProfileIDNoError = NewProfileID then
+        exit;
+
+      ConfPersonalizationMgt.SetCurrentProfileID(NewProfileID);
+
+      UserPersonalization.GET(USERSECURITYID);
+
+      with SessionSet do begin
+        INIT;
+        PROFILEID := NewProfileID;
+        PROFILEAPPID := UserPersonalization."App ID";
+        PROFILESYSTEMSCOPE := UserPersonalization.Scope = UserPersonalization.Scope::System;
+        LANGUAGEID := UserPersonalization."Language ID";
+        LOCALEID := UserPersonalization."Locale ID";
+        TIMEZONE := UserPersonalization."Time Zone";
+        REQUESTSESSIONUPDATE(true);
+      end;
+    END;
+
+    LOCAL PROCEDURE SendJsonToControlAddIn@8();
+    VAR
+      RolecenterSelectorMgt@1001 : Codeunit "Rolecenter Selector Mgt.";
+      Json@1000 : Text;
+    BEGIN
+      Json := RolecenterSelectorMgt.BuildJsonFromPageMetadata(CurrRoleCenterID);
+      CurrPage.ControlAddin.LoadRoleCenterFromJson(Json);
+    END;
+
+    PROCEDURE GetAcceptAction@7() : Boolean;
+    BEGIN
+      exit(AcceptAction);
+    END;
+
+    EVENT ControlAddin@-5::ControlAddInReady@4();
+    VAR
+      RolecenterSelectorMgt@1000 : Codeunit "Rolecenter Selector Mgt.";
+      Json@1001 : Text;
+    BEGIN
+      Json := RolecenterSelectorMgt.BuildPageDataJsonForRolecenterSelector;
+      CurrPage.ControlAddin.LoadPageDataFromJson(Json);
+      SendJsonToControlAddIn;
+      CurrPage.ControlAddin.SetCurrentProfileId(CurrProfileID);
+    END;
+
+    EVENT ControlAddin@-5::OnAcceptAction@5();
+    BEGIN
+      AcceptAction := true;
+      if not SkipSessionUpdateRequest then
+        ChangeProfile(CurrProfileID);
+      CurrPage.CLOSE;
+    END;
+
+    EVENT ControlAddin@-5::OnProfileSelected@6(profileId@1000 : Text);
+    VAR
+      Profile@1001 : Record Profile;
+    BEGIN
+      Profile.SETRANGE("Profile ID",profileId);
+
+      if Profile.FINDFIRST then begin
+        CurrProfileID := Profile."Profile ID";
+        CurrRoleCenterID := Profile."Role Center ID";
+        SendJsonToControlAddIn;
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

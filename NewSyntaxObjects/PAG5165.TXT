@@ -1,0 +1,307 @@
+OBJECT Page 5165 Purchase Quote Archive Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161431.323T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Lines;
+    LinksAllowed=false;
+    SourceTable="Purchase Line Archive";
+    SourceTableView=WHERE("Document Type"=FILTER(Quote));
+    PageType=ListPart;
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 1907935204;1 ;ActionGroup;
+                      Name="&Line";
+                      CaptionML=ENU=&Line;
+                      Image=Line }
+      { 1903587104;2 ;Action    ;
+                      Name=Dimensions;
+                      AccessByPermission=TableData Dimension=R;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=ENU=Dimensions;
+                      ToolTipML=ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                      ApplicationArea=#Dimensions;
+                      Image=Dimensions;
+                      OnAction=BEGIN
+                                 ShowDimensions;
+                               END;
+                                }
+      { 1904522204;2 ;Action    ;
+                      Name="Co&mments";
+                      CaptionML=ENU=Co&mments;
+                      ToolTipML=ENU=View or add comments for the record.;
+                      ApplicationArea=#Advanced;
+                      Image=ViewComments;
+                      OnAction=BEGIN
+                                 ShowLineComments;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name=Type;
+                ToolTipML=ENU=Specifies the line type.;
+                ApplicationArea=#Advanced;
+                SourceExpr=Type;
+                ImplicitType=Option }
+
+    { 4   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the involved entry or record, according to the specified number series.;
+                ApplicationArea=#Advanced;
+                SourceExpr="No.";
+                ImplicitType=Code20 }
+
+    { 6   ;2   ;Field     ;
+                Name="Cross-Reference No.";
+                ToolTipML=ENU=Specifies the cross-referenced item number. If you enter a cross reference between yours and your vendor's or customer's item number, then this number will override the standard item number when you enter the cross-reference number on a sales or purchase document.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Cross-Reference No.";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 8   ;2   ;Field     ;
+                Name="Variant Code";
+                ToolTipML=ENU=Specifies the variant of the item on the line.;
+                ApplicationArea=#Planning;
+                SourceExpr="Variant Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 10  ;2   ;Field     ;
+                Name=Nonstock;
+                ToolTipML=ENU=Specifies that this item is a nonstock item.;
+                ApplicationArea=#Advanced;
+                SourceExpr=Nonstock;
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 12  ;2   ;Field     ;
+                Name="VAT Prod. Posting Group";
+                ToolTipML=ENU=Specifies the Tax specification of the involved item or resource to link transactions made for this record with the appropriate general ledger account according to the Tax posting setup.;
+                ApplicationArea=#Advanced;
+                SourceExpr="VAT Prod. Posting Group";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 14  ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU="Specifies a description of the purchase quote archive. ";
+                ApplicationArea=#Advanced;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+    { 16  ;2   ;Field     ;
+                Name="Location Code";
+                ToolTipML=ENU=Specifies a code for the location where you want the items to be placed when they are received.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Location Code";
+                ImplicitType=Code10 }
+
+    { 18  ;2   ;Field     ;
+                Name=Quantity;
+                ToolTipML=ENU=Specifies the number of units of the item that will be specified on the line.;
+                ApplicationArea=#Advanced;
+                BlankZero=true;
+                SourceExpr=Quantity;
+                ImplicitType=Decimal }
+
+    { 20  ;2   ;Field     ;
+                Name="Unit of Measure Code";
+                ToolTipML=ENU=Specifies how each unit of the item or resource is measured, such as in pieces or hours. By default, the value in the Base Unit of Measure field on the item or resource card is inserted.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Unit of Measure Code";
+                ImplicitType=Code10 }
+
+    { 22  ;2   ;Field     ;
+                Name="Unit of Measure";
+                ToolTipML=ENU=Specifies the name of the item or resource's unit of measure, such as piece or hour.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Unit of Measure";
+                Visible=FALSE;
+                ImplicitType=Text10 }
+
+    { 24  ;2   ;Field     ;
+                Name="Direct Unit Cost";
+                ToolTipML=ENU=Specifies the cost of one unit of the selected item or resource.;
+                ApplicationArea=#Advanced;
+                BlankZero=true;
+                SourceExpr="Direct Unit Cost";
+                ImplicitType=Decimal }
+
+    { 26  ;2   ;Field     ;
+                Name="Indirect Cost %";
+                ToolTipML=ENU=Specifies the percentage of the item's last purchase cost that includes indirect costs, such as freight that is associated with the purchase of the item.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Indirect Cost %";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 28  ;2   ;Field     ;
+                Name="Unit Cost (LCY)";
+                ToolTipML=ENU=Specifies the cost, in $, of one unit of the item or resource on the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Unit Cost (LCY)";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 30  ;2   ;Field     ;
+                Name="Unit Price (LCY)";
+                ToolTipML=ENU=Specifies the price, in $, of one unit of the item or resource. You can enter a price manually or have it entered according to the Price/Profit Calculation field on the related card.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Unit Price (LCY)";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 1020002;2;Field     ;
+                Name="Tax Liable";
+                ToolTipML=ENU=Specifies if this vendor charges you sales tax for purchases.;
+                SourceExpr="Tax Liable";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 1020000;2;Field     ;
+                Name="Tax Area Code";
+                ToolTipML=ENU=Specifies the tax area that is used to calculate and post sales tax.;
+                SourceExpr="Tax Area Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 1020004;2;Field     ;
+                Name="Tax Group Code";
+                ToolTipML=ENU=Specifies the tax group that is used to calculate and post sales tax.;
+                SourceExpr="Tax Group Code";
+                ImplicitType=Code20 }
+
+    { 1020006;2;Field     ;
+                Name="Use Tax";
+                ToolTipML=ENU=Specifies a U.S. sales tax that is paid on items purchased by a company that are used by the company, instead of being sold to a customer.;
+                SourceExpr="Use Tax";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 32  ;2   ;Field     ;
+                Name="Line Amount";
+                ToolTipML=ENU=Specifies the net amount, excluding any invoice discount amount, that must be paid for products on the line.;
+                ApplicationArea=#Advanced;
+                BlankZero=true;
+                SourceExpr="Line Amount";
+                ImplicitType=Decimal }
+
+    { 34  ;2   ;Field     ;
+                Name="Line Discount %";
+                ToolTipML=ENU=Specifies the discount percentage that is granted for the item on the line.;
+                ApplicationArea=#Advanced;
+                BlankZero=true;
+                SourceExpr="Line Discount %";
+                ImplicitType=Decimal }
+
+    { 36  ;2   ;Field     ;
+                Name="Line Discount Amount";
+                ToolTipML=ENU=Specifies the discount amount that is granted for the item on the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Line Discount Amount";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 38  ;2   ;Field     ;
+                Name="Allow Invoice Disc.";
+                ToolTipML=ENU=Specifies if the invoice line is included when the invoice discount is calculated.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Allow Invoice Disc.";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 40  ;2   ;Field     ;
+                Name="Allow Item Charge Assignment";
+                ToolTipML=ENU=Specifies that you can assign item charges to this line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Allow Item Charge Assignment";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 46  ;2   ;Field     ;
+                Name="Job No.";
+                ToolTipML=ENU=Specifies the job number that the archived document was linked to.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Job No.";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 48  ;2   ;Field     ;
+                Name="Prod. Order No.";
+                ToolTipML=ENU=Specifies the number of the related production order.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr="Prod. Order No.";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 50  ;2   ;Field     ;
+                Name="Blanket Order No.";
+                ToolTipML=ENU=Specifies the number of the blanket order that the record originates from.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Blanket Order No.";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 52  ;2   ;Field     ;
+                Name="Blanket Order Line No.";
+                ToolTipML=ENU=Specifies the number of the blanket order line that the record originates from.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Blanket Order Line No.";
+                Visible=FALSE;
+                ImplicitType=Integer }
+
+    { 54  ;2   ;Field     ;
+                Name="Appl.-to Item Entry";
+                ToolTipML=ENU=Specifies the number of the item ledger entry that the document or journal line is applied to.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Appl.-to Item Entry";
+                Visible=FALSE;
+                ImplicitType=Integer }
+
+    { 56  ;2   ;Field     ;
+                Name="Shortcut Dimension 1 Code";
+                ToolTipML=ENU=Specifies the code for Shortcut Dimension 1, which is one of two global dimension codes that you set up in the General Ledger Setup window.;
+                ApplicationArea=#Dimensions;
+                SourceExpr="Shortcut Dimension 1 Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 58  ;2   ;Field     ;
+                Name="Shortcut Dimension 2 Code";
+                ToolTipML=ENU=Specifies the code for Shortcut Dimension 2, which is one of two global dimension codes that you set up in the General Ledger Setup window.;
+                ApplicationArea=#Dimensions;
+                SourceExpr="Shortcut Dimension 2 Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

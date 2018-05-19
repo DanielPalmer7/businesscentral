@@ -1,0 +1,126 @@
+OBJECT Page 2344 BC O365 Payment Instr Settings
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161410.137T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Payment instructions;
+    SourceTable="O365 Payment Instructions";
+    PageType=ListPart;
+    OnAfterGetRecord=BEGIN
+                       if Default then begin
+                         NameText := STRSUBSTNO(DefaultTxt,GetNameInCurrentLanguage);
+                         StyleExpr := 'Strong';
+                       end else begin
+                         NameText := GetNameInCurrentLanguage;
+                         StyleExpr := 'Standard';
+                       end;
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 5       ;    ;ActionContainer;
+                      Name=ActionContainer5;
+                      ActionContainerType=ActionItems }
+      { 7       ;1   ;Action    ;
+                      Name=Edit;
+                      ShortCutKey=Return;
+                      CaptionML=ENU=Edit;
+                      ToolTipML=ENU=Open these payment instructions in an editable way.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      Visible=FALSE;
+                      Image=DocumentEdit;
+                      Scope=Repeater;
+                      OnAction=VAR
+                                 BCO365PaymentInstrCard@1000 : Page "BC O365 Payment Instr. Card";
+                               BEGIN
+                                 BCO365PaymentInstrCard.SetPaymentInstructionsOnPage(Rec);
+                                 BCO365PaymentInstrCard.LOOKUPMODE(true);
+                                 if BCO365PaymentInstrCard.RUNMODAL = ACTION::OK then;
+                               END;
+                                }
+      { 6       ;1   ;Action    ;
+                      Name=Delete;
+                      CaptionML=ENU=Delete;
+                      ToolTipML=ENU=Delete the current payment instructions.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Delete;
+                      PromotedOnly=true;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 if FIND then
+                                   DELETE(true);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 12  ;1   ;Group     ;
+                Name=Control12;
+                GroupType=Group;
+                InstructionalTextML=ENU=The payment instructions will show up on the bottom of your invoices. You can edit the existing ones or create a new one. }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=NameText;
+                Width=2;
+                CaptionML=ENU=Short name;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=NameText;
+                StyleExpr=StyleExpr;
+                ImplicitType=Text }
+
+    { 4   ;2   ;Field     ;
+                Name=GetPaymentInstructionsInCurrentLanguage;
+                CaptionML=ENU=Payment instructions;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=GetPaymentInstructionsInCurrentLanguage;
+                StyleExpr=StyleExpr;
+                ImplicitType=Text }
+
+    { 8   ;1   ;Field     ;
+                Name=AddNewPaymentInstructions;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=NewPaymentInstructionsLbl;
+                Editable=FALSE;
+                Style=StandardAccent;
+                StyleExpr=TRUE;
+                OnDrillDown=BEGIN
+                              O365SalesInvoiceMgmt.OpenNewPaymentInstructionsCard;
+                            END;
+
+                ImplicitType=TextConst;
+                ShowCaption=false }
+
+  }
+  CODE
+  {
+    VAR
+      O365SalesInvoiceMgmt@1003 : Codeunit "O365 Sales Invoice Mgmt";
+      NameText@1000 : Text;
+      DefaultTxt@1001 : TextConst '@@@=%1: the description of the payment instructions;ENU=%1 (default)';
+      NewPaymentInstructionsLbl@1002 : TextConst 'ENU=Add new payment instructions';
+      StyleExpr@1004 : Text;
+
+    BEGIN
+    END.
+  }
+}
+

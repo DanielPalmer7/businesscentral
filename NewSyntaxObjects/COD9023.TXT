@@ -1,0 +1,25 @@
+OBJECT Codeunit 9023 Pmt. Rec. Jnl. Import Trans.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=VAR
+            BankAccReconciliation@1000 : Record "Bank Acc. Reconciliation";
+          BEGIN
+            BankAccReconciliation.ImportAndProcessToNewStatement
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

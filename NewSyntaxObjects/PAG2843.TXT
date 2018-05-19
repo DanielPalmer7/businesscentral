@@ -1,0 +1,166 @@
+OBJECT Page 2843 Native - Sync Services Setting
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161414.847T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[@@@={Locked};
+               ENU=nativeSyncServicesSettings];
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="O365 Settings Menu";
+    PageType=List;
+    SourceTableTemporary=true;
+    OnInit=BEGIN
+             INSERT;
+           END;
+
+    OnOpenPage=BEGIN
+                 SetCalculatedFields;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       SetCalculatedFields;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 8   ;2   ;Field     ;
+                Name=qboSyncTitle;
+                CaptionML=[@@@={Locked};
+                           ENU=qboSyncTitle];
+                ToolTipML=ENU=Specifies QuickBooks Online Sync title.;
+                ApplicationArea=#All;
+                SourceExpr=QBOSyncTitle;
+                Editable=FALSE;
+                ImplicitType=Text }
+
+    { 6   ;2   ;Field     ;
+                Name=qboSyncDescription;
+                CaptionML=[@@@={Locked};
+                           ENU=qboSyncDescription];
+                ToolTipML=ENU=Specifies QuickBooks Online Sync description.;
+                ApplicationArea=#All;
+                SourceExpr=QBOSyncDescription;
+                Editable=FALSE;
+                ImplicitType=Text }
+
+    { 5   ;2   ;Field     ;
+                Name=qboSyncEnabled;
+                CaptionML=[@@@={Locked};
+                           ENU=qboSyncEnabled];
+                ToolTipML=ENU=Specifies QuickBooks Online Sync enabled.;
+                ApplicationArea=#All;
+                SourceExpr=QBOSyncEnabled;
+                OnValidate=BEGIN
+                             if QBOSyncEnabled then
+                               ERROR(CantEnableSyncFromHereErr);
+                             QBOSyncProxy.SetQBOSyncEnabled(QBOSyncEnabled);
+                           END;
+
+                ImplicitType=Boolean }
+
+    { 3   ;2   ;Field     ;
+                Name=qbdSyncTitle;
+                CaptionML=[@@@={Locked};
+                           ENU=qbdSyncTitle];
+                ToolTipML=ENU=Specifies QuickBooks Desktop Sync title;
+                ApplicationArea=#All;
+                SourceExpr=QBDSyncTitle;
+                Editable=FALSE;
+                ImplicitType=Text }
+
+    { 4   ;2   ;Field     ;
+                Name=qbdSyncDescription;
+                CaptionML=[@@@={Locked};
+                           ENU=qbdSyncDescription];
+                ToolTipML=ENU=Specifies QuickBooks Desktop Sync description;
+                ApplicationArea=#All;
+                SourceExpr=QBDSyncDescription;
+                Editable=FALSE;
+                ImplicitType=Text }
+
+    { 7   ;2   ;Field     ;
+                Name=qbdSyncEnabled;
+                CaptionML=[@@@={Locked};
+                           ENU=qbdSyncEnabled];
+                ToolTipML=ENU=Specifies QuickBooks Desktop Sync enabled;
+                ApplicationArea=#All;
+                SourceExpr=QBDSyncEnabled;
+                OnValidate=BEGIN
+                             QBDSyncProxy.SetQBDSyncEnabled(QBDSyncEnabled);
+                           END;
+
+                ImplicitType=Boolean }
+
+    { 9   ;2   ;Field     ;
+                Name=qbdSyncSendToEmail;
+                CaptionML=[@@@={Locked};
+                           ENU=qbdSyncSendToEmail];
+                ToolTipML=ENU=Specifies the email to send QuickBooks Desktop Sync setup instructions to.;
+                ApplicationArea=#All;
+                SourceExpr=QBDSyncSendToEmail;
+                OnValidate=BEGIN
+                             if QBDSyncSendToEmail = '' then
+                               ERROR(SendToEmailErr);
+
+                             QBDSyncProxy.SetQBDSyncSendToEmail(QBDSyncSendToEmail);
+                           END;
+
+                ImplicitType=Text }
+
+  }
+  CODE
+  {
+    VAR
+      QBDSyncProxy@1007 : Codeunit "QBD Sync Proxy";
+      QBOSyncProxy@1006 : Codeunit "QBO Sync Proxy";
+      QBOSyncTitle@1005 : Text;
+      QBOSyncDescription@1004 : Text;
+      QBOSyncEnabled@1003 : Boolean;
+      QBDSyncTitle@1002 : Text;
+      QBDSyncDescription@1001 : Text;
+      QBDSyncEnabled@1000 : Boolean;
+      QBDSyncSendToEmail@1008 : Text;
+      SendToEmailErr@1009 : TextConst 'ENU=Send to email is not specified.';
+      SendingEmailErr@1010 : TextConst 'ENU=Error while sending email.';
+      CantEnableSyncFromHereErr@1011 : TextConst 'ENU=Can''t enable sync from here. Use QBO Sync. Auth service instead.';
+
+    [ServiceEnabled]
+    [External]
+    PROCEDURE SendInstructionsByEmail@17(VAR ActionContext@1000 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.WebServiceActionContext");
+    VAR
+      ODataActionManagement@1001 : Codeunit "OData Action Management";
+      Handled@1003 : Boolean;
+    BEGIN
+      QBDSyncProxy.SendEmailInBackground(Handled);
+      if not Handled then
+        ERROR(SendingEmailErr);
+      ODataActionManagement.SetDeleteResponseLocation(ActionContext,PAGE::"Native - Sync Services Setting");
+    END;
+
+    LOCAL PROCEDURE SetCalculatedFields@3();
+    BEGIN
+      QBOSyncProxy.GetQBOSyncSettings(QBOSyncTitle,QBOSyncDescription,QBOSyncEnabled);
+      QBDSyncProxy.GetQBDSyncSettings(QBDSyncTitle,QBDSyncDescription,QBDSyncEnabled,QBDSyncSendToEmail);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

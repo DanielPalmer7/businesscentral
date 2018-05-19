@@ -1,0 +1,41 @@
+OBJECT Table 450 Bar Chart Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160113.230T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Bar Chart Buffer;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Series No.          ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Series No. }
+    { 2   ;   ;Column No.          ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Column No. }
+    { 3   ;   ;Y Value             ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Y Value }
+    { 4   ;   ;X Value             ;Text100       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=X Value }
+    { 5   ;   ;Tag                 ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Tag }
+  }
+  KEYS
+  {
+    {    ;"Series No."                            ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

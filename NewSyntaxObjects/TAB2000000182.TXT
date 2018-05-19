@@ -1,0 +1,34 @@
+OBJECT Table 2000000182 Media Resources
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.890T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code50         }
+    { 2   ;   ;MediaSet Reference  ;MediaSet       }
+    { 3   ;   ;Media Reference     ;Media          }
+    { 4   ;   ;Blob                ;BLOB          ;SubType=User-Defined }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

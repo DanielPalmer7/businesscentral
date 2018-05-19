@@ -1,0 +1,53 @@
+OBJECT Table 7828 MS-QBO Sync Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160231.247T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=MS-QBO Sync Buffer;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Id                  ;BigInteger    ;AutoIncrement=true;
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Id }
+    { 2   ;   ;Record Id           ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Record Id }
+  }
+  KEYS
+  {
+    {    ;Id                                      ;Clustered=true }
+    {    ;"Record Id"                              }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE InsertNew@1(RecordId@1000 : RecordID);
+    BEGIN
+      RESET;
+      if Exists(RecordId) then
+        exit;
+      INIT;
+      "Record Id" := RecordId;
+      INSERT;
+    END;
+
+    PROCEDURE Exists@2(RecordIdToFind@1000 : RecordID) : Boolean;
+    BEGIN
+      SETRANGE("Record Id",RecordIdToFind);
+      exit(FINDFIRST);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,468 @@
+OBJECT Page 9007 Purchasing Agent Role Center
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161633.543T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[@@@="{Dependency=Match,""ProfileDescription_PURCHASINGAGENT""}";
+               ENU=Purchasing Agent];
+    PageType=RoleCenter;
+    ActionList=ACTIONS
+    {
+      { 1900000006;0 ;ActionContainer;
+                      Name=ActionContainer1900000006;
+                      ActionContainerType=Reports }
+      { 5       ;1   ;Action    ;
+                      Name="Top __ Vendor List";
+                      CaptionML=ENU=Top __ Vendor List;
+                      ToolTipML=ENU=View a list of the vendors from whom you purchase the most or to whom you owe the most.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Top __ Vendor List" }
+      { 6       ;1   ;Action    ;
+                      Name="Vendor/Item Statistics";
+                      CaptionML=ENU=Vendor/Item Statistics;
+                      ToolTipML=ENU=View a list of item entries for each vendor in a selected period.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Vendor/Item Statistics" }
+      { 28      ;1   ;Separator ;
+                      Name=Separator28 }
+      { 8       ;1   ;Action    ;
+                      Name="Availability Projection";
+                      CaptionML=ENU=Availability Projection;
+                      ToolTipML=ENU=View a list of the quantity of each item in customer, purchase, and transfer orders and the quantity available in inventory. The list is divided into columns that cover six periods with starting and ending dates as well as the periods before and after those periods. The list is useful when you are planning your inventory purchases.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Availability Projection" }
+      { 9       ;1   ;Action    ;
+                      Name="Purchase Order Status";
+                      CaptionML=ENU=Purchase Order Status;
+                      ToolTipML=ENU=View a list of items on order from vendors. The report also shows the expected receipt date and the quantity and amount on back orders. The report can be used, for example, to see when items should be received and whether a reminder of a back order should be issued.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Purchase Order Status" }
+      { 13      ;1   ;Action    ;
+                      Name="Vendor Purchases by Item";
+                      CaptionML=ENU=Vendor Purchases by Item;
+                      ToolTipML=ENU=View a list of the vendors that your company has purchased items from within a selected period. It shows invoiced quantity, amount and discount. The report can be used to analyze a company's item purchases.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Vendor Purchases by Item" }
+      { 14      ;1   ;Action    ;
+                      Name="Item Cost and Price List";
+                      CaptionML=ENU=Item Cost and Price List;
+                      ToolTipML=ENU=View price information for your items or stockkeeping units, such as direct unit cost, last direct cost, unit price, profit percentage, and profit.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Item Cost and Price List" }
+      { 1020000 ;1   ;Separator ;
+                      Name=Separator1020000 }
+      { 1020001 ;1   ;Action    ;
+                      Name="Outstanding Order Stat. by PO";
+                      CaptionML=ENU=Outstanding Order Stat. by PO;
+                      ToolTipML=ENU=View detailed outstanding order information printed by purchase order number. Microsoft Dynamics NAV includes shipping information, quantities ordered, and the amount back ordered.;
+                      RunObject=Report "Outstanding Order Stat. by PO";
+                      Image=Report }
+      { 1020002 ;1   ;Action    ;
+                      Name="Outstanding Purch. Order Aging";
+                      CaptionML=ENU=Outstanding Purch. Order Aging;
+                      ToolTipML=ENU=View vendor orders aged by their expected date. Only orders that have not been received appear on the report.;
+                      RunObject=Report "Outstanding Purch. Order Aging";
+                      Image=Report }
+      { 1020003 ;1   ;Action    ;
+                      Name="Outstanding Purch.Order Status";
+                      CaptionML=ENU=Outstanding Purch.Order Status;
+                      ToolTipML=ENU=View detailed outstanding order information for each vendor. This report includes shipping information, quantities ordered, and the amount that is back ordered.;
+                      RunObject=Report "Outstanding Purch.Order Status";
+                      Image=Report }
+      { 1020004 ;1   ;Action    ;
+                      Name="Purchase Advice";
+                      CaptionML=ENU=Purchase Advice;
+                      ToolTipML=ENU=Get suggestions on what items you need to order to keep inventory at the desired level. This report looks at sales and purchase orders as well as backorders to determine the reorder amount.;
+                      RunObject=Report "Purchase Advice";
+                      Image=Report }
+      { 1900000011;0 ;ActionContainer;
+                      Name=ActionContainer1900000011;
+                      ActionContainerType=HomeItems }
+      { 7       ;1   ;Action    ;
+                      Name=PurchaseOrders;
+                      CaptionML=ENU=Purchase Orders;
+                      ToolTipML=ENU=Create purchase orders to mirror sales documents that vendors send to you. This enables you to record the cost of purchases and to track accounts payable. Posting purchase orders dynamically updates inventory levels so that you can minimize inventory costs and provide better customer service. Purchase orders allow partial receipts, unlike with purchase invoices, and enable drop shipment directly from your vendor to your customer. Purchase orders can be created automatically from PDF or image files from your vendors by using the Incoming Documents feature.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Order List" }
+      { 3       ;1   ;Action    ;
+                      Name=PurchaseOrdersPendConf;
+                      CaptionML=ENU=Pending Confirmation;
+                      ToolTipML=ENU="View the list of purchase orders that await the vendor's confirmation. ";
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Order List";
+                      RunPageView=WHERE(Status=FILTER(Open)) }
+      { 23      ;1   ;Action    ;
+                      Name=PurchaseOrdersPartDeliv;
+                      CaptionML=ENU=Partially Delivered;
+                      ToolTipML=ENU=View the list of purchases that are partially received.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Order List";
+                      RunPageView=WHERE(Status=FILTER(Released),
+                                        Receive=FILTER(true),
+                                        "Completely Received"=FILTER(false)) }
+      { 76      ;1   ;Action    ;
+                      Name="Purchase Quotes";
+                      CaptionML=ENU=Purchase Quotes;
+                      ToolTipML=ENU=Create purchase quotes to represent your request for quotes from vendors. Quotes can be converted to purchase orders.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Purchase Quotes" }
+      { 78      ;1   ;Action    ;
+                      Name="Blanket Purchase Orders";
+                      CaptionML=ENU=Blanket Purchase Orders;
+                      ToolTipML=ENU=Use blanket purchase orders as a framework for a long-term agreement between you and your vendors to buy large quantities that are to be delivered in several smaller shipments over a certain period of time. Blanket orders often cover only one item with predetermined delivery dates. The main reason for using a blanket order rather than a purchase order is that quantities entered on a blanket order do not affect item availability and thus can be used as a worksheet for monitoring, forecasting, and planning purposes..;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Blanket Purchase Orders" }
+      { 82      ;1   ;Action    ;
+                      Name="Purchase Invoices";
+                      CaptionML=ENU=Purchase Invoices;
+                      ToolTipML=ENU=Create purchase invoices to mirror sales documents that vendors send to you. This enables you to record the cost of purchases and to track accounts payable. Posting purchase invoices dynamically updates inventory levels so that you can minimize inventory costs and provide better customer service. Purchase invoices can be created automatically from PDF or image files from your vendors by using the Incoming Documents feature.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Invoices" }
+      { 83      ;1   ;Action    ;
+                      Name="Purchase Return Orders";
+                      CaptionML=ENU=Purchase Return Orders;
+                      ToolTipML=ENU=Create purchase return orders to mirror sales return documents that vendors send to you for incorrect or damaged items that you have paid for and then returned to the vendor. Purchase return orders enable you to ship back items from multiple purchase documents with one purchase return and support warehouse documents for the item handling. Purchase return orders can be created automatically from PDF or image files from your vendors by using the Incoming Documents feature. Note: If you have not yet paid for an erroneous purchase, you can simply cancel the posted purchase invoice to automatically revert the financial transaction.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Return Order List" }
+      { 31      ;1   ;Action    ;
+                      Name="Purchase Credit Memos";
+                      CaptionML=ENU=Purchase Credit Memos;
+                      ToolTipML=ENU=Create purchase credit memos to mirror sales credit memos that vendors send to you for incorrect or damaged items that you have paid for and then returned to the vendor. If you need more control of the purchase return process, such as warehouse documents for the physical handling, use purchase return orders, in which purchase credit memos are integrated. Purchase credit memos can be created automatically from PDF or image files from your vendors by using the Incoming Documents feature. Note: If you have not yet paid for an erroneous purchase, you can simply cancel the posted purchase invoice to automatically revert the financial transaction.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Credit Memos" }
+      { 26      ;1   ;Action    ;
+                      Name="Assembly Orders";
+                      CaptionML=ENU=Assembly Orders;
+                      ToolTipML=ENU=View ongoing assembly orders.;
+                      ApplicationArea=#Assembly;
+                      RunObject=Page "Assembly Orders" }
+      { 32      ;1   ;Action    ;
+                      Name="Sales Orders";
+                      CaptionML=ENU=Sales Orders;
+                      ToolTipML=ENU=Record your agreements with customers to sell certain products on certain delivery and payment terms. Sales orders, unlike sales invoices, allow you to ship partially, deliver directly from your vendor to your customer, initiate warehouse handling, and print various customer-facing documents. Sales invoicing is integrated in the sales order process.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Sales Order List";
+                      Image=Order }
+      { 85      ;1   ;Action    ;
+                      Name=Vendors;
+                      CaptionML=ENU=Vendors;
+                      ToolTipML=ENU=View or edit detailed information for the vendors that you trade with. From each vendor card, you can open related information, such as purchase statistics and ongoing orders, and you can define special prices and line discounts that the vendor grants you if certain conditions are met.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Vendor List";
+                      Image=Vendor }
+      { 88      ;1   ;Action    ;
+                      Name=Items;
+                      CaptionML=ENU=Items;
+                      ToolTipML=ENU=View or edit detailed information for the products that you trade in. The item card can be of type Inventory or Service to specify if the item is a physical unit or a labor time unit. Here you also define if items in inventory or on incoming orders are automatically reserved for outbound documents and whether order tracking links are created between demand and supply to reflect planning actions.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Item List";
+                      Image=Item }
+      { 91      ;1   ;Action    ;
+                      Name="Nonstock Items";
+                      CaptionML=ENU=Nonstock Items;
+                      ToolTipML=ENU="View the list of items that you do not carry in inventory. ";
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Nonstock Item List";
+                      Image=NonStockItem }
+      { 94      ;1   ;Action    ;
+                      Name="Stockkeeping Units";
+                      CaptionML=ENU=Stockkeeping Units;
+                      ToolTipML=ENU="Open the list of item SKUs to view or edit instances of item at different locations or with different variants. ";
+                      ApplicationArea=#Warehouse;
+                      RunObject=Page "Stockkeeping Unit List";
+                      Image=SKU }
+      { 95      ;1   ;Action    ;
+                      Name="Purchase Analysis Reports";
+                      CaptionML=ENU=Purchase Analysis Reports;
+                      ToolTipML=ENU=Analyze the dynamics of your purchase volumes. You can also use the report to analyze your vendors' performance and purchase prices.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Analysis Report Purchase";
+                      RunPageView=WHERE("Analysis Area"=FILTER(Purchase)) }
+      { 96      ;1   ;Action    ;
+                      Name="Inventory Analysis Reports";
+                      CaptionML=ENU=Inventory Analysis Reports;
+                      ToolTipML=ENU=Analyze the dynamics of your inventory according to key performance indicators that you select, for example inventory turnover. You can also use the report to analyze your inventory costs, in terms of direct and indirect costs, as well as the value and quantities of your different types of inventory.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Analysis Report Inventory";
+                      RunPageView=WHERE("Analysis Area"=FILTER(Inventory)) }
+      { 10      ;1   ;Action    ;
+                      Name="Item Journals";
+                      CaptionML=ENU=Item Journals;
+                      ToolTipML=ENU=Post item transactions directly to the item ledger to adjust inventory in connection with purchases, sales, and positive or negative adjustments without using documents. You can save sets of item journal lines as standard journals so that you can perform recurring postings quickly. A condensed version of the item journal function exists on item cards for quick adjustment of an items inventory quantity.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Item Journal Batches";
+                      RunPageView=WHERE("Template Type"=CONST(Item),
+                                        Recurring=CONST(false)) }
+      { 17      ;1   ;Action    ;
+                      Name="Purchase Journals";
+                      CaptionML=ENU=Purchase Journals;
+                      ToolTipML=ENU=Post any purchase-related transaction directly to a vendor, bank, or general ledger account instead of using dedicated documents. You can post all types of financial purchase transactions, including payments, refunds, and finance charge amounts. Note that you cannot post item quantities with a purchase journal.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "General Journal Batches";
+                      RunPageView=WHERE("Template Type"=CONST(Purchases),
+                                        Recurring=CONST(false)) }
+      { 19      ;1   ;Action    ;
+                      Name=RequisitionWorksheets;
+                      CaptionML=ENU=Requisition Worksheets;
+                      ToolTipML=ENU=Calculate a supply plan to fulfill item demand with purchases or transfers.;
+                      ApplicationArea=#Planning;
+                      RunObject=Page "Req. Wksh. Names";
+                      RunPageView=WHERE("Template Type"=CONST("Req."),
+                                        Recurring=CONST(false)) }
+      { 20      ;1   ;Action    ;
+                      Name=SubcontractingWorksheets;
+                      CaptionML=ENU=Subcontracting Worksheets;
+                      ToolTipML=ENU=Calculate the needed production supply, find the production orders that have material ready to send to a subcontractor, and automatically create purchase orders for subcontracted operations from production order routings.;
+                      ApplicationArea=#Planning;
+                      RunObject=Page "Req. Wksh. Names";
+                      RunPageView=WHERE("Template Type"=CONST("For. Labor"),
+                                        Recurring=CONST(false)) }
+      { 22      ;1   ;Action    ;
+                      Name="Standard Cost Worksheets";
+                      CaptionML=ENU=Standard Cost Worksheets;
+                      ToolTipML=ENU=Review or update standard costs. Purchasers, production or assembly managers can use the worksheet to simulate the effect on the cost of the manufactured or assembled item if the standard cost for consumption, production capacity usage, or assembly resource usage is changed. You can set a cost change to take effect on a specified date.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Standard Cost Worksheet Names" }
+      { 1900000012;0 ;ActionContainer;
+                      Name=ActionContainer1900000012;
+                      ActionContainerType=ActivityButtons }
+      { 39      ;1   ;ActionGroup;
+                      Name="Posted Documents";
+                      CaptionML=ENU=Posted Documents;
+                      Image=FiledPosted }
+      { 40      ;2   ;Action    ;
+                      Name="Posted Purchase Receipts";
+                      CaptionML=ENU=Posted Purchase Receipts;
+                      ToolTipML=ENU=Open the list of posted purchase receipts.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Purchase Receipts" }
+      { 42      ;2   ;Action    ;
+                      Name="Posted Purchase Invoices";
+                      CaptionML=ENU=Posted Purchase Invoices;
+                      ToolTipML=ENU=Open the list of posted purchase invoices.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Purchase Invoices" }
+      { 12      ;2   ;Action    ;
+                      Name="Posted Return Shipments";
+                      CaptionML=ENU=Posted Return Shipments;
+                      ToolTipML=ENU=Open the list of posted return shipments.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Return Shipments" }
+      { 15      ;2   ;Action    ;
+                      Name="Posted Purchase Credit Memos";
+                      CaptionML=ENU=Posted Purchase Credit Memos;
+                      ToolTipML=ENU=Open the list of posted purchase credit memos.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Posted Purchase Credit Memos" }
+      { 27      ;2   ;Action    ;
+                      Name="Posted Assembly Orders";
+                      CaptionML=ENU=Posted Assembly Orders;
+                      ToolTipML=ENU=View completed assembly orders.;
+                      ApplicationArea=#Assembly;
+                      RunObject=Page "Posted Assembly Orders" }
+      { 1       ;0   ;ActionContainer;
+                      Name=ActionContainer1;
+                      ActionContainerType=NewDocumentItems }
+      { 18      ;1   ;Action    ;
+                      Name="Purchase &Quote";
+                      CaptionML=ENU=Purchase &Quote;
+                      ToolTipML=ENU=Create a new purchase quote, for example to reflect a request for quote.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Purchase Quote";
+                      Promoted=false;
+                      Image=Quote;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 16      ;1   ;Action    ;
+                      Name="Purchase &Invoice";
+                      CaptionML=ENU=Purchase &Invoice;
+                      ToolTipML=ENU=Create a new purchase invoice.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Invoice";
+                      Promoted=false;
+                      Image=NewPurchaseInvoice;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 4       ;1   ;Action    ;
+                      Name="Purchase &Order";
+                      CaptionML=ENU=Purchase &Order;
+                      ToolTipML=ENU=Create a new purchase order.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Order";
+                      Promoted=false;
+                      Image=Document;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 2       ;1   ;Action    ;
+                      Name="Purchase &Return Order";
+                      CaptionML=ENU=Purchase &Return Order;
+                      ToolTipML=ENU=Create a new purchase return order to return received items.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Return Order";
+                      Promoted=false;
+                      Image=ReturnOrder;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 24      ;1   ;Separator ;
+                      Name=Tasks;
+                      CaptionML=ENU=Tasks;
+                      IsHeader=true }
+      { 29      ;1   ;Action    ;
+                      Name="&Purchase Journal";
+                      CaptionML=ENU=&Purchase Journal;
+                      ToolTipML=ENU=Post purchase transactions directly to the general ledger. The purchase journal may already contain journal lines that are created as a result of related functions.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Journal";
+                      Image=Journals }
+      { 30      ;1   ;Action    ;
+                      Name="Item &Journal";
+                      CaptionML=ENU=Item &Journal;
+                      ToolTipML=ENU=Adjust the physical quantity of items on inventory.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Item Journal";
+                      Image=Journals }
+      { 11      ;1   ;Action    ;
+                      Name="Order Plan&ning";
+                      CaptionML=ENU=Order Plan&ning;
+                      ToolTipML=ENU=Plan supply orders order by order to fulfill new demand.;
+                      ApplicationArea=#Planning;
+                      RunObject=Page "Order Planning";
+                      Image=Planning }
+      { 38      ;1   ;Separator ;
+                      Name=Separator38 }
+      { 33      ;1   ;Action    ;
+                      Name="Requisition &Worksheet";
+                      CaptionML=ENU=Requisition &Worksheet;
+                      ToolTipML=ENU=Calculate a supply plan to fulfill item demand with purchases or transfers.;
+                      ApplicationArea=#Planning;
+                      RunObject=Page "Req. Wksh. Names";
+                      RunPageView=WHERE("Template Type"=CONST("Req."),
+                                        Recurring=CONST(false));
+                      Image=Worksheet }
+      { 34      ;1   ;Action    ;
+                      Name="Pur&chase Prices";
+                      CaptionML=ENU=Pur&chase Prices;
+                      ToolTipML=ENU=View or set up different prices for items that you buy from the vendor. An item price is automatically granted on invoice lines when the specified criteria are met, such as vendor, quantity, or ending date.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Prices";
+                      Image=Price }
+      { 41      ;1   ;Action    ;
+                      Name="Purchase &Line Discounts";
+                      CaptionML=ENU=Purchase &Line Discounts;
+                      ToolTipML=ENU=View or set up different discounts for items that you buy from the vendor. An item discount is automatically granted on invoice lines when the specified criteria are met, such as vendor, quantity, or ending date.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Purchase Line Discounts";
+                      Image=LineDiscount }
+      { 36      ;1   ;Separator ;
+                      Name=History;
+                      CaptionML=ENU=History;
+                      IsHeader=true }
+      { 46      ;1   ;Action    ;
+                      Name="Navi&gate";
+                      CaptionML=ENU=Navi&gate;
+                      ToolTipML=ENU=Find all entries and documents that exist for the document number and posting date on the selected entry or document.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page Navigate;
+                      Image=Navigate }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000008;0;Container;
+                Name=Control1900000008;
+                ContainerType=RoleCenterArea }
+
+    { 1900724808;1;Group  ;
+                Name=Control1900724808 }
+
+    { 1907662708;2;Part   ;
+                Name=Control1907662708;
+                ApplicationArea=#Advanced;
+                PagePartID="Purchase Agent Activities";
+                PartType=Page }
+
+    { 1902476008;2;Part   ;
+                Name=Control1902476008;
+                ApplicationArea=#Advanced;
+                PagePartID="My Vendors";
+                PartType=Page }
+
+    { 1900724708;1;Group  ;
+                Name=Control1900724708 }
+
+    { 25  ;2   ;Part      ;
+                Name=Control25;
+                ApplicationArea=#Advanced;
+                PagePartID="Purchase Performance";
+                PartType=Page }
+
+    { 37  ;2   ;Part      ;
+                Name=Control37;
+                ApplicationArea=#Advanced;
+                PagePartID="Purchase Performance";
+                Visible=false;
+                PartType=Page }
+
+    { 21  ;2   ;Part      ;
+                Name=Control21;
+                ApplicationArea=#Advanced;
+                PagePartID="Inventory Performance";
+                PartType=Page }
+
+    { 44  ;2   ;Part      ;
+                Name=Control44;
+                ApplicationArea=#Advanced;
+                PagePartID="Inventory Performance";
+                Visible=false;
+                PartType=Page }
+
+    { 45  ;2   ;Part      ;
+                Name=Control45;
+                ApplicationArea=#Advanced;
+                PagePartID="Report Inbox Part";
+                PartType=Page }
+
+    { 35  ;2   ;Part      ;
+                Name=Control35;
+                ApplicationArea=#Advanced;
+                PagePartID="My Job Queue";
+                Visible=false;
+                PartType=Page }
+
+    { 1905989608;2;Part   ;
+                Name=Control1905989608;
+                ApplicationArea=#Advanced;
+                PagePartID="My Items";
+                PartType=Page }
+
+    { 1903012608;2;Part   ;
+                Name=Control1903012608;
+                ApplicationArea=#Advanced;
+                PagePartID="Connect Online";
+                Visible=FALSE;
+                PartType=Page }
+
+    { 43  ;2   ;Part      ;
+                Name=Control43;
+                ApplicationArea=#Advanced;
+                PartType=System;
+                SystemPartID=MyNotes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

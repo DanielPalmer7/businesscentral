@@ -1,0 +1,90 @@
+OBJECT Page 10146 Deposit List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161723.150T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Deposit List;
+    SourceTable="Deposit Header";
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1900000005;0 ;ActionContainer;
+                      Name=ActionContainer1900000005;
+                      ActionContainerType=NewDocumentItems }
+      { 1907613505;1 ;Action    ;
+                      Name=Deposit;
+                      CaptionML=ENU=Deposit;
+                      ToolTipML=ENU="Create a new deposit. ";
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page Deposit;
+                      Promoted=false;
+                      Image=Document;
+                      PromotedCategory=New }
+      { 1900000006;0 ;ActionContainer;
+                      Name=ActionContainer1900000006;
+                      ActionContainerType=Reports }
+      { 1904394106;1 ;Action    ;
+                      Name="Deposit Test Report";
+                      CaptionML=ENU=Deposit Test Report;
+                      ToolTipML=ENU=Verify the result of posting the deposit before you run the Deposit report.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Report "Deposit Test Report";
+                      Promoted=false;
+                      Image=Report;
+                      PromotedCategory=Report }
+    }
+  }
+  CONTROLS
+  {
+    { 1020000; ;Container ;
+                Name=Container;
+                ContainerType=ContentArea }
+
+    { 1020001;1;Group     ;
+                Name=Control1020001;
+                GroupType=Repeater }
+
+    { 1020002;2;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the deposit.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                ImplicitType=Code20 }
+
+    { 1020003;2;Field     ;
+                Name="Bank Account No.";
+                ToolTipML=ENU=Specifies the number of the bank account.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Bank Account No.";
+                ImplicitType=Code20 }
+
+    { 1020004;2;Field     ;
+                Name="Currency Code";
+                ToolTipML=ENU=Specifies the currency of the deposit.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Currency Code";
+                ImplicitType=Code10 }
+
+    { 1020006;2;Field     ;
+                Name="Total Deposit Amount";
+                ToolTipML=ENU=Specifies the total amount of the deposit.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Total Deposit Amount";
+                ImplicitType=Decimal }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

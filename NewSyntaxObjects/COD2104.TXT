@@ -1,0 +1,272 @@
+OBJECT Codeunit 2104 O365 Send + Resend Invoice
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160713.680T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      ThereIsNothingToSellInvoiceErr@1003 : TextConst 'ENU=Please add at least one line item to the invoice.';
+      ThereIsNothingToSellQuoteErr@1008 : TextConst 'ENU=Please add at least one line item to the estimate.';
+      InvoiceSendingMsg@1002 : TextConst 'ENU=Your invoice is being sent.';
+      EstimateSendingMsg@1001 : TextConst 'ENU=Your estimate is being sent.';
+      CannotSendCanceledDocErr@1000 : TextConst 'ENU=You can''t resend a canceled invoice.';
+      O365SalesEmailManagement@1004 : Codeunit "O365 Sales Email Management";
+      CustomerDoesNotExistInvoiceErr@1009 : TextConst '@@@="%1 = Customer Name";ENU=Customer %1 cannot be found.\\To send the invoice, you must recreate the customer.';
+      CustomerDoesNotExistQuoteErr@1005 : TextConst '@@@="%1 = Customer Name";ENU=Customer %1 cannot be found.\\To send the estimate, you must recreate the customer.';
+      ConfirmPostingZeroAmountInvoiceQst@1010 : TextConst 'ENU=You''re about to save an invoice that will not result in any payment. Continue?';
+      ConfirmSendingZeroAmountEstimateQst@1006 : TextConst 'ENU=You''re about to save an estimate that will not result in any payment. Continue?';
+      ConfirmConvertToInvoiceQst@1007 : TextConst 'ENU=Do you want to turn the estimate into a draft invoice?';
+      CouponsNotValidMsg@1011 : TextConst 'ENU=One or more coupons are no longer valid. Remove them, and then try again.';
+      NextNoSeriesUsedInvoiceErr@1012 : TextConst 'ENU=The next number for invoices has already been used. \ Please consult with your accountant, and then update the number sequence in settings.';
+      NextNoSeriesUsedEstimateErr@1013 : TextConst 'ENU=The next number for estimates has already been used. \ Please consult with your accountant, and then update the number sequence in settings.';
+      TestInvoiceSendingMsg@1014 : TextConst 'ENU=Your test invoice is being sent.';
+
+    PROCEDURE SendOrResendSalesDocument@1(O365SalesDocument@1000 : Record "O365 Sales Document") : Boolean;
+    VAR
+      SalesInvoiceHeader@1001 : Record "Sales Invoice Header";
+      SalesHeader@1002 : Record "Sales Header";
+    BEGIN
+      with O365SalesDocument do begin
+        if Canceled then
+          ERROR(CannotSendCanceledDocErr);
+
+        if Posted then begin
+          if not SalesInvoiceHeader.GET("No.") then
+            exit(false);
+          exit(ResendSalesInvoice(SalesInvoiceHeader));
+        end;
+
+        if not SalesHeader.GET("Document Type","No.") then
+          exit(false);
+        exit(SendSalesInvoiceOrOpenPage(SalesHeader,true,O365SalesDocument,true));
+      end;
+    END;
+
+    PROCEDURE ResendSalesInvoice@2(SalesInvoiceHeader@1000 : Record "Sales Invoice Header") : Boolean;
+    BEGIN
+      with SalesInvoiceHeader do begin
+        SETRECFILTER;
+        CODEUNIT.RUN(CODEUNIT::"O365 Setup Email");
+
+        if not O365SalesEmailManagement.ShowEmailDialog("No.") then
+          exit(false);
+
+        EmailRecords(false);
+        MESSAGE(InvoiceSendingMsg);
+      end;
+
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE SendSalesInvoiceOrOpenPage@3(SalesHeader@1000 : Record "Sales Header";OpenInvoiceIfNoItems@1001 : Boolean;O365SalesDocument@1002 : Record "O365 Sales Document";ShowMessage@1003 : Boolean) : Boolean;
+    VAR
+      EmailParameter@1005 : Record "Email Parameter";
+      O365SalesInvoiceMgmt@1004 : Codeunit "O365 Sales Invoice Mgmt";
+    BEGIN
+      with SalesHeader do begin
+        SETRECFILTER;
+        if not CheckDocumentCanBeSent(SalesHeader,OpenInvoiceIfNoItems,O365SalesDocument) then
+          exit(false);
+
+        if not O365SalesEmailManagement.ShowEmailDialog("No.") then
+          exit(false);
+
+        FIND;
+
+        if EmailParameter.GET("No.","Document Type",EmailParameter."Parameter Type"::Address) then
+          O365SalesInvoiceMgmt.ValidateCustomerEmail(SalesHeader,COPYSTR(EmailParameter.GetParameterValue,1,80));
+
+        if "Document Type" = "Document Type"::Quote then begin
+          EmailRecords(false);
+          if ShowMessage then
+            MESSAGE(EstimateSendingMsg);
+        end else begin
+          SendToPosting(CODEUNIT::"Sales-Post + Email");
+          if ShowMessage then
+            MESSAGE(InvoiceSendingMsg);
+        end;
+      end;
+
+      exit(true);
+    END;
+
+    PROCEDURE SendSalesInvoiceOrQuote@4(SalesHeader@1000 : Record "Sales Header") : Boolean;
+    VAR
+      O365SalesDocument@1001 : Record "O365 Sales Document";
+    BEGIN
+      exit(SendSalesInvoiceOrOpenPage(SalesHeader,false,O365SalesDocument,true));
+    END;
+
+    PROCEDURE SendSalesInvoiceOrQuoteFromBC@9(SalesHeader@1000 : Record "Sales Header") : Boolean;
+    VAR
+      O365SalesDocument@1001 : Record "O365 Sales Document";
+    BEGIN
+      exit(SendSalesInvoiceOrOpenPage(SalesHeader,false,O365SalesDocument,false));
+    END;
+
+    PROCEDURE SendInvoiceFromQuote@5(SalesHeader@1000 : Record "Sales Header";OpenInvoiceIfNoItems@1003 : Boolean) : Boolean;
+    VAR
+      O365SalesDocument@1004 : Record "O365 Sales Document";
+      EmailParameter@1001 : Record "Email Parameter";
+      O365SalesInvoiceMgmt@1002 : Codeunit "O365 Sales Invoice Mgmt";
+    BEGIN
+      if not CheckDocumentCanBeSent(SalesHeader,OpenInvoiceIfNoItems,O365SalesDocument) then
+        exit(false);
+
+      MakeInvoiceFromQuote(SalesHeader,false);
+
+      if not O365SalesEmailManagement.ShowEmailDialog(SalesHeader."No.") then
+        exit(true);
+
+      SalesHeader.FIND;
+
+      if EmailParameter.GET(SalesHeader."No.",SalesHeader."Document Type",EmailParameter."Parameter Type"::Address) then
+        O365SalesInvoiceMgmt.ValidateCustomerEmail(SalesHeader,COPYSTR(EmailParameter.GetParameterValue,1,80));
+
+      SalesHeader.SendToPosting(CODEUNIT::"Sales-Post + Email");
+      MESSAGE(InvoiceSendingMsg);
+      exit(true);
+    END;
+
+    PROCEDURE MakeInvoiceFromQuote@6(VAR SalesHeader@1001 : Record "Sales Header";ShowConfirmDialog@1002 : Boolean) : Boolean;
+    VAR
+      SalesQuoteToInvoice@1000 : Codeunit "Sales-Quote to Invoice";
+    BEGIN
+      if ShowConfirmDialog then
+        if not CONFIRM(ConfirmConvertToInvoiceQst,false) then
+          exit(false);
+
+      SalesHeader.LOCKTABLE;
+      SalesHeader.FIND;
+      SalesQuoteToInvoice.RUN(SalesHeader);
+      SalesQuoteToInvoice.GetSalesInvoiceHeader(SalesHeader);
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE CheckDocumentCanBeSent@8(SalesHeader@1000 : Record "Sales Header";OpenInvoiceIfNoItems@1002 : Boolean;O365SalesDocument@1003 : Record "O365 Sales Document") : Boolean;
+    VAR
+      O365CouponClaim@1004 : Record "O365 Coupon Claim";
+      Customer@1001 : Record Customer;
+      Confirmed@1005 : Boolean;
+    BEGIN
+      with SalesHeader do begin
+        CheckDocumentIfNoItemsExists(SalesHeader,OpenInvoiceIfNoItems,O365SalesDocument);
+        if not Customer.GET("Sell-to Customer No.") then
+          case "Document Type" of
+            "Document Type"::Invoice:
+              ERROR(STRSUBSTNO(CustomerDoesNotExistInvoiceErr,"Sell-to Customer Name"));
+            else
+              ERROR(STRSUBSTNO(CustomerDoesNotExistQuoteErr,"Sell-to Customer Name"));
+          end;
+
+        CheckNextNoSeriesIsAvailable("Document Type"::Invoice);
+
+        // Verify all coupons are still valid
+        O365CouponClaim.SETRANGE("Document Type Filter","Document Type");
+        O365CouponClaim.SETRANGE("Document No. Filter","No.");
+        O365CouponClaim.SETRANGE("Is applied",true);
+        O365CouponClaim.SETRANGE("Is Valid",false);
+        if not O365CouponClaim.ISEMPTY then begin
+          MESSAGE(CouponsNotValidMsg);
+          exit(false);
+        end;
+
+        CALCFIELDS("Amount Including VAT");
+        if "Amount Including VAT" = 0 then begin
+          case "Document Type" of
+            "Document Type"::Invoice:
+              Confirmed := CONFIRM(ConfirmPostingZeroAmountInvoiceQst);
+            else
+              Confirmed := CONFIRM(ConfirmSendingZeroAmountEstimateQst);
+          end;
+          if not Confirmed then
+            exit(false);
+        end;
+
+        CODEUNIT.RUN(CODEUNIT::"O365 Setup Email");
+      end;
+
+      exit(true);
+    END;
+
+    [External]
+    PROCEDURE CheckDocumentIfNoItemsExists@7(SalesHeader@1000 : Record "Sales Header";OpenInvoiceIfNoItems@1002 : Boolean;O365SalesDocument@1003 : Record "O365 Sales Document");
+    BEGIN
+      with SalesHeader do
+        if not SalesLinesExist then begin
+          if OpenInvoiceIfNoItems and (O365SalesDocument."No." <> '') then
+            O365SalesDocument.OpenInvoice;
+          case "Document Type" of
+            "Document Type"::Invoice:
+              ERROR(ThereIsNothingToSellInvoiceErr);
+            else
+              ERROR(ThereIsNothingToSellQuoteErr);
+          end;
+        end;
+    END;
+
+    PROCEDURE SendTestInvoiceFromBC@10(SalesHeader@1000 : Record "Sales Header") : Boolean;
+    VAR
+      O365SalesDocument@1001 : Record "O365 Sales Document";
+    BEGIN
+      with SalesHeader do begin
+        SETRECFILTER;
+
+        if "Document Type" <> "Document Type"::Invoice then
+          exit(false);
+
+        CheckDocumentIfNoItemsExists(SalesHeader,false,O365SalesDocument);
+        CODEUNIT.RUN(CODEUNIT::"O365 Setup Email");
+
+        if not O365SalesEmailManagement.ShowEmailDialog("No.") then
+          exit(false);
+
+        EmailRecords(false);
+        MESSAGE(TestInvoiceSendingMsg);
+      end;
+      exit(true);
+    END;
+
+    PROCEDURE CheckNextNoSeriesIsAvailable@110(DocumentType@1001 : Option);
+    VAR
+      SalesInvoiceHeader@1003 : Record "Sales Invoice Header";
+      DummyO365SalesDocument@1006 : Record "O365 Sales Document";
+      SalesHeader@1005 : Record "Sales Header";
+      SalesReceivablesSetup@1004 : Record "Sales & Receivables Setup";
+      NoSeriesManagement@1000 : Codeunit NoSeriesManagement;
+      NextNoSeries@1002 : Code[20];
+    BEGIN
+      SalesReceivablesSetup.GET;
+
+      case DocumentType of
+        DummyO365SalesDocument."Document Type"::Quote:
+          begin
+            NextNoSeries := NoSeriesManagement.ClearStateAndGetNextNo(SalesReceivablesSetup."Quote Nos.");
+            if SalesHeader.GET(SalesHeader."Document Type"::Quote,NextNoSeries) then
+              ERROR(NextNoSeriesUsedEstimateErr);
+          end;
+        DummyO365SalesDocument."Document Type"::Invoice:
+          begin
+            NextNoSeries := NoSeriesManagement.ClearStateAndGetNextNo(SalesReceivablesSetup."Posted Invoice Nos.");
+            if SalesInvoiceHeader.GET(NextNoSeries) then
+              ERROR(NextNoSeriesUsedInvoiceErr);
+          end;
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,53 @@
+OBJECT Table 319 Tax Area Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160108.730T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               TaxArea.GET("Tax Area");
+               TaxJurisdiction.GET("Tax Jurisdiction Code");
+               TaxJurisdiction.TESTFIELD("Country/Region",TaxArea."Country/Region");
+             END;
+
+    CaptionML=ENU=Tax Area Line;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Tax Area            ;Code20        ;TableRelation="Tax Area";
+                                                   CaptionML=ENU=Tax Area }
+    { 2   ;   ;Tax Jurisdiction Code;Code10       ;TableRelation="Tax Jurisdiction";
+                                                   CaptionML=ENU=Tax Jurisdiction Code;
+                                                   NotBlank=true }
+    { 3   ;   ;Jurisdiction Description;Text50    ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Tax Jurisdiction".Description WHERE (Code=FIELD("Tax Jurisdiction Code")));
+                                                   CaptionML=ENU=Jurisdiction Description;
+                                                   Editable=false }
+    { 4   ;   ;Calculation Order   ;Integer       ;CaptionML=ENU=Calculation Order;
+                                                   MinValue=0 }
+  }
+  KEYS
+  {
+    {    ;"Tax Area","Tax Jurisdiction Code"      ;Clustered=true }
+    {    ;"Tax Jurisdiction Code"                  }
+    {    ;"Tax Area","Calculation Order"           }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      TaxArea@1020000 : Record "Tax Area";
+      TaxJurisdiction@1020001 : Record "Tax Jurisdiction";
+
+    BEGIN
+    END.
+  }
+}
+

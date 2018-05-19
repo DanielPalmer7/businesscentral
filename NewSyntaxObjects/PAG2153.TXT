@@ -1,0 +1,139 @@
+OBJECT Page 2153 O365 Payment Terms List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161404.527T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Payment Terms;
+    LinksAllowed=false;
+    SourceTable="O365 Payment Terms";
+    PageType=List;
+    SourceTableTemporary=true;
+    RefreshOnActivate=true;
+    ShowFilter=false;
+    OnFindRecord=BEGIN
+                   RefreshRecords;
+
+                   exit(FIND(Which));
+                 END;
+
+    OnAfterGetRecord=BEGIN
+                       Days := CALCDATE("Due Date Calculation",TODAY) - TODAY;
+                       PaymentTermsCode := Code;
+                     END;
+
+    OnNewRecord=BEGIN
+                  CLEAR(PaymentTermsCode);
+                  CLEAR(Days);
+                END;
+
+    ActionList=ACTIONS
+    {
+      { 3       ;    ;ActionContainer;
+                      Name=ActionContainer3;
+                      ActionContainerType=NewDocumentItems }
+      { 7       ;1   ;Action    ;
+                      Name=NewPaymentTerms;
+                      CaptionML=ENU=New;
+                      ToolTipML=ENU=Create new payment term;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Invoicing-MDL-New;
+                      PromotedCategory=Process;
+                      PromotedOnly=true;
+                      RunPageMode=Create;
+                      OnAction=BEGIN
+                                 if PAGE.RUNMODAL(PAGE::"BC O365 Payment Terms Card") = ACTION::LookupOK then;
+                               END;
+                                }
+      { 10      ;1   ;Action    ;
+                      Name=EditPaymentTerms;
+                      CaptionML=ENU=Edit;
+                      ToolTipML=ENU=Edit this payment term;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Edit;
+                      Scope=Repeater;
+                      OnAction=VAR
+                                 PaymentTerms@1001 : Record "Payment Terms";
+                                 BCO365PaymentTermsCard@1000 : Page "BC O365 Payment Terms Card";
+                               BEGIN
+                                 if PaymentTerms.GET(Code) then begin
+                                   BCO365PaymentTermsCard.SetPaymentTerms(PaymentTerms);
+                                   BCO365PaymentTermsCard.LOOKUPMODE(true);
+                                   if BCO365PaymentTermsCard.RUNMODAL = ACTION::LookupOK then;
+                                 end;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 8   ;2   ;Field     ;
+                Name=PaymentTermsCode;
+                CaptionML=ENU=Short name;
+                ToolTipML=ENU=Specifies the short name of the payment term;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=PaymentTermsCode;
+                ImplicitType=Code10 }
+
+    { 9   ;2   ;Field     ;
+                Name=Days;
+                CaptionML=ENU=Days;
+                ToolTipML=ENU=Specifies the number of days until payments are due when this payment term is used.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Days;
+                ImplicitType=Integer }
+
+    { 11  ;2   ;Field     ;
+                Name=DummyText;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=DummyText;
+                Editable=FALSE;
+                ImplicitType=Code10;
+                ShowCaption=false }
+
+    { 4   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the payment term.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Description;
+                Visible=FALSE;
+                ImplicitType=Text50 }
+
+    { 6   ;2   ;Field     ;
+                Name="Due Date Calculation";
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Due Date Calculation";
+                Visible=FALSE;
+                ImplicitType=DateFormula }
+
+  }
+  CODE
+  {
+    VAR
+      Days@1000 : Integer;
+      PaymentTermsCode@1001 : Code[10];
+      DummyText@1003 : Code[10];
+
+    BEGIN
+    END.
+  }
+}
+

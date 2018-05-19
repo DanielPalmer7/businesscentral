@@ -1,0 +1,50 @@
+OBJECT Report 7115 Run Purch. Analysis Line Temp.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160417.443T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Run Purch. Analysis Line Temp.;
+    ProcessingOnly=true;
+    OnPreReport=BEGIN
+                  AnalysisLineTemplate.FILTERGROUP := 2;
+                  AnalysisLineTemplate.SETRANGE("Analysis Area",AnalysisLineTemplate."Analysis Area"::Purchase);
+                  AnalysisLineTemplate.FILTERGROUP := 0;
+                  PAGE.RUNMODAL(0,AnalysisLineTemplate);
+                END;
+
+    UseRequestPage=false;
+  }
+  DATASET
+  {
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      AnalysisLineTemplate@1000 : Record "Analysis Line Template";
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

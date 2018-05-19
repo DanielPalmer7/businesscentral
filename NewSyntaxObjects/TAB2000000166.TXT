@@ -1,0 +1,60 @@
+OBJECT Table 2000000166 Tenant Permission
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.857T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;App ID              ;GUID           }
+    { 2   ;   ;Role ID             ;Code20        ;TableRelation="Tenant Permission Set"."Role ID" WHERE ("App ID"=FIELD("App ID")) }
+    { 3   ;   ;Role Name           ;Text30        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Tenant Permission Set".Name WHERE ("App ID"=FIELD("App ID"),
+                                                                                                          "Role ID"=FIELD("Role ID"))) }
+    { 4   ;   ;Object Type         ;Option        ;OptionString="Table Data",Table,,Report,,Codeunit,XMLport,MenuSuite,Page,Query,System }
+    { 5   ;   ;Object ID           ;Integer       ;TableRelation=IF ("Object Type"=CONST("Table Data")) AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(Table))
+                                                                 ELSE IF ("Object Type"=CONST(Table)) AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(Table))
+                                                                 ELSE IF ("Object Type"=CONST(Report)) AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(Report))
+                                                                 ELSE IF ("Object Type"=CONST(Codeunit)) AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(Codeunit))
+                                                                 ELSE IF ("Object Type"=CONST(XMLport)) AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(XMLport))
+                                                                 ELSE IF ("Object Type"=CONST(MenuSuite)) AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(MenuSuite))
+                                                                 ELSE IF ("Object Type"=CONST(Page)) AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(Page))
+                                                                 ELSE IF ("Object Type"=CONST(Query)) AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(Query))
+                                                                 ELSE IF ("Object Type"=CONST(System)) AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(System)) }
+    { 6   ;   ;Object Name         ;Text249       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE ("Object Type"=FIELD("Object Type"),
+                                                                                                                "Object ID"=FIELD("Object ID"))) }
+    { 7   ;   ;Read Permission     ;Option        ;InitValue=Yes;
+                                                   OptionString=" ",Yes,Indirect }
+    { 8   ;   ;Insert Permission   ;Option        ;InitValue=Yes;
+                                                   OptionString=" ",Yes,Indirect }
+    { 9   ;   ;Modify Permission   ;Option        ;InitValue=Yes;
+                                                   OptionString=" ",Yes,Indirect }
+    { 10  ;   ;Delete Permission   ;Option        ;InitValue=Yes;
+                                                   OptionString=" ",Yes,Indirect }
+    { 11  ;   ;Execute Permission  ;Option        ;InitValue=Yes;
+                                                   OptionString=" ",Yes,Indirect }
+    { 12  ;   ;Security Filter     ;TableFilter   ;TableIDExpr="Object ID" }
+  }
+  KEYS
+  {
+    {    ;"App ID","Role ID","Object Type","Object ID";
+                                                   Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

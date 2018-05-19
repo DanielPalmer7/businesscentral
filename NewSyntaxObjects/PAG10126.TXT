@@ -1,0 +1,275 @@
+OBJECT Page 10126 Posted Bank Rec. Chk Lines Sub
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161721.7T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Posted Bank Rec. Chk Lines Sub;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable="Posted Bank Rec. Line";
+    SourceTableView=SORTING("Bank Account No.","Statement No.","Record Type","Line No.")
+                    WHERE("Record Type"=CONST(Check));
+    PageType=ListPart;
+    OnOpenPage=BEGIN
+                 OnActivateForm;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 1907935204;1 ;ActionGroup;
+                      Name="&Line";
+                      CaptionML=ENU=&Line;
+                      Image=Line }
+      { 1901967304;2 ;ActionGroup;
+                      Name=Dimensions;
+                      CaptionML=ENU=Dimensions;
+                      Image=Dimensions }
+      { 1906302804;3 ;Action    ;
+                      Name="&Checks";
+                      CaptionML=[ENU=&Checks;
+                                 ENC=&Cheques];
+                      ToolTipML=ENU=View the related checks.;
+                      ApplicationArea=#Basic,#Suite;
+                      OnAction=BEGIN
+                                 LookupLineDimensions;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1020020;1;Field     ;
+                Name="PostedBankRecHdr.""Bank Account No.""";
+                CaptionML=ENU=Bank Account No.;
+                ToolTipML=ENU=Specifies the bank account that the bank statement line applies to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=PostedBankRecHdr."Bank Account No.";
+                Editable=FALSE }
+
+    { 1020022;1;Field     ;
+                Name="PostedBankRecHdr.""Statement No.""";
+                CaptionML=ENU=Statement No.;
+                ToolTipML=ENU=Specifies the bank reconciliation statement number that this line applies to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=PostedBankRecHdr."Statement No.";
+                Editable=FALSE }
+
+    { 1020024;1;Field     ;
+                Name="PostedBankRecHdr.""Statement Date""";
+                CaptionML=ENU=Statement Date;
+                ToolTipML=ENU=Specifies the bank reconciliation statement date that this line applies to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=PostedBankRecHdr."Statement Date";
+                Editable=FALSE }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name="Posting Date";
+                ToolTipML=ENU=Specifies the Posting Date field from the Bank Rec. Line table.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Posting Date";
+                Editable=FALSE;
+                ImplicitType=Date }
+
+    { 4   ;2   ;Field     ;
+                Name="Document Type";
+                ToolTipML=ENU=Specifies the type of document from the Bank Reconciliation Line table.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document Type";
+                Editable=FALSE;
+                ImplicitType=Option }
+
+    { 6   ;2   ;Field     ;
+                Name="Document No.";
+                ToolTipML=ENU=Specifies the number of the bank reconciliation that this line belongs to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document No.";
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 1020018;2;Field     ;
+                Name="External Document No.";
+                ToolTipML=ENU=Specifies the external document number for the posted journal line.;
+                SourceExpr="External Document No.";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code35 }
+
+    { 1020000;2;Field     ;
+                Name="Account Type";
+                ToolTipML=ENU=Specifies the Account Type field from the Bank Reconciliation Line table.;
+                SourceExpr="Account Type";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Option }
+
+    { 1020002;2;Field     ;
+                Name="Account No.";
+                ToolTipML=ENU=Specifies the Account No. field from the Bank Reconciliation Line table.;
+                SourceExpr="Account No.";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 8   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the transaction on the bank reconciliation line.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 10  ;2   ;Field     ;
+                Name=Amount;
+                ToolTipML=ENU=Specifies the amount of the item, such as a check, that was deposited.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Amount;
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 12  ;2   ;Field     ;
+                Name=Cleared;
+                ToolTipML=ENU=Specifies if the check on the line has been cleared, as indicated on the bank statement.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Cleared;
+                OnValidate=BEGIN
+                             ClearedOnAfterValidate;
+                           END;
+
+                ImplicitType=Boolean }
+
+    { 14  ;2   ;Field     ;
+                Name="Cleared Amount";
+                ToolTipML=ENU=Specifies the amount that was cleared by the bank, as indicated by the bank statement.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Cleared Amount";
+                OnValidate=BEGIN
+                             ClearedAmountOnAfterValidate;
+                           END;
+
+                ImplicitType=Decimal }
+
+    { 1020012;2;Field     ;
+                Name="""Cleared Amount"" - Amount";
+                CaptionML=ENU=Difference;
+                ToolTipML=ENU=Specifies the difference between the Amount field and the Cleared Amount field.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Cleared Amount" - Amount;
+                Editable=FALSE }
+
+    { 1020004;2;Field     ;
+                Name="Bal. Account Type";
+                ToolTipML=ENU=Specifies the code for the Balance Account Type that will be posted to the general ledger.;
+                SourceExpr="Bal. Account Type";
+                Visible=FALSE;
+                ImplicitType=Option }
+
+    { 1020006;2;Field     ;
+                Name="Bal. Account No.";
+                ToolTipML=ENU=Specifies the general ledger customer, vendor, or bank account number the line will be posted to.;
+                SourceExpr="Bal. Account No.";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 1020008;2;Field     ;
+                Name="Currency Code";
+                ToolTipML=ENU=Specifies the currency code for line amounts posted to the general ledger. This field is for adjustment type lines only.;
+                SourceExpr="Currency Code";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code10 }
+
+    { 1020010;2;Field     ;
+                Name="Currency Factor";
+                ToolTipML=ENU=Specifies a currency factor for the reconciliation sub-line entry. The value is calculated based on currency code, exchange rate, and the bank record header's statement date.;
+                SourceExpr="Currency Factor";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 1020015;1;Field     ;
+                Name=BankStatementCleared;
+                CaptionML=ENU=Statement;
+                ToolTipML=ENU=Specifies the bank reconciliation statement that this line applies to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=PostedBankRecHdr."Cleared With./Chks. Per Stmnt.";
+                Editable=FALSE }
+
+    { 1020017;1;Field     ;
+                Name=TotalCleared;
+                CaptionML=ENU=Total Cleared;
+                ToolTipML=ENU=Specifies the total amount of the lines that are marked as cleared.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=PostedBankRecHdr."Total Cleared Checks";
+                Editable=FALSE }
+
+  }
+  CODE
+  {
+    VAR
+      PostedBankRecHdr@1020000 : Record "Posted Bank Rec. Header";
+
+    [External]
+    PROCEDURE SetupTotals@1020002();
+    BEGIN
+      if PostedBankRecHdr.GET("Bank Account No.","Statement No.") then
+        PostedBankRecHdr.CALCFIELDS("Total Cleared Checks");
+    END;
+
+    [External]
+    PROCEDURE LookupLineDimensions@1020000();
+    BEGIN
+      ShowDimensions;
+    END;
+
+    [External]
+    PROCEDURE GetTableID@1020001() : Integer;
+    VAR
+      Object@1020001 : Record Object;
+    BEGIN
+      Object.SETRANGE(Type,Object.Type::Table);
+      Object.SETRANGE(Name,TABLENAME);
+      Object.FINDFIRST;
+      exit(Object.ID);
+    END;
+
+    LOCAL PROCEDURE ClearedOnAfterValidate@19021297();
+    BEGIN
+      CurrPage.UPDATE(true);
+      SetupTotals;
+    END;
+
+    LOCAL PROCEDURE ClearedAmountOnAfterValidate@19016797();
+    BEGIN
+      CurrPage.UPDATE(true);
+      SetupTotals;
+    END;
+
+    LOCAL PROCEDURE OnActivateForm@19002417();
+    BEGIN
+      SetupTotals;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,587 @@
+OBJECT Page 27010 Mexican CFDI Wizard
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161725.517T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Set up Mexican CFDI information;
+    PageType=NavigatePage;
+    OnInit=BEGIN
+             LoadTopBanners;
+           END;
+
+    OnOpenPage=VAR
+                 CompanyInformation@1020001 : Record "Company Information";
+               BEGIN
+                 Step := Step::Start;
+                 EnableControls;
+                 if CompanyInformation.FINDFIRST then begin
+                   PostCode := CompanyInformation."SAT Postal Code";
+                   TaxScheme := CompanyInformation."SAT Tax Regime Classification";
+                 end;
+               END;
+
+    OnQueryClosePage=BEGIN
+                       if (CloseAction = ACTION::OK) and (not Finished) then
+                         if not CONFIRM(SetupNotCompletedQst,false) then
+                           ERROR('');
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 10      ;    ;ActionContainer;
+                      Name=ActionContainer10;
+                      ActionContainerType=ActionItems }
+      { 15      ;1   ;Action    ;
+                      Name=ActionBack;
+                      CaptionML=ENU=Back;
+                      ApplicationArea=#Basic,#Suite;
+                      Enabled=BackActionEnabled;
+                      InFooterBar=true;
+                      Image=PreviousRecord;
+                      OnAction=BEGIN
+                                 NextStep(true);
+                               END;
+                                }
+      { 14      ;1   ;Action    ;
+                      Name=ActionNext;
+                      CaptionML=ENU=Next;
+                      ApplicationArea=#Basic,#Suite;
+                      Enabled=NextActionEnabled;
+                      InFooterBar=true;
+                      Image=NextRecord;
+                      OnAction=BEGIN
+                                 NextStep(false);
+                               END;
+                                }
+      { 11      ;1   ;Action    ;
+                      Name=ActionFinish;
+                      CaptionML=ENU=Finish;
+                      ApplicationArea=#Basic,#Suite;
+                      Enabled=FinishActionEnabled;
+                      InFooterBar=true;
+                      Image=Approve;
+                      OnAction=VAR
+                                 AssistedSetup@1020000 : Record "Assisted Setup";
+                               BEGIN
+                                 Finished := true;
+                                 AssistedSetup.SetStatus(PAGE::"Mexican CFDI Wizard",AssistedSetup.Status::Completed);
+                                 FinishAction;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 96  ;1   ;Group     ;
+                Name=Control96;
+                Visible=TopBannerVisible AND NOT FinalStepVisible;
+                Editable=FALSE;
+                GroupType=Group }
+
+    { 97  ;2   ;Field     ;
+                Name=MediaResourcesStandard;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=MediaResourcesStandard."Media Reference";
+                Editable=FALSE;
+                ShowCaption=false }
+
+    { 98  ;1   ;Group     ;
+                Name=Control98;
+                Visible=TopBannerVisible AND FinalStepVisible;
+                Editable=FALSE;
+                GroupType=Group }
+
+    { 99  ;2   ;Field     ;
+                Name=MediaResourcesDone;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=MediaResourcesDone."Media Reference";
+                Editable=FALSE;
+                ShowCaption=false }
+
+    { 25  ;1   ;Group     ;
+                Name=Control25;
+                Visible=FirstStepVisible;
+                GroupType=Group }
+
+    { 24  ;2   ;Group     ;
+                Name="Welcome to the assisted setup guide for Mexican CFDI reporting";
+                CaptionML=ENU=Welcome to the assisted setup guide for Mexican CFDI reporting;
+                Visible=FirstStepVisible;
+                GroupType=Group }
+
+    { 1020000;3;Group     ;
+                Name=Control1020000;
+                Visible=FirstStepVisible;
+                GroupType=Group;
+                InstructionalTextML=ENU=This guide helps you set up the Mexican CFDI features for reporting information to SAT. }
+
+    { 19  ;1   ;Group     ;
+                Name=Control19;
+                Visible=PopulateStepVisible;
+                GroupType=Group }
+
+    { 20  ;2   ;Group     ;
+                Name="Get the information that SAT requires";
+                CaptionML=ENU=Get the information that SAT requires;
+                Visible=PopulateStepVisible;
+                GroupType=Group }
+
+    { 1020001;3;Group     ;
+                Name=Control1020001;
+                Visible=PopulateStepVisible;
+                GroupType=Group;
+                InstructionalTextML=ENU=Click Next to get the information that SAT requires for CFDI reporting. }
+
+    { 1020004;1;Group     ;
+                Name=Control1020004;
+                Visible=MapStepVisible;
+                GroupType=Group }
+
+    { 1020003;2;Group     ;
+                Name="Map Information to SAT requirements";
+                CaptionML=ENU=Map Information to SAT requirements;
+                Visible=MapStepVisible;
+                GroupType=Group }
+
+    { 1020002;3;Group     ;
+                Name=Control1020002;
+                Visible=MapStepVisible;
+                GroupType=Group;
+                InstructionalTextML=ENU=Click Next to map your country codes and units of measure to the values that SAT requires. }
+
+    { 1020007;1;Group     ;
+                Name=Control1020007;
+                Visible=CompanyStepVisible;
+                GroupType=Group }
+
+    { 1020006;2;Group     ;
+                Name="Set company SAT information";
+                CaptionML=ENU=Set company SAT information;
+                Visible=CompanyStepVisible;
+                GroupType=Group }
+
+    { 1020005;3;Group     ;
+                Name=Control1020005;
+                Visible=CompanyStepVisible;
+                GroupType=Group;
+                InstructionalTextML=ENU=You will need to set your SAT ZIP Code and SAT Tax Regime Classification for your company. }
+
+    { 1020008;4;Field     ;
+                Name=PostCode;
+                CaptionML=ENU=SAT ZIP Code;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=PostCode;
+                Visible=CompanyStepVisible;
+                OnValidate=BEGIN
+                             NextActionEnabled := (PostCode <> '') and (TaxScheme <> '');
+                           END;
+                            }
+
+    { 1020009;4;Field     ;
+                Name=TaxScheme;
+                CaptionML=ENU=SAT Tax Regime Classification;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=TaxScheme;
+                TableRelation="SAT Tax Scheme"."SAT Tax Scheme";
+                Visible=CompanyStepVisible;
+                OnValidate=BEGIN
+                             NextActionEnabled := (PostCode <> '') and (TaxScheme <> '');
+                           END;
+                            }
+
+    { 1020020;1;Group     ;
+                Name=Control1020020;
+                Visible=PaymentTermsStepVisible;
+                GroupType=Group }
+
+    { 1020021;2;Group     ;
+                Name="Map your payment terms to those that SAT requires.";
+                CaptionML=ENU=Map your payment terms to those that SAT requires.;
+                Visible=PaymentTermsStepVisible;
+                GroupType=Group }
+
+    { 1020022;3;Part      ;
+                Name="Payment Terms";
+                CaptionML=ENU=Payment Terms;
+                ApplicationArea=#Basic,#Suite;
+                PagePartID="SAT Payment Terms Subform";
+                Visible=PaymentTermsStepVisible;
+                PartType=Page }
+
+    { 1020025;1;Group     ;
+                Name=Control1020025;
+                Visible=PaymentMethodsStepVisible;
+                GroupType=Group }
+
+    { 1020024;2;Group     ;
+                Name="Map your payment methods to those that SAT requires.";
+                CaptionML=ENU=Map your payment methods to those that SAT requires.;
+                Visible=PaymentMethodsStepVisible;
+                GroupType=Group }
+
+    { 1020023;3;Part      ;
+                Name="Payment Methods";
+                CaptionML=ENU=Payment Methods;
+                ApplicationArea=#Basic,#Suite;
+                PagePartID="SAT Payment Methods Subform";
+                Visible=PaymentMethodsStepVisible;
+                PartType=Page }
+
+    { 1020017;1;Group     ;
+                Name=Control1020017;
+                Visible=ItemStepVisible;
+                GroupType=Group }
+
+    { 1020018;2;Group     ;
+                Name="Set the SAT Item Classification for each item you will be using in your sales documents";
+                CaptionML=ENU=Set the SAT Item Classification for each item you will be using in your sales documents;
+                Visible=ItemStepVisible;
+                GroupType=Group }
+
+    { 1020019;3;Part      ;
+                Name=Control1020019;
+                PagePartID="SAT Item Subform";
+                Visible=ItemStepVisible;
+                PartType=Page }
+
+    { 1020028;1;Group     ;
+                Name=Control1020028;
+                Visible=CustomerStepVisible;
+                GroupType=Group }
+
+    { 1020027;2;Group     ;
+                Name="Set up SAT information for each customer you will be using in your sales documents";
+                CaptionML=ENU=Set up SAT information for each customer you will be using in your sales documents;
+                Visible=CustomerStepVisible;
+                GroupType=Group }
+
+    { 1020026;3;Part      ;
+                Name=Control1020026;
+                PagePartID="SAT Customer Subform";
+                Visible=CustomerStepVisible;
+                PartType=Page }
+
+    { 8   ;1   ;Group     ;
+                Name=Control8;
+                Visible=FinalStepVisible;
+                GroupType=Group }
+
+    { 12  ;2   ;Group     ;
+                Name="That's it!";
+                CaptionML=ENU=That's it!;
+                GroupType=Group }
+
+    { 1020010;3;Group     ;
+                Name=Control1020010;
+                Visible=FinalStepVisible AND NOT AllCountriesMapped;
+                GroupType=Group;
+                InstructionalTextML=ENU=You still have Country Codes that have not had their SAT Country Codes set. }
+
+    { 1020016;3;Group     ;
+                Name=Control1020016;
+                Visible=FinalStepVisible AND NOT AllUofMsMapped;
+                GroupType=Group;
+                InstructionalTextML=ENU=You still have Units of Measure that have not had their SAT Unit of Measure Codes set. }
+
+    { 1020011;3;Group     ;
+                Name=Control1020011;
+                Visible=FinalStepVisible;
+                GroupType=Group;
+                InstructionalTextML=ENU=Choose Finish to complete this assisted setup guide. }
+
+  }
+  CODE
+  {
+    VAR
+      MediaRepositoryStandard@1040 : Record "Media Repository";
+      MediaRepositoryDone@1041 : Record "Media Repository";
+      MediaResourcesStandard@1002 : Record "Media Resources";
+      MediaResourcesDone@1001 : Record "Media Resources";
+      Step@1012 : 'Start,Populate,Map,Company,PaymentMethods,PaymentTerms,Item,Customer,Finish';
+      TopBannerVisible@1042 : Boolean;
+      FirstStepVisible@1000 : Boolean;
+      PopulateStepVisible@1010 : Boolean;
+      MapStepVisible@1020000 : Boolean;
+      CompanyStepVisible@1020001 : Boolean;
+      PaymentTermsStepVisible@1020004 : Boolean;
+      PaymentMethodsStepVisible@1020016 : Boolean;
+      ItemStepVisible@1020009 : Boolean;
+      CustomerStepVisible@1020010 : Boolean;
+      FinalStepVisible@1015 : Boolean;
+      FinishActionEnabled@1009 : Boolean;
+      BackActionEnabled@1013 : Boolean;
+      NextActionEnabled@1014 : Boolean;
+      SetupNotCompletedQst@1020002 : TextConst 'ENU=The setup has not yet been completed.\\Are you sure that you want to exit?';
+      Finished@1020003 : Boolean;
+      AllCountriesMapped@1020005 : Boolean;
+      AllUofMsMapped@1020006 : Boolean;
+      PostCode@1020007 : Code[10];
+      TaxScheme@1020008 : Code[10];
+
+    LOCAL PROCEDURE EnableControls@2();
+    BEGIN
+      ResetControls;
+
+      case Step of
+        Step::Start:
+          ShowStartStep;
+        Step::Populate:
+          ShowPopulateStep;
+        Step::Map:
+          ShowMapStep;
+        Step::Company:
+          ShowCompanyStep;
+        Step::PaymentTerms:
+          ShowPaymentTermsStep;
+        Step::PaymentMethods:
+          ShowPaymentMethodsStep;
+        Step::Item:
+          ShowItemStep;
+        Step::Customer:
+          ShowCustomerStep;
+        Step::Finish:
+          ShowFinalStep;
+      end;
+    END;
+
+    LOCAL PROCEDURE FinishAction@12();
+    BEGIN
+      CurrPage.CLOSE;
+    END;
+
+    LOCAL PROCEDURE NextStep@41(Backwards@1000 : Boolean);
+    VAR
+      SATUtilities@1020000 : Codeunit "SAT Utilities";
+    BEGIN
+      // find out if system data already entered.  Then move by 2.
+      if (Step = Step::Start) and (not Backwards) then
+        if DoesSATInfoAlreadyExist then begin
+          Step := Step + 2;
+          EnableControls;
+          exit;
+        end;
+      if (Step = Step::Map) and Backwards then
+        if DoesSATInfoAlreadyExist then begin
+          Step := Step - 2;
+          EnableControls;
+          exit;
+        end;
+
+      if Backwards then
+        Step := Step - 1
+      else
+        Step := Step + 1;
+
+      if (Step = Step::Company) and (not Backwards) then  // Came from Map step, need to run the mapping
+        MapSATInformation;
+      if (Step = Step::PaymentMethods) and (not Backwards) then // Came from Company Info setting, save the values
+        SetCompanyInformation;
+      if (Step = Step::Map) and (not Backwards) then // Came from Populate setting, save the values
+        SATUtilities.PopulateSATInformation;
+
+      EnableControls;
+    END;
+
+    LOCAL PROCEDURE ShowStartStep@24();
+    BEGIN
+      FirstStepVisible := true;
+      FinishActionEnabled := false;
+      BackActionEnabled := false;
+    END;
+
+    LOCAL PROCEDURE ShowPopulateStep@33();
+    BEGIN
+      FirstStepVisible := false;
+      PopulateStepVisible := true;
+      MapStepVisible := false;
+      CompanyStepVisible := false;
+      PaymentTermsStepVisible := false;
+      PaymentMethodsStepVisible := false;
+      ItemStepVisible := false;
+      CustomerStepVisible := false;
+      FinishActionEnabled := false;
+    END;
+
+    LOCAL PROCEDURE ShowMapStep@1020002();
+    BEGIN
+      BackActionEnabled := false;
+      FirstStepVisible := false;
+      PopulateStepVisible := false;
+      MapStepVisible := true;
+      CompanyStepVisible := false;
+      PaymentTermsStepVisible := false;
+      PaymentMethodsStepVisible := false;
+      ItemStepVisible := false;
+      CustomerStepVisible := false;
+      FinishActionEnabled := false;
+    END;
+
+    LOCAL PROCEDURE ShowCompanyStep@1020003();
+    BEGIN
+      BackActionEnabled := true;
+      NextActionEnabled := (PostCode <> '') or (TaxScheme <> '');
+
+      FirstStepVisible := false;
+      PopulateStepVisible := false;
+      MapStepVisible := false;
+      CompanyStepVisible := true;
+      PaymentTermsStepVisible := false;
+      PaymentMethodsStepVisible := false;
+      ItemStepVisible := false;
+      CustomerStepVisible := false;
+      FinishActionEnabled := false;
+    END;
+
+    LOCAL PROCEDURE ShowPaymentTermsStep@1020001();
+    BEGIN
+      FirstStepVisible := false;
+      PopulateStepVisible := false;
+      MapStepVisible := false;
+      CompanyStepVisible := false;
+      PaymentTermsStepVisible := true;
+      PaymentMethodsStepVisible := false;
+      ItemStepVisible := false;
+      CustomerStepVisible := false;
+      FinishActionEnabled := false;
+    END;
+
+    LOCAL PROCEDURE ShowPaymentMethodsStep@1020004();
+    BEGIN
+      FirstStepVisible := false;
+      PopulateStepVisible := false;
+      MapStepVisible := false;
+      CompanyStepVisible := false;
+      PaymentTermsStepVisible := false;
+      PaymentMethodsStepVisible := true;
+      ItemStepVisible := false;
+      CustomerStepVisible := false;
+      FinishActionEnabled := false;
+    END;
+
+    LOCAL PROCEDURE ShowItemStep@1020005();
+    BEGIN
+      FirstStepVisible := false;
+      PopulateStepVisible := false;
+      MapStepVisible := false;
+      CompanyStepVisible := false;
+      PaymentTermsStepVisible := false;
+      PaymentMethodsStepVisible := false;
+      ItemStepVisible := true;
+      CustomerStepVisible := false;
+      FinishActionEnabled := false;
+    END;
+
+    LOCAL PROCEDURE ShowCustomerStep@1020007();
+    BEGIN
+      FirstStepVisible := false;
+      PopulateStepVisible := false;
+      MapStepVisible := false;
+      CompanyStepVisible := false;
+      PaymentTermsStepVisible := false;
+      PaymentMethodsStepVisible := false;
+      ItemStepVisible := false;
+      CustomerStepVisible := true;
+      FinishActionEnabled := false;
+    END;
+
+    LOCAL PROCEDURE ShowFinalStep@34();
+    BEGIN
+      FinalStepVisible := true;
+      BackActionEnabled := false;
+      NextActionEnabled := false;
+    END;
+
+    LOCAL PROCEDURE ResetControls@1();
+    BEGIN
+      FinishActionEnabled := true;
+      BackActionEnabled := true;
+      NextActionEnabled := true;
+
+      FirstStepVisible := false;
+      PopulateStepVisible := false;
+      MapStepVisible := false;
+      CompanyStepVisible := false;
+      PaymentTermsStepVisible := false;
+      PaymentMethodsStepVisible := false;
+      ItemStepVisible := false;
+      CustomerStepVisible := false;
+      FinalStepVisible := false;
+    END;
+
+    LOCAL PROCEDURE LoadTopBanners@40();
+    BEGIN
+      if MediaRepositoryStandard.GET('AssistedSetup-NoText-400px.png',FORMAT(CURRENTCLIENTTYPE)) and
+         MediaRepositoryDone.GET('AssistedSetupDone-NoText-400px.png',FORMAT(CURRENTCLIENTTYPE))
+      then
+        if MediaResourcesStandard.GET(MediaRepositoryStandard."Media Resources Ref") and
+           MediaResourcesDone.GET(MediaRepositoryDone."Media Resources Ref")
+        then
+          TopBannerVisible := MediaResourcesDone."Media Reference".HASVALUE;
+      EnableControls;
+    END;
+
+    LOCAL PROCEDURE DoesSATInfoAlreadyExist@1020000() : Boolean;
+    VAR
+      SATRelationshipType@1020000 : Record "SAT Relationship Type";
+    BEGIN
+      if SATRelationshipType.FINDFIRST then
+        exit(true);
+      exit(false);
+    END;
+
+    LOCAL PROCEDURE MapSATInformation@1020006();
+    VAR
+      CountryRegion@1020001 : Record "Country/Region";
+      UnitOfMeasure@1020002 : Record "Unit of Measure";
+      SATUtilities@1020000 : Codeunit "SAT Utilities";
+    BEGIN
+      CountryRegion.SETRANGE("SAT Country Code",'');
+      if CountryRegion.FINDFIRST then begin
+        SATUtilities.MapCountryCodes;
+        CountryRegion.SETRANGE("SAT Country Code",'');
+        if CountryRegion.FINDFIRST then
+          AllCountriesMapped := false
+        else
+          AllCountriesMapped := true;
+      end else
+        AllCountriesMapped := true;
+
+      UnitOfMeasure.SETRANGE("SAT UofM Classification",'');
+      if UnitOfMeasure.FINDFIRST then begin
+        SATUtilities.MapUnitsofMeasure;
+        UnitOfMeasure.SETRANGE("SAT UofM Classification",'');
+        if UnitOfMeasure.FINDFIRST then
+          AllUofMsMapped := false
+        else
+          AllUofMsMapped := true;
+      end else
+        AllUofMsMapped := true;
+    END;
+
+    LOCAL PROCEDURE SetCompanyInformation@1020020();
+    VAR
+      CompanyInformation@1020000 : Record "Company Information";
+    BEGIN
+      with CompanyInformation do
+        if FINDFIRST then begin
+          "SAT Postal Code" := PostCode;
+          "SAT Tax Regime Classification" := TaxScheme;
+          MODIFY;
+        end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

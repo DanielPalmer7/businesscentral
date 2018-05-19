@@ -1,0 +1,44 @@
+OBJECT Table 2000000110 Active Session
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.780T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;User SID            ;GUID          ;TableRelation=User."User Security ID";
+                                                   TestTableRelation=false }
+    { 2   ;   ;Server Instance ID  ;Integer       ;TableRelation="Server Instance"."Server Instance ID" }
+    { 3   ;   ;Session ID          ;Integer        }
+    { 4   ;   ;Server Instance Name;Text250        }
+    { 5   ;   ;Server Computer Name;Text250        }
+    { 6   ;   ;User ID             ;Text132        }
+    { 7   ;   ;Client Type         ;Option        ;OptionString="Windows Client","SharePoint Client","Web Service","Client Service",NAS,Background,"Management Client","Web Client",Unknown,Tablet,Phone,Desktop }
+    { 8   ;   ;Client Computer Name;Text250        }
+    { 9   ;   ;Login Datetime      ;DateTime       }
+    { 10  ;   ;Database Name       ;Text250        }
+    { 11  ;   ;Session Unique ID   ;GUID           }
+  }
+  KEYS
+  {
+    {    ;"Server Instance ID","Session ID"       ;Clustered=true }
+    {    ;"Login Datetime"                         }
+    {    ;"User SID","Client Type"                 }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

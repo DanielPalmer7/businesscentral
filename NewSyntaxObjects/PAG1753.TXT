@@ -1,0 +1,44 @@
+OBJECT Page 1753 Field Content Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161353.807T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Field Contents;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable="Field Content Buffer";
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=Value;
+                ApplicationArea=#All;
+                SourceExpr=Value;
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

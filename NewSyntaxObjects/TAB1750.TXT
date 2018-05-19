@@ -1,0 +1,35 @@
+OBJECT Table 1750 Fields Sync Status
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160129.620T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Fields Sync Status;
+  }
+  FIELDS
+  {
+    { 1   ;   ;ID                  ;Code2         ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=ID }
+    { 2   ;   ;Last Sync Date Time ;DateTime      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Last Sync Date Time }
+  }
+  KEYS
+  {
+    {    ;ID                                      ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

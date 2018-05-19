@@ -1,0 +1,42 @@
+OBJECT Codeunit 10142 Deposit-Post + Print
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160932.973T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Deposit Header";
+    OnRun=BEGIN
+            DepositHeader.COPY(Rec);
+
+            if not CONFIRM(Text000,false) then
+              exit;
+
+            DepositPost.RUN(DepositHeader);
+            Rec := DepositHeader;
+            COMMIT;
+
+            if PostedDepositHeader.GET("No.") then begin
+              PostedDepositHeader.SETRECFILTER;
+              REPORT.RUN(REPORT::Deposit,false,false,PostedDepositHeader);
+            end;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      DepositHeader@1020000 : Record "Deposit Header";
+      PostedDepositHeader@1020003 : Record "Posted Deposit Header";
+      DepositPost@1020001 : Codeunit "Deposit-Post";
+      Text000@1020002 : TextConst 'ENU=Do you want to post and print the Deposit?';
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,55 @@
+OBJECT Page 572 Finance Charge Interest Rates
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161301.537T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Finance Charge Interest Rates;
+    SourceTable="Finance Charge Interest Rate";
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 4   ;1   ;Group     ;
+                Name=Control4;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="Start Date";
+                ToolTipML=ENU=Specifies the start date for the interest rate.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Start Date";
+                ImplicitType=Date }
+
+    { 2   ;2   ;Field     ;
+                Name="Interest Rate";
+                ToolTipML=ENU=Specifies the interest rate percentage.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Interest Rate";
+                ImplicitType=Decimal }
+
+    { 1   ;2   ;Field     ;
+                Name="Interest Period (Days)";
+                ToolTipML=ENU=Specifies the number of days in the interest period.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Interest Period (Days)";
+                ImplicitType=Integer }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,36 @@
+OBJECT Table 8402 Record Set Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160231.457T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Record Set Buffer;
+  }
+  FIELDS
+  {
+    { 1   ;   ;No                  ;Integer       ;AutoIncrement=true;
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=No }
+    { 2   ;   ;Value RecordID      ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Value RecordID }
+  }
+  KEYS
+  {
+    {    ;No                                      ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

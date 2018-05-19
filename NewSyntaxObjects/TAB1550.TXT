@@ -1,0 +1,48 @@
+OBJECT Table 1550 Restricted Record
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160128.830T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Restricted Record;
+  }
+  FIELDS
+  {
+    { 1   ;   ;ID                  ;BigInteger    ;AutoIncrement=true;
+                                                   CaptionML=ENU=ID }
+    { 2   ;   ;Record ID           ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Record ID }
+    { 3   ;   ;Details             ;Text250       ;CaptionML=ENU=Details }
+  }
+  KEYS
+  {
+    {    ;ID                                      ;Clustered=true }
+    {    ;"Record ID"                              }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    [Internal]
+    PROCEDURE ShowRecord@1();
+    VAR
+      PageManagement@1001 : Codeunit "Page Management";
+      RecRef@1000 : RecordRef;
+    BEGIN
+      if not RecRef.GET("Record ID") then
+        exit;
+      PageManagement.PageRun(RecRef);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

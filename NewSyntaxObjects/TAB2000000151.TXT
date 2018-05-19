@@ -1,0 +1,32 @@
+OBJECT Table 2000000151 NAV App Tenant App
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.843T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Tenant ID           ;Text128        }
+    { 2   ;   ;App Package ID      ;GUID           }
+  }
+  KEYS
+  {
+    {    ;"Tenant ID","App Package ID"            ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

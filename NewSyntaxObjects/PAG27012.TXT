@@ -1,0 +1,58 @@
+OBJECT Page 27012 SAT Payment Methods Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161725.727T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=SAT Payment Methods Subform;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="Payment Method";
+    PageType=ListPart;
+    OnOpenPage=BEGIN
+                 CurrPage.CAPTION := '';
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1020000;0;Container ;
+                Name=Control1020000;
+                ContainerType=ContentArea }
+
+    { 1020001;1;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1020002;2;Field     ;
+                Name=Code;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Code;
+                ImplicitType=Code10 }
+
+    { 1020003;2;Field     ;
+                Name=Description;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+    { 1020004;2;Field     ;
+                Name="SAT Method of Payment";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="SAT Method of Payment";
+                ImplicitType=Code10 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,67 @@
+OBJECT Page 2876 Native - Tax Rates
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161415.613T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Native - Tax Rates;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable="Tax Rate Buffer";
+    DelayedInsert=false;
+    PageType=List;
+    SourceTableTemporary=true;
+    OnOpenPage=BEGIN
+                 LoadRecords;
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=taxAreaId;
+                CaptionML=[@@@={Locked};
+                           ENU=taxAreaId];
+                ApplicationArea=#All;
+                SourceExpr="Tax Area ID";
+                ImplicitType=GUID }
+
+    { 4   ;2   ;Field     ;
+                Name=taxGroupId;
+                CaptionML=[@@@={Locked};
+                           ENU=taxGroupId];
+                ApplicationArea=#All;
+                SourceExpr="Tax Group ID";
+                ImplicitType=GUID }
+
+    { 5   ;2   ;Field     ;
+                Name=taxRate;
+                CaptionML=[@@@={Locked};
+                           ENU=taxRate];
+                ApplicationArea=#All;
+                SourceExpr="Tax Rate";
+                ImplicitType=Decimal }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

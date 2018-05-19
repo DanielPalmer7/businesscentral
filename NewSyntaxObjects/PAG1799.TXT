@@ -1,0 +1,376 @@
+OBJECT Page 1799 Data Migration Overview
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161354.37T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Data Migration Overview;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable="Data Migration Status";
+    PageType=List;
+    RefreshOnActivate=true;
+    OnOpenPage=BEGIN
+                 ShowNotifications;
+               END;
+
+    OnAfterGetRecord=VAR
+                       AllObjWithCaption@1000 : Record AllObjWithCaption;
+                       DataMigrationMgt@1001 : Codeunit "Data Migration Mgt.";
+                       DummyCode@1002 : Code[10];
+                     BEGIN
+                       NextTask := NextTask::" ";
+                       ErrorStyle := 'Standard';
+
+                       case Status of
+                         Status::Completed:
+                           begin
+                             StatusStyle := 'Favorable'; // bold green
+                             if DataMigrationMgt.DestTableHasAnyTransactions(Rec,DummyCode) then
+                               NextTask := NextTask::"Review and post";
+                           end;
+                         Status::"Completed with Errors":
+                           begin
+                             NextTask := NextTask::"Review and fix errors";
+                             StatusStyle := 'Attention';
+                           end;
+                         Status::Stopped,
+                         Status::Failed:
+                           begin
+                             StatusStyle := 'Attention'; // red
+                             if DataMigrationMgt.DestTableHasAnyTransactions(Rec,DummyCode) then
+                               NextTask := NextTask::"Review and Delete";
+                           end;
+                         Status::"In Progress":
+                           StatusStyle := 'StandardAccent'; // blue
+                         Status::Pending:
+                           StatusStyle := 'Standard'; // black
+                       end;
+
+                       CALCFIELDS("Error Count");
+                       if "Error Count" = 0 then
+                         ErrorStyle := 'Subordinate';
+
+                       AllObjWithCaption.SETRANGE("Object Type",AllObjWithCaption."Object Type"::Table);
+                       AllObjWithCaption.SETRANGE("Object ID","Destination Table ID");
+                       if AllObjWithCaption.FINDFIRST then
+                         TableNameToMigrate := AllObjWithCaption."Object Caption";
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 9       ;    ;ActionContainer;
+                      Name=ActionContainer9;
+                      ActionContainerType=ActionItems }
+      { 14      ;1   ;Action    ;
+                      Name=Refresh;
+                      CaptionML=ENU=Refresh;
+                      ToolTipML=ENU="";
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Refresh;
+                      PromotedCategory=Process;
+                      PromotedOnly=true;
+                      OnAction=BEGIN
+                                 CurrPage.UPDATE;
+                                 ShowNotifications;
+                               END;
+                                }
+      { 10      ;1   ;Action    ;
+                      Name=Stop Data Migration;
+                      CaptionML=ENU=Stop All Migrations;
+                      ToolTipML=ENU=Stop all data migrations that are in progress or pending.;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Stop;
+                      PromotedCategory=Process;
+                      PromotedOnly=true;
+                      OnAction=VAR
+                                 DataMigrationStatus@1001 : Record "Data Migration Status";
+                                 DataMigrationMgt@1000 : Codeunit "Data Migration Mgt.";
+                               BEGIN
+                                 OnRequestAbort;
+                                 DataMigrationStatus.SETFILTER(
+                                   Status,'%1|%2',DataMigrationStatus.Status::"In Progress",DataMigrationStatus.Status::Pending);
+                                 if DataMigrationStatus.FINDFIRST then
+                                   DataMigrationMgt.SetAbortStatus(DataMigrationStatus);
+                               END;
+                                }
+      { 13      ;    ;ActionContainer;
+                      Name=ActionContainer13;
+                      ActionContainerType=RelatedInformation }
+      { 11      ;1   ;Action    ;
+                      Name=Show Errors;
+                      CaptionML=ENU=Show Errors;
+                      ToolTipML=ENU=Show the errors that occurred during migration.;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=ErrorLog;
+                      PromotedCategory=Process;
+                      PromotedOnly=true;
+                      OnAction=BEGIN
+                                 ShowErrors;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Control2;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="Migration Type";
+                ToolTipML=ENU=Specifies the type of data migration.;
+                ApplicationArea=#All;
+                SourceExpr="Migration Type";
+                Visible=false;
+                ImplicitType=Text250 }
+
+    { 5   ;2   ;Field     ;
+                Name=TableNameToMigrate;
+                CaptionML=ENU=Table Name;
+                ToolTipML=ENU=Specifies the Table Name;
+                ApplicationArea=#All;
+                SourceExpr=TableNameToMigrate;
+                ImplicitType=Text250 }
+
+    { 6   ;2   ;Field     ;
+                Name="Migrated Number";
+                ToolTipML=ENU=Specifies the number of records that were migrated.;
+                ApplicationArea=#All;
+                SourceExpr="Migrated Number";
+                ImplicitType=Integer }
+
+    { 4   ;2   ;Field     ;
+                Name="Total Number";
+                ToolTipML=ENU=Specifies the total number of records that were migrated.;
+                ApplicationArea=#All;
+                SourceExpr="Total Number";
+                OnDrillDown=BEGIN
+                              DataMigrationFacade.OnSelectRowFromDashboard(Rec);
+                            END;
+
+                ImplicitType=Integer }
+
+    { 7   ;2   ;Field     ;
+                Name="Progress Percent";
+                ToolTipML=ENU=Specifies the progress of the data migration.;
+                ApplicationArea=#All;
+                SourceExpr="Progress Percent";
+                ImplicitType=Decimal }
+
+    { 8   ;2   ;Field     ;
+                Name=Status;
+                ToolTipML=ENU=Specifies the status of the data migration.;
+                ApplicationArea=#All;
+                SourceExpr=Status;
+                StyleExpr=StatusStyle;
+                ImplicitType=Option }
+
+    { 15  ;2   ;Field     ;
+                Name=Next Task;
+                CaptionML=ENU=Next Task;
+                ToolTipML=ENU=Specifies the next task that is needed to complete the migration.;
+                ApplicationArea=#All;
+                SourceExpr=NextTask;
+                OnDrillDown=BEGIN
+                              case NextTask of
+                                NextTask::"Review and fix errors":
+                                  ShowErrors;
+                                NextTask::"Review and post",
+                                NextTask::"Review and Delete":
+                                  case "Destination Table ID" of
+                                    DATABASE::Vendor:
+                                      GoToGeneralJournalForVendors;
+                                    DATABASE::Customer:
+                                      GoToGeneralJournalForCustomers;
+                                    DATABASE::Item:
+                                      GoToItemJournal;
+                                    else
+                                      GoToGeneralJournalForAccounts;
+                                  end;
+                              end;
+                            END;
+
+                ImplicitType=Option }
+
+    { 12  ;2   ;Field     ;
+                Name="Error Count";
+                ToolTipML=ENU=Specifies how many records could not be migrated because of an error.;
+                ApplicationArea=#All;
+                SourceExpr="Error Count";
+                StyleExpr=ErrorStyle;
+                OnDrillDown=BEGIN
+                              if "Error Count" = 0 then
+                                exit;
+                              ShowErrors;
+                            END;
+
+                ImplicitType=Integer }
+
+  }
+  CODE
+  {
+    VAR
+      DataMigrationFacade@1015 : Codeunit "Data Migration Facade";
+      RefreshNotification@1012 : Notification;
+      StatusStyle@1000 : Text INDATASET;
+      TableNameToMigrate@1001 : Text[250] INDATASET;
+      DashboardEmptyNotificationMsg@1003 : TextConst 'ENU=This page shows the status of a data migration. It''s empty because you have not migrated data.';
+      StartDataMigrationMsg@1004 : TextConst 'ENU=Start data migration';
+      RefreshNotificationMsg@1002 : TextConst 'ENU=Data migration is in progress. Refresh the page to update the migration status.';
+      RefreshNotificationShown@1008 : Boolean;
+      LearnMoreTxt@1014 : TextConst 'ENU=Learn more';
+      NextTask@1016 : '" ","Review and fix errors","Review and post","Review and Delete"';
+      ErrorStyle@1005 : Text;
+
+    [Integration]
+    LOCAL PROCEDURE OnRequestAbort@1();
+    BEGIN
+    END;
+
+    LOCAL PROCEDURE ShowErrors@3();
+    VAR
+      DataMigrationError@1000 : Record "Data Migration Error";
+    BEGIN
+      DataMigrationError.SETRANGE("Migration Type","Migration Type");
+      DataMigrationError.SETRANGE("Destination Table ID","Destination Table ID");
+      PAGE.RUNMODAL(PAGE::"Data Migration Error",DataMigrationError);
+      CurrPage.UPDATE;
+    END;
+
+    LOCAL PROCEDURE ShowNotifications@4();
+    BEGIN
+      if ShowDashboardEmptyNotification then
+        exit;
+
+      ShowRefreshNotification;
+    END;
+
+    LOCAL PROCEDURE ShowDashboardEmptyNotification@5() NotificationShown : Boolean;
+    VAR
+      DataMigrationStatus@1000 : Record "Data Migration Status";
+      DashboardEmptyNotification@1001 : Notification;
+    BEGIN
+      if not DataMigrationStatus.ISEMPTY then
+        exit;
+
+      DashboardEmptyNotification.MESSAGE(DashboardEmptyNotificationMsg);
+      DashboardEmptyNotification.ADDACTION(
+        StartDataMigrationMsg,CODEUNIT::"Data Migration Mgt.",'StartDataMigrationWizardFromNotification');
+      DashboardEmptyNotification.ADDACTION(LearnMoreTxt,CODEUNIT::"Data Migration Mgt.",'ShowHelpTopicPage');
+      DashboardEmptyNotification.SEND;
+      NotificationShown := true;
+    END;
+
+    LOCAL PROCEDURE ShowRefreshNotification@2() NotificationShown : Boolean;
+    VAR
+      DataMigrationMgt@1002 : Codeunit "Data Migration Mgt.";
+    BEGIN
+      if not DataMigrationMgt.IsMigrationInProgress then begin
+        if RefreshNotificationShown then
+          RefreshNotification.RECALL;
+        exit;
+      end;
+
+      if RefreshNotificationShown then
+        exit;
+
+      RefreshNotification.MESSAGE(RefreshNotificationMsg);
+      RefreshNotification.SEND;
+      NotificationShown := true;
+      RefreshNotificationShown := true;
+    END;
+
+    PROCEDURE GoToItemJournal@21();
+    VAR
+      ItemJournalLine@1001 : Record "Item Journal Line";
+      ItemJournalBatchName@1003 : Code[10];
+    BEGIN
+      DataMigrationFacade.OnFindBatchForItemTransactions("Migration Type",ItemJournalBatchName);
+      if ItemJournalBatchName <> '' then begin
+        ItemJournalLine.SETRANGE("Journal Batch Name",ItemJournalBatchName);
+        if ItemJournalLine.FINDFIRST then begin
+          ItemJournalLine.SETRANGE("Journal Template Name",ItemJournalLine."Journal Template Name");
+          PAGE.RUN(PAGE::"Item Journal",ItemJournalLine);
+          exit;
+        end;
+      end;
+      PAGE.RUN(PAGE::"Item Journal");
+    END;
+
+    PROCEDURE GoToGeneralJournalForCustomers@23();
+    VAR
+      GenJournalLine@1002 : Record "Gen. Journal Line";
+      GenJournalBatchName@1003 : Code[10];
+    BEGIN
+      DataMigrationFacade.OnFindBatchForCustomerTransactions("Migration Type",GenJournalBatchName);
+      if GenJournalBatchName <> '' then begin
+        GenJournalLine.SETRANGE("Journal Batch Name",GenJournalBatchName);
+        if GenJournalLine.FINDFIRST then begin
+          GenJournalLine.SETRANGE("Journal Template Name",GenJournalLine."Journal Template Name");
+          GenJournalLine.SETRANGE("Account Type",GenJournalLine."Account Type"::Customer);
+          PAGE.RUN(PAGE::"General Journal",GenJournalLine);
+          exit;
+        end;
+      end;
+      PAGE.RUN(PAGE::"General Journal");
+    END;
+
+    PROCEDURE GoToGeneralJournalForVendors@36();
+    VAR
+      GenJournalLine@1000 : Record "Gen. Journal Line";
+      GenJournalBatchName@1003 : Code[10];
+    BEGIN
+      DataMigrationFacade.OnFindBatchForVendorTransactions("Migration Type",GenJournalBatchName);
+      if GenJournalBatchName <> '' then begin
+        GenJournalLine.SETRANGE("Journal Batch Name",GenJournalBatchName);
+        if GenJournalLine.FINDFIRST then begin
+          GenJournalLine.SETRANGE("Journal Template Name",GenJournalLine."Journal Template Name");
+          GenJournalLine.SETRANGE("Account Type",GenJournalLine."Account Type"::Vendor);
+          PAGE.RUN(PAGE::"General Journal",GenJournalLine);
+          exit;
+        end;
+      end;
+      PAGE.RUN(PAGE::"General Journal");
+    END;
+
+    LOCAL PROCEDURE GoToGeneralJournalForAccounts@19();
+    VAR
+      GenJournalLine@1001 : Record "Gen. Journal Line";
+      GenJournalBatchName@1000 : Code[10];
+    BEGIN
+      DataMigrationFacade.OnFindBatchForAccountTransactions(Rec,GenJournalBatchName);
+      if GenJournalBatchName <> '' then begin
+        GenJournalLine.SETRANGE("Journal Batch Name",GenJournalBatchName);
+        if GenJournalLine.FINDFIRST then begin
+          GenJournalLine.SETRANGE("Journal Template Name",GenJournalLine."Journal Template Name");
+          GenJournalLine.SETRANGE("Account Type",GenJournalLine."Account Type"::"G/L Account");
+          PAGE.RUN(PAGE::"General Journal",GenJournalLine);
+          exit;
+        end;
+      end;
+      PAGE.RUN(PAGE::"General Journal");
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

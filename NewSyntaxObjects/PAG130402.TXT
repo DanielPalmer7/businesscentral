@@ -1,0 +1,47 @@
+OBJECT Page 130402 CAL Test Codeunits
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    SourceTable=AllObjWithCaption;
+    SourceTableView=WHERE("Object Type"=CONST(Codeunit),
+                          "Object Subtype"=CONST('Test'));
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name="Object ID";
+                ApplicationArea=#All;
+                SourceExpr="Object ID";
+                ImplicitType=Integer }
+
+    { 4   ;2   ;Field     ;
+                Name="Object Name";
+                ApplicationArea=#All;
+                SourceExpr="Object Name";
+                ImplicitType=Text30 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

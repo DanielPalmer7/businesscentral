@@ -1,0 +1,172 @@
+OBJECT Page 560 Dimension Value List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161300.647T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Dimension Value List;
+    SourceTable="Dimension Value";
+    DataCaptionExpr=GetFormCaption;
+    PageType=List;
+    OnOpenPage=BEGIN
+                 GLSetup.GET;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       NameIndent := 0;
+                       FormatLines;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                IndentationColumnName=NameIndent;
+                IndentationControls=Name;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name=Code;
+                ToolTipML=ENU=Specifies the code for the dimension value.;
+                ApplicationArea=#Dimensions;
+                SourceExpr=Code;
+                Style=Strong;
+                StyleExpr=Emphasize;
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=Name;
+                ToolTipML=ENU=Specifies a descriptive name for the dimension value.;
+                ApplicationArea=#Dimensions;
+                SourceExpr=Name;
+                Style=Strong;
+                StyleExpr=Emphasize;
+                ImplicitType=Text50 }
+
+    { 6   ;2   ;Field     ;
+                Name="Dimension Value Type";
+                ToolTipML=ENU=Specifies the purpose of the dimension value.;
+                ApplicationArea=#Dimensions;
+                SourceExpr="Dimension Value Type";
+                Visible=FALSE;
+                ImplicitType=Option }
+
+    { 8   ;2   ;Field     ;
+                Name=Totaling;
+                ToolTipML=ENU=Specifies an account interval or a list of account numbers. The entries of the account will be totaled to give a total balance. How entries are totaled depends on the value in the Account Type field.;
+                ApplicationArea=#Dimensions;
+                SourceExpr=Totaling;
+                Visible=FALSE;
+                ImplicitType=Text250 }
+
+    { 10  ;2   ;Field     ;
+                Name=Blocked;
+                ToolTipML=ENU=Specifies that the related record is blocked from being posted in transactions, for example a customer that is declared insolvent or an item that is placed in quarantine.;
+                ApplicationArea=#Dimensions;
+                SourceExpr=Blocked;
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 12  ;2   ;Field     ;
+                Name="Consolidation Code";
+                ToolTipML=ENU=Specifies the code that is used for consolidation.;
+                ApplicationArea=#Dimensions;
+                SourceExpr="Consolidation Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Name=Control1900383207;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      GLSetup@1000 : Record "General Ledger Setup";
+      Text000@1001 : TextConst 'ENU=Shortcut Dimension %1';
+      Emphasize@19004235 : Boolean INDATASET;
+      NameIndent@19079073 : Integer INDATASET;
+
+    [External]
+    PROCEDURE GetSelectionFilter@4() : Text;
+    VAR
+      DimVal@1004 : Record "Dimension Value";
+      SelectionFilterManagement@1001 : Codeunit SelectionFilterManagement;
+    BEGIN
+      CurrPage.SETSELECTIONFILTER(DimVal);
+      exit(SelectionFilterManagement.GetSelectionFilterForDimensionValue(DimVal));
+    END;
+
+    [External]
+    PROCEDURE SetSelection@3(VAR DimVal@1001 : Record "Dimension Value");
+    BEGIN
+      CurrPage.SETSELECTIONFILTER(DimVal);
+    END;
+
+    LOCAL PROCEDURE GetFormCaption@1() : Text[250];
+    BEGIN
+      if GETFILTER("Dimension Code") <> '' then
+        exit(GETFILTER("Dimension Code"));
+
+      if GETFILTER("Global Dimension No.") = '1' then
+        exit(GLSetup."Global Dimension 1 Code");
+
+      if GETFILTER("Global Dimension No.") = '2' then
+        exit(GLSetup."Global Dimension 2 Code");
+
+      if GETFILTER("Global Dimension No.") = '3' then
+        exit(GLSetup."Shortcut Dimension 3 Code");
+
+      if GETFILTER("Global Dimension No.") = '4' then
+        exit(GLSetup."Shortcut Dimension 4 Code");
+
+      if GETFILTER("Global Dimension No.") = '5' then
+        exit(GLSetup."Shortcut Dimension 5 Code");
+
+      if GETFILTER("Global Dimension No.") = '6' then
+        exit(GLSetup."Shortcut Dimension 6 Code");
+
+      if GETFILTER("Global Dimension No.") = '7' then
+        exit(GLSetup."Shortcut Dimension 7 Code");
+
+      if GETFILTER("Global Dimension No.") = '8' then
+        exit(GLSetup."Shortcut Dimension 8 Code");
+
+      exit(STRSUBSTNO(Text000,"Global Dimension No."));
+    END;
+
+    LOCAL PROCEDURE FormatLines@19039177();
+    BEGIN
+      Emphasize := "Dimension Value Type" <> "Dimension Value Type"::Standard;
+      NameIndent := Indentation;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,277 @@
+OBJECT Page 10140 Deposit
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161722.420T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Deposit;
+    SourceTable="Deposit Header";
+    DataCaptionExpr=FormCaption;
+    SourceTableView=SORTING("Journal Template Name","Journal Batch Name");
+    PageType=Document;
+    OnOpenPage=BEGIN
+                 CurrentJnlBatchName := "Journal Batch Name";
+                 GenJnlManagement.TemplateSelection(PAGE::Deposit,9,false,GenJnlLine,JnlSelected);
+                 if not JnlSelected then
+                   ERROR('');
+                 if GenJnlLine.GETRANGEMAX("Journal Template Name") <> "Journal Template Name" then
+                   CurrentJnlBatchName := '';
+                 GenJnlManagement.OpenJnl(CurrentJnlBatchName,GenJnlLine);
+                 SyncFormWithJournal;
+               END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           CALCFIELDS("Total Deposit Lines");
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      Name=ActionContainer1900000003;
+                      ActionContainerType=RelatedInformation }
+      { 1020027 ;1   ;ActionGroup;
+                      Name="&Deposit";
+                      CaptionML=ENU=&Deposit }
+      { 1020030 ;2   ;Action    ;
+                      Name=Comments;
+                      CaptionML=ENU=Comments;
+                      ToolTipML=ENU=View deposit comments that apply.;
+                      RunObject=Page "Bank Comment Sheet";
+                      RunPageView=WHERE("Table Name"=CONST(Deposit));
+                      RunPageLink="Bank Account No."=FIELD("Bank Account No."),
+                                  "No."=FIELD("No.");
+                      Image=ViewComments }
+      { 1020031 ;2   ;Action    ;
+                      Name=Dimensions;
+                      CaptionML=ENU=Dimensions;
+                      ToolTipML=ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                      ApplicationArea=#Suite;
+                      Image=Dimensions;
+                      OnAction=BEGIN
+                                 ShowDocDim;
+                                 CurrPage.SAVERECORD;
+                               END;
+                                }
+      { 1020018 ;2   ;Separator ;
+                      Name=Separator1020018 }
+      { 1020017 ;2   ;Action    ;
+                      Name="Change &Batch";
+                      CaptionML=ENU=Change &Batch;
+                      ToolTipML=ENU=Edit the journal batch that the deposit is based on.;
+                      ApplicationArea=#Basic,#Suite;
+                      OnAction=BEGIN
+                                 CurrPage.SAVERECORD;
+                                 GenJnlManagement.LookupName(CurrentJnlBatchName,GenJnlLine);
+                                 if "Journal Batch Name" <> CurrentJnlBatchName then begin
+                                   CLEAR(Rec);
+                                   SyncFormWithJournal;
+                                 end;
+                               END;
+                                }
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 1020039 ;1   ;ActionGroup;
+                      Name="P&osting";
+                      CaptionML=ENU=P&osting;
+                      Image=Post }
+      { 1020040 ;2   ;Action    ;
+                      Name="Test Report";
+                      Ellipsis=true;
+                      CaptionML=ENU=Test Report;
+                      ToolTipML=ENU=View a test report so that you can find and correct any errors before you perform the actual posting of the journal or document.;
+                      ApplicationArea=#Basic,#Suite;
+                      Image=TestReport;
+                      OnAction=BEGIN
+                                 DepositHeader.SETRANGE("No.","No.");
+                                 REPORT.RUN(REPORT::"Deposit Test Report",true,false,DepositHeader);
+                               END;
+                                }
+      { 1020041 ;2   ;Action    ;
+                      Name=Post;
+                      ShortCutKey=F9;
+                      Ellipsis=true;
+                      CaptionML=ENU=P&ost;
+                      ToolTipML=ENU=Finalize the document or journal by posting the amounts and quantities to the related accounts in your company books.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Post;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CODEUNIT.RUN(CODEUNIT::"Deposit-Post (Yes/No)",Rec);
+                               END;
+                                }
+      { 1020042 ;2   ;Action    ;
+                      Name=PostAndPrint;
+                      ShortCutKey=Shift+F9;
+                      Ellipsis=true;
+                      CaptionML=ENU=Post and &Print;
+                      ToolTipML=ENU=Finalize and prepare to print the document or journal. The values and quantities are posted to the related accounts. A report request window where you can specify what to include on the print-out.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=PostPrint;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CODEUNIT.RUN(CODEUNIT::"Deposit-Post + Print",Rec);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1020000;1;Group     ;
+                Name=General;
+                CaptionML=ENU=General }
+
+    { 1020001;2;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the deposit that you are creating.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                Importance=Promoted;
+                OnAssistEdit=BEGIN
+                               if AssistEdit(xRec) then
+                                 CurrPage.UPDATE;
+                             END;
+
+                ImplicitType=Code20 }
+
+    { 1020003;2;Field     ;
+                Name="Bank Account No.";
+                ToolTipML=ENU=Specifies the bank account number to which this deposit is being made.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Bank Account No.";
+                Importance=Promoted;
+                ImplicitType=Code20 }
+
+    { 1020005;2;Field     ;
+                Name="Total Deposit Amount";
+                ToolTipML=ENU=Specifies the total amount of the Deposit. The sum of the amounts must equal this field value before you will be able to post this Deposit.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Total Deposit Amount";
+                ImplicitType=Decimal }
+
+    { 1020007;2;Field     ;
+                Name="Total Deposit Lines";
+                ToolTipML=ENU=Specifies the sum of the amounts in the Amount fields on the associated deposit lines.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Total Deposit Lines";
+                ImplicitType=Decimal }
+
+    { 1020022;2;Field     ;
+                Name=Difference;
+                CaptionML=ENU=Difference;
+                ToolTipML=ENU=Specifies the difference between the Amount field and the Cleared Amount field.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Difference;
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                Editable=FALSE }
+
+    { 1020009;2;Field     ;
+                Name="Posting Date";
+                ToolTipML=ENU=Specifies the date when the Deposit should be posted. This should be the date that the Deposit is deposited in the bank.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Posting Date";
+                Importance=Promoted;
+                ImplicitType=Date }
+
+    { 1020011;2;Field     ;
+                Name="Document Date";
+                ToolTipML=ENU=Specifies the date of the deposit document.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document Date";
+                ImplicitType=Date }
+
+    { 1020013;2;Field     ;
+                Name="Shortcut Dimension 1 Code";
+                ToolTipML=ENU=Specifies the dimension value code the deposit header will be associated with.;
+                ApplicationArea=#Suite;
+                SourceExpr="Shortcut Dimension 1 Code";
+                ImplicitType=Code20 }
+
+    { 1020015;2;Field     ;
+                Name="Shortcut Dimension 2 Code";
+                ToolTipML=ENU=Specifies the dimension value code the deposit header will be associated with.;
+                ApplicationArea=#Suite;
+                SourceExpr="Shortcut Dimension 2 Code";
+                ImplicitType=Code20 }
+
+    { 1020019;2;Field     ;
+                Name="Currency Code";
+                ToolTipML=ENU=Specifies the currency that will be used for this Deposit.;
+                ApplicationArea=#Suite;
+                SourceExpr="Currency Code";
+                ImplicitType=Code10 }
+
+    { 1020026;1;Part      ;
+                Name=Subform;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="Journal Template Name"=FIELD("Journal Template Name"),
+                            "Journal Batch Name"=FIELD("Journal Batch Name");
+                PagePartID="Deposit Subform";
+                UpdatePropagation=Both }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=TRUE;
+                Editable=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      DepositHeader@1020001 : Record "Deposit Header";
+      GenJnlLine@1020003 : Record "Gen. Journal Line";
+      GenJnlManagement@1020002 : Codeunit GenJnlManagement;
+      JnlSelected@1020004 : Boolean;
+      CurrentJnlBatchName@1020005 : Code[10];
+
+    LOCAL PROCEDURE Difference@1020001() : Decimal;
+    BEGIN
+      exit("Total Deposit Amount" - "Total Deposit Lines");
+    END;
+
+    LOCAL PROCEDURE SyncFormWithJournal@1020000();
+    BEGIN
+      GenJnlLine.FILTERGROUP(2);
+      FILTERGROUP(2);
+      GenJnlLine.COPYFILTER("Journal Template Name","Journal Template Name");
+      GenJnlLine.COPYFILTER("Journal Batch Name","Journal Batch Name");
+      "Journal Template Name" := GETRANGEMAX("Journal Template Name");
+      "Journal Batch Name" := GETRANGEMAX("Journal Batch Name");
+      FILTERGROUP(0);
+      GenJnlLine.FILTERGROUP(0);
+      if not FIND('-') then ;
+    END;
+
+    LOCAL PROCEDURE FormCaption@1020002() : Text[80];
+    BEGIN
+      if "No." = '' then
+        exit(GETRANGEMAX("Journal Batch Name"));
+
+      exit("No." + ' (' + "Journal Batch Name" + ')');
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

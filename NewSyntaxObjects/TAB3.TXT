@@ -1,0 +1,118 @@
+OBJECT Table 3 Payment Terms
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160053.230T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Code,Description;
+    OnInsert=BEGIN
+               SetLastModifiedDateTime;
+             END;
+
+    OnModify=BEGIN
+               SetLastModifiedDateTime;
+             END;
+
+    OnDelete=VAR
+               PaymentTermsTranslation@1000 : Record "Payment Term Translation";
+               O365SalesInitialSetup@1001 : Record "O365 Sales Initial Setup";
+             BEGIN
+               if IdentityManagement.IsInvAppId then
+                 if O365SalesInitialSetup.GET and
+                    (O365SalesInitialSetup."Default Payment Terms Code" = Code)
+                 then
+                   ERROR(CannotRemoveDefaultPaymentTermsErr);
+
+               with PaymentTermsTranslation do begin
+                 SETRANGE("Payment Term",Code);
+                 DELETEALL
+               end;
+             END;
+
+    OnRename=BEGIN
+               SetLastModifiedDateTime;
+             END;
+
+    CaptionML=ENU=Payment Terms;
+    LookupPageID="Payment Terms";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Due Date Calculation;DateFormula   ;CaptionML=ENU=Due Date Calculation }
+    { 3   ;   ;Discount Date Calculation;DateFormula;
+                                                   CaptionML=ENU=Discount Date Calculation }
+    { 4   ;   ;Discount %          ;Decimal       ;CaptionML=ENU=Discount %;
+                                                   DecimalPlaces=0:5;
+                                                   MinValue=0;
+                                                   MaxValue=100 }
+    { 5   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+    { 6   ;   ;Calc. Pmt. Disc. on Cr. Memos;Boolean;
+                                                   CaptionML=ENU=Calc. Pmt. Disc. on Cr. Memos }
+    { 8   ;   ;Last Modified Date Time;DateTime   ;CaptionML=ENU=Last Modified Date Time;
+                                                   Editable=false }
+    { 8000;   ;Id                  ;GUID          ;CaptionML=ENU=Id }
+    { 27000;  ;SAT Payment Term    ;Code10        ;TableRelation="SAT Payment Term";
+                                                   CaptionML=ENU=SAT Payment Term }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;Code,Description,"Due Date Calculation"  }
+    { 2   ;Brick               ;Code,Description,"Due Date Calculation"  }
+  }
+  CODE
+  {
+    VAR
+      IdentityManagement@1000 : Codeunit "Identity Management";
+      CannotRemoveDefaultPaymentTermsErr@1001 : TextConst 'ENU=You cannot remove the default payment terms.';
+
+    LOCAL PROCEDURE SetLastModifiedDateTime@16();
+    BEGIN
+      "Last Modified Date Time" := CURRENTDATETIME;
+    END;
+
+    [External]
+    PROCEDURE TranslateDescription@1(VAR PaymentTerms@1000 : Record "Payment Terms";Language@1001 : Code[10]);
+    VAR
+      PaymentTermsTranslation@1002 : Record "Payment Term Translation";
+    BEGIN
+      if PaymentTermsTranslation.GET(PaymentTerms.Code,Language) then
+        PaymentTerms.Description := PaymentTermsTranslation.Description;
+    END;
+
+    PROCEDURE GetDescriptionInCurrentLanguage@2() : Text[50];
+    VAR
+      Language@1000 : Record Language;
+      PaymentTermTranslation@1001 : Record "Payment Term Translation";
+    BEGIN
+      if PaymentTermTranslation.GET(Code,Language.GetUserLanguage) then
+        exit(PaymentTermTranslation.Description);
+
+      exit(Description);
+    END;
+
+    [External]
+    PROCEDURE UsePaymentDiscount@3() : Boolean;
+    VAR
+      PaymentTerms@1000 : Record "Payment Terms";
+    BEGIN
+      PaymentTerms.SETFILTER("Discount %",'<>%1',0);
+
+      exit(not PaymentTerms.ISEMPTY);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

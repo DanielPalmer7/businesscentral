@@ -1,0 +1,61 @@
+OBJECT Report 5175 Del. Blanket Sales Order Ver.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160350.497T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Delete Archived Blanket Sales Order Versions;
+    ProcessingOnly=true;
+    OnPostReport=BEGIN
+                   MESSAGE(ArchivedVersionsDeletedMsg);
+                 END;
+
+  }
+  DATASET
+  {
+    { 3260;    ;DataItem;Sales Header Archive;
+               DataItemTable="Sales Header Archive";
+               DataItemTableView=SORTING("Document Type","No.","Doc. No. Occurrence","Version No.") WHERE("Document Type"=CONST("Blanket Order"),"Interaction Exist"=CONST(false));
+               OnAfterGetRecord=VAR
+                                  SalesHeader@1000 : Record "Sales Header";
+                                BEGIN
+                                  SalesHeader.SETRANGE("Document Type",SalesHeader."Document Type"::"Blanket Order");
+                                  SalesHeader.SETRANGE("No.","No.");
+                                  SalesHeader.SETRANGE("Doc. No. Occurrence","Doc. No. Occurrence");
+                                  if not SalesHeader.FINDFIRST then
+                                    DELETE(true);
+                                END;
+
+               ReqFilterFields="No.","Date Archived","Sell-to Customer No." }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      ArchivedVersionsDeletedMsg@1000 : TextConst 'ENU=Archived versions deleted.';
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

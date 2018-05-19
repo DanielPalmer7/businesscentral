@@ -1,0 +1,32 @@
+OBJECT Codeunit 10001 Shipment Line - Edit
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Sales Shipment Line";
+    Permissions=TableData "Sales Shipment Line"=imd;
+    OnRun=BEGIN
+            SalesShipmentLine := Rec;
+            SalesShipmentLine.LOCKTABLE;
+            SalesShipmentLine.FIND;
+            SalesShipmentLine."Package Tracking No." := "Package Tracking No.";
+            SalesShipmentLine.MODIFY;
+            Rec := SalesShipmentLine;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      SalesShipmentLine@1020000 : Record "Sales Shipment Line";
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,210 @@
+OBJECT Codeunit 5452 Graph Sync. Runner
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160737.407T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+            RunFullSync;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      GraphDataSetup@1000 : Codeunit "Graph Data Setup";
+      ALGraphSyncSynchronouslyCategoryTxt@1001 : TextConst '@@@={Locked};ENU=AL Graph Sync Synchronously';
+
+    [External]
+    PROCEDURE IsGraphSyncEnabled@4() : Boolean;
+    VAR
+      MarketingSetup@1000 : Record "Marketing Setup";
+      AuxSyncEnabled@1001 : Boolean;
+    BEGIN
+      if CURRENTEXECUTIONMODE = EXECUTIONMODE::Debug then
+        exit(false);
+
+      if not MarketingSetup.GET then
+        exit(false);
+
+      if MarketingSetup."Sync with Microsoft Graph" then
+        exit(true);
+
+      OnCheckAuxiliarySyncEnabled(AuxSyncEnabled);
+      exit(AuxSyncEnabled);
+    END;
+
+    [External]
+    PROCEDURE RunDeltaSync@10();
+    BEGIN
+      OnRunGraphDeltaSync;
+    END;
+
+    [External]
+    PROCEDURE RunDeltaSyncForEntity@3(TableID@1002 : Integer);
+    VAR
+      IntegrationTableMapping@1000 : Record "Integration Table Mapping";
+      IntegrationMappingCode@1001 : Code[20];
+    BEGIN
+      IntegrationMappingCode := GraphDataSetup.GetMappingCodeForTable(TableID);
+      GraphDataSetup.GetIntegrationTableMapping(IntegrationTableMapping,IntegrationMappingCode);
+      if not IntegrationTableMapping.IsFullSyncAllowed then
+        exit;
+
+      IntegrationTableMapping.SetFullSyncStartAndCommit;
+      RunIntegrationTableSynch(IntegrationTableMapping);
+
+      IntegrationTableMapping.GET(IntegrationTableMapping.Name);
+      IntegrationTableMapping.SetFullSyncEndAndCommit;
+    END;
+
+    [External]
+    PROCEDURE RunFullSync@11();
+    BEGIN
+      OnRunGraphFullSync;
+    END;
+
+    [External]
+    PROCEDURE RunFullSyncForEntity@2(TableID@1002 : Integer);
+    VAR
+      IntegrationTableMapping@1000 : Record "Integration Table Mapping";
+      IntegrationMappingCode@1001 : Code[20];
+    BEGIN
+      IntegrationMappingCode := GraphDataSetup.GetMappingCodeForTable(TableID);
+      GraphDataSetup.GetIntegrationTableMapping(IntegrationTableMapping,IntegrationMappingCode);
+      if not IntegrationTableMapping.IsFullSyncAllowed then
+        exit;
+      IntegrationTableMapping.SetFullSyncStartAndCommit;
+
+      IntegrationTableMapping."Graph Delta Token" := '';
+      IntegrationTableMapping.MODIFY(true);
+
+      CreateIntegrationRecordsForUncoupledRecords(IntegrationTableMapping."Table ID");
+      RunIntegrationTableSynch(IntegrationTableMapping);
+
+      IntegrationTableMapping.GET(IntegrationTableMapping.Name);
+      IntegrationTableMapping.SetFullSyncEndAndCommit;
+    END;
+
+    [External]
+    PROCEDURE RunIntegrationTableSynch@1(IntegrationTableMapping@1000 : Record "Integration Table Mapping");
+    VAR
+      IntegrationManagement@1001 : Codeunit "Integration Management";
+      InsertEnabled@1005 : Boolean;
+      ModifyEnabled@1004 : Boolean;
+      DeleteEnabled@1003 : Boolean;
+      RenameEnabled@1002 : Boolean;
+    BEGIN
+      IntegrationManagement.GetDatabaseTableTriggerSetup(
+        IntegrationTableMapping."Table ID",InsertEnabled,ModifyEnabled,DeleteEnabled,RenameEnabled);
+      CODEUNIT.RUN(IntegrationTableMapping."Synch. Codeunit ID",IntegrationTableMapping);
+    END;
+
+    LOCAL PROCEDURE CreateIntegrationRecordsForUncoupledRecords@7(TableId@1000 : Integer);
+    VAR
+      IntegrationRecord@1002 : Record "Integration Record";
+      NavRecordRef@1001 : RecordRef;
+    BEGIN
+      NavRecordRef.OPEN(TableId);
+
+      if NavRecordRef.FINDSET then
+        repeat
+          CLEAR(IntegrationRecord);
+          IntegrationRecord.SETRANGE("Record ID",NavRecordRef.RECORDID);
+          if IntegrationRecord.ISEMPTY then begin
+            CLEAR(IntegrationRecord);
+            IntegrationRecord."Record ID" := NavRecordRef.RECORDID;
+            IntegrationRecord."Table ID" := NavRecordRef.NUMBER;
+            IntegrationRecord.INSERT(true);
+          end;
+        until NavRecordRef.NEXT = 0;
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnCheckAuxiliarySyncEnabled@8(VAR AuxSyncEnabled@1000 : Boolean);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnRunGraphDeltaSync@6();
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnRunGraphFullSync@5();
+    BEGIN
+    END;
+
+    PROCEDURE SyncFromGraphSynchronously@9(CodeunitId@1005 : Integer;TimeoutInSeconds@1006 : Integer);
+    VAR
+      SessionId@1004 : Integer;
+      StartDateTime@1001 : DateTime;
+      TimePassed@1000 : Duration;
+      TimeoutReached@1002 : Boolean;
+    BEGIN
+      // Start session will use CPU time of main thread while main thread is SLEEPing
+      // Taskscheduler cannot be used since it requires a COMMIT to start
+      SessionId := 0;
+
+      if not STARTSESSION(SessionId,CodeunitId,COMPANYNAME) then begin
+        OnSyncSynchronouslyCannotStartSession('Codeunit: ' + FORMAT(CodeunitId));
+        exit;
+      end;
+
+      StartDateTime := CURRENTDATETIME;
+
+      repeat
+        SLEEP(300);
+        if not ISSESSIONACTIVE(SessionId) then
+          exit;
+
+        TimePassed := CURRENTDATETIME - StartDateTime;
+        TimeoutReached := TimePassed > TimeoutInSeconds * 1000;
+      until TimeoutReached;
+
+      OnSyncSynchronouslyTimeout('Codeunit: ' + FORMAT(CodeunitId));
+    END;
+
+    PROCEDURE GetDefaultSyncSynchronouslyTimeoutInSeconds@12() : Integer;
+    BEGIN
+      // User is waiting for the sync to complete
+      // This value should not be too great
+      exit(30);
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnSyncSynchronouslyCannotStartSession@17(AdditionalDetails@1000 : Text);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnSyncSynchronouslyTimeout@18(AdditionalDetails@1000 : Text);
+    BEGIN
+    END;
+
+    [EventSubscriber(Codeunit,5452,OnSyncSynchronouslyCannotStartSession)]
+    LOCAL PROCEDURE HandleOnSyncSynchronouslyCannotStartSession@22(AdditionalDetails@1000 : Text);
+    BEGIN
+      SENDTRACETAG(
+        '00001KX',ALGraphSyncSynchronouslyCategoryTxt,VERBOSITY::Error,
+        'Could not start the session. ' + AdditionalDetails,DATACLASSIFICATION::SystemMetadata);
+    END;
+
+    [EventSubscriber(Codeunit,5452,OnSyncSynchronouslyTimeout)]
+    LOCAL PROCEDURE HandleOnSyncSynchronouslySessionTimeout@23(AdditionalDetails@1000 : Text);
+    BEGIN
+      SENDTRACETAG(
+        '00001KY',ALGraphSyncSynchronouslyCategoryTxt,VERBOSITY::Error,
+        'Timeout on the Forced Graph Sync. ' + AdditionalDetails,DATACLASSIFICATION::SystemMetadata);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

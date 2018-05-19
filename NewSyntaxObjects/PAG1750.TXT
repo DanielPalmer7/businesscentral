@@ -1,0 +1,99 @@
+OBJECT Page 1750 Field Data Classification
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161353.530T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Field Data Classification;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    LinksAllowed=false;
+    SourceTable=Field;
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=TableNo;
+                ApplicationArea=#All;
+                SourceExpr=TableNo;
+                ImplicitType=Integer }
+
+    { 4   ;2   ;Field     ;
+                Name="No.";
+                ApplicationArea=#All;
+                SourceExpr="No.";
+                ImplicitType=Integer }
+
+    { 5   ;2   ;Field     ;
+                Name=TableName;
+                ApplicationArea=#All;
+                SourceExpr=TableName;
+                ImplicitType=Text30 }
+
+    { 6   ;2   ;Field     ;
+                Name=FieldName;
+                ApplicationArea=#All;
+                SourceExpr=FieldName;
+                ImplicitType=Text30 }
+
+    { 7   ;2   ;Field     ;
+                Name=Type;
+                ApplicationArea=#All;
+                SourceExpr=Type;
+                ImplicitType=Option }
+
+    { 8   ;2   ;Field     ;
+                Name=Class;
+                ApplicationArea=#All;
+                SourceExpr=Class;
+                ImplicitType=Option }
+
+    { 9   ;2   ;Field     ;
+                Name="Type Name";
+                ApplicationArea=#All;
+                SourceExpr="Type Name";
+                ImplicitType=Text30 }
+
+    { 10  ;2   ;Field     ;
+                Name=RelationTableNo;
+                ApplicationArea=#All;
+                SourceExpr=RelationTableNo;
+                ImplicitType=Integer }
+
+    { 11  ;2   ;Field     ;
+                Name=OptionString;
+                ApplicationArea=#All;
+                SourceExpr=OptionString;
+                ImplicitType=Text1023 }
+
+    { 12  ;2   ;Field     ;
+                Name=DataClassification;
+                ApplicationArea=#All;
+                SourceExpr=DataClassification;
+                ImplicitType=Option }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

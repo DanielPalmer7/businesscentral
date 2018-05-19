@@ -1,0 +1,163 @@
+OBJECT Page 1637 Office Suggested Line Items
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161352.130T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Suggested Line Items;
+    SourceTable="Office Suggested Line Item";
+    DataCaptionExpr=PageTitleTxt;
+    PageType=StandardDialog;
+    SourceTableTemporary=true;
+    ShowFilter=false;
+    OnOpenPage=BEGIN
+                 if FINDLAST then
+                   LastLineNo := "Line No.";
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       NeedsAttention := Matches > 1;
+                     END;
+
+    OnQueryClosePage=BEGIN
+                       if CloseAction in [ACTION::OK,ACTION::LookupOK] then
+                         if DoNotShowAgain then
+                           OnDisableMessage;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 8   ;1   ;Group     ;
+                Name=Control8;
+                GroupType=Group;
+                InstructionalTextML=ENU=We think we've found one or more items that match the text in the email. Would you like to add them as line items in the document? }
+
+    { 3   ;2   ;Group     ;
+                Name=Control3;
+                GroupType=Repeater }
+
+    { 4   ;3   ;Field     ;
+                Name=Add;
+                ToolTipML=ENU=Specifies whether to add this item to the document;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Add;
+                Enabled=NOT NeedsAttention;
+                ImplicitType=Boolean }
+
+    { 5   ;3   ;Field     ;
+                Name=Item;
+                Width=10;
+                Lookup=false;
+                CaptionML=ENU=Item;
+                ToolTipML=ENU=Specifies the item;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=GetItem;
+                Editable=FALSE;
+                Style=Attention;
+                StyleExpr=NeedsAttention;
+                OnValidate=VAR
+                             TempOfficeSuggestedLineItem@1000 : TEMPORARY Record "Office Suggested Line Item";
+                           BEGIN
+                             if "Line No." = 0 then begin
+                               TempOfficeSuggestedLineItem.COPY(Rec,true);
+                               if TempOfficeSuggestedLineItem.FINDLAST then
+                                 "Line No." := TempOfficeSuggestedLineItem."Line No." + 1000;
+                             end;
+                           END;
+
+                OnDrillDown=VAR
+                              Item@1002 : Record Item;
+                              ItemNo@1000 : Text[50];
+                            BEGIN
+                              if Matches > 1 then begin
+                                if Item.TryGetItemNo(ItemNo,"Item Description",false) then
+                                  Item.GET(ItemNo);
+                              end else
+                                Item.PickItem(Item);
+
+                              if Item."No." <> '' then begin
+                                VALIDATE("Item No.",Item."No.");
+                                VALIDATE("Item Description",Item.Description);
+                                VALIDATE(Add,true);
+                                VALIDATE(Matches,1);
+                                if "Line No." = 0 then begin
+                                  VALIDATE("Line No.",LastLineNo + 1000);
+                                  LastLineNo := "Line No.";
+                                end;
+
+                                NeedsAttention := false;
+                              end;
+                            END;
+
+                QuickEntry=FALSE }
+
+    { 6   ;3   ;Field     ;
+                Name=Description;
+                Width=20;
+                CaptionML=ENU=Description;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=GetDescription;
+                TableRelation=Item.Description WHERE ("No."=FIELD("Item No."));
+                Editable=FALSE }
+
+    { 7   ;3   ;Field     ;
+                Name=Quantity;
+                Width=6;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Quantity;
+                ImplicitType=Integer }
+
+    { 2   ;2   ;Field     ;
+                Name=DoNotShowAgain;
+                CaptionML=ENU=Do not show this message again;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=DoNotShowAgain;
+                ImplicitType=Boolean }
+
+  }
+  CODE
+  {
+    VAR
+      PageTitleTxt@1001 : TextConst 'ENU=Suggested Line Items';
+      ResolveItemTxt@1002 : TextConst 'ENU=Resolve item';
+      LastLineNo@1004 : Integer;
+      DoNotShowAgain@1000 : Boolean;
+      MultipleMatchesTxt@1005 : TextConst '@@@=%1 - The keyword that yielded items in the database. %2 - the number of item matches that were found from the keyword.;ENU=%1 (%2 matches)';
+      NeedsAttention@1003 : Boolean;
+
+    LOCAL PROCEDURE GetDescription@2() Description : Text;
+    BEGIN
+      if Matches > 1 then
+        Description := STRSUBSTNO(MultipleMatchesTxt,"Item Description",Matches)
+      else
+        Description := "Item Description";
+    END;
+
+    LOCAL PROCEDURE GetItem@7() Item : Text;
+    BEGIN
+      if Matches > 1 then
+        Item := ResolveItemTxt
+      else
+        Item := "Item No.";
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnDisableMessage@1();
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

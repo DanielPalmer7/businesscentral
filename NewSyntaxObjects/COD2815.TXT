@@ -1,0 +1,91 @@
+OBJECT Codeunit 2815 Native - Coupons
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160719.337T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      CustomerIDNotSpecifiedErr@1002 : TextConst '@@@={Locked};ENU=You must specify a customer id to get the coupons.';
+      CustomerIdDoesntMatchACustomerErr@1004 : TextConst 'ENU=The customerId you specified doesn''t match a customer.';
+      CouponDoesntExistErr@1003 : TextConst '@@@="%1=claimId value;%2=graphContactId value.";ENU=The coupon with "claimId" : "%1"  doesn''t exist for this Customer.';
+      CouponAlreadyAppliedErr@1000 : TextConst 'ENU=The coupon is already applied in another invoice.';
+      CouponInvalidErr@1001 : TextConst 'ENU=The status on the coupon is not valid.';
+
+    PROCEDURE RenewCoupons@4(CustomerIdFilter@1004 : Text);
+    VAR
+      Customer@1000 : Record Customer;
+      Contact@1005 : Record Contact;
+      GraphIntContact@1001 : Codeunit "Graph Int. - Contact";
+      CouponsManagement@1003 : Codeunit "Coupons Management";
+      GraphContactId@1002 : Text[250];
+    BEGIN
+      if CustomerIdFilter = '' then
+        ERROR(CustomerIDNotSpecifiedErr);
+
+      Customer.SETRANGE(Id,CustomerIdFilter);
+      if not Customer.FINDFIRST then
+        ERROR(CustomerIdDoesntMatchACustomerErr);
+
+      GraphIntContact.FindGraphContactIdFromCustomer(GraphContactId,Customer,Contact);
+
+      CouponsManagement.GetCouponsForGraphContactId(GraphContactId);
+    END;
+
+    PROCEDURE CheckIfCouponCanBeUsed@7(O365CouponClaimDocLink@1000 : Record "O365 Coupon Claim Doc. Link");
+    VAR
+      O365CouponClaim@1001 : Record "O365 Coupon Claim";
+      O365PostedCouponClaim@1002 : Record "O365 Posted Coupon Claim";
+    BEGIN
+      O365CouponClaim.GET(O365CouponClaimDocLink."Claim ID",O365CouponClaimDocLink."Graph Contact ID");
+
+      if not O365CouponClaim."Is Valid" then
+        ERROR(CouponInvalidErr);
+
+      if O365CouponClaim.Usage = O365CouponClaim.Usage::oneTime then begin
+        O365PostedCouponClaim.SETRANGE("Claim ID",O365CouponClaimDocLink."Claim ID");
+        O365PostedCouponClaim.SETRANGE("Graph Contact ID",O365CouponClaimDocLink."Graph Contact ID");
+        if not O365PostedCouponClaim.ISEMPTY then
+          ERROR(CouponAlreadyAppliedErr);
+      end;
+    END;
+
+    PROCEDURE CheckThatCouponCanBeAppliedToInvoice@2(O365CouponClaimDocLink@1002 : Record "O365 Coupon Claim Doc. Link");
+    VAR
+      DummySalesHeader@1005 : Record "Sales Header";
+      O365CouponClaim@1006 : Record "O365 Coupon Claim";
+    BEGIN
+      if (O365CouponClaimDocLink."Document Type" <> DummySalesHeader."Document Type"::Invoice) and
+         (O365CouponClaimDocLink."Document Type" <> DummySalesHeader."Document Type"::Quote)
+      then
+        exit;
+
+      if not O365CouponClaim.GET(O365CouponClaimDocLink."Claim ID",O365CouponClaimDocLink."Graph Contact ID") then
+        ERROR(STRSUBSTNO(CouponDoesntExistErr,O365CouponClaimDocLink."Claim ID",O365CouponClaimDocLink."Graph Contact ID"));
+    END;
+
+    PROCEDURE WriteCouponsJSON@3(DocumentType@1000 : Option;DocumentNo@1001 : Code[20];Posted@1002 : Boolean) : Text;
+    VAR
+      NativeEDMTypes@1003 : Codeunit "Native - EDM Types";
+    BEGIN
+      if Posted then
+        exit(NativeEDMTypes.WritePostedCouponsJSON(DocumentNo));
+
+      exit(NativeEDMTypes.WriteCouponsJSON(DocumentType,DocumentNo));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

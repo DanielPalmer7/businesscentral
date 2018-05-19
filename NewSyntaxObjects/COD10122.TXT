@@ -1,0 +1,41 @@
+OBJECT Codeunit 10122 Bank Rec.-Post + Print
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160932.150T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Bank Rec. Header";
+    OnRun=BEGIN
+            BankRecHeader.COPY(Rec);
+
+            if not CONFIRM(Text000,false) then
+              exit;
+
+            BankRecPost.RUN(BankRecHeader);
+            Rec := BankRecHeader;
+            COMMIT;
+
+            if PostedBankRecHeader.GET("Bank Account No.","Statement No.") then
+              DocPrint.PrintBankRecStmt(PostedBankRecHeader);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      BankRecHeader@1003 : Record "Bank Rec. Header";
+      PostedBankRecHeader@1020000 : Record "Posted Bank Rec. Header";
+      BankRecPost@1009 : Codeunit "Bank Rec.-Post";
+      Text000@1020001 : TextConst 'ENU=Do you want to post and print the Bank Reconcilation?';
+      DocPrint@1020002 : Codeunit "Document-Print";
+
+    BEGIN
+    END.
+  }
+}
+

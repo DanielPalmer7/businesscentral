@@ -1,0 +1,48 @@
+OBJECT Table 2000000111 Session Event
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.773T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;User SID            ;GUID          ;TableRelation=User."User Security ID";
+                                                   ValidateTableRelation=false;
+                                                   TestTableRelation=false }
+    { 2   ;   ;Server Instance ID  ;Integer       ;TableRelation="Server Instance"."Server Instance ID";
+                                                   ValidateTableRelation=false;
+                                                   TestTableRelation=false }
+    { 3   ;   ;Session ID          ;Integer        }
+    { 4   ;   ;Event Type          ;Option        ;OptionString=Logon,Logoff,Start,Stop,Close }
+    { 5   ;   ;Event Datetime      ;DateTime       }
+    { 6   ;   ;Client Type         ;Option        ;OptionString="Windows Client","SharePoint Client","Web Service","Client Service",NAS,Background,"Management Client","Web Client",Unknown,Tablet,Phone,Desktop }
+    { 7   ;   ;Database Name       ;Text250        }
+    { 8   ;   ;Client Computer Name;Text250        }
+    { 9   ;   ;User ID             ;Text132        }
+    { 10  ;   ;Comment             ;Text132        }
+    { 11  ;   ;Session Unique ID   ;GUID           }
+  }
+  KEYS
+  {
+    {    ;"User SID","Server Instance ID","Session ID","Event Datetime","Event Type";
+                                                   Clustered=true }
+    {    ;"Session Unique ID"                      }
+    {    ;"Event Datetime"                         }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

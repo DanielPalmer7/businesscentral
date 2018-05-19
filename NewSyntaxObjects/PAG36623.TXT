@@ -1,0 +1,119 @@
+OBJECT Page 36623 Credit Manager Activities
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161726.163T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Activities;
+    SourceTable="Credit Manager Cue";
+    PageType=CardPart;
+    OnOpenPage=BEGIN
+                 RESET;
+                 if not GET then begin
+                   INIT;
+                   INSERT;
+                 end;
+
+                 SETRANGE("Overdue Date Filter",0D,WORKDATE - 1);
+                 SETRANGE("User Filter",USERID);
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 11  ;1   ;Group     ;
+                Name="My Approvals";
+                CaptionML=ENU=My Approvals;
+                GroupType=CueGroup }
+
+    { 1020004;2;Field     ;
+                Name="Approvals - Sales Orders";
+                CaptionML=ENU=Sales Orders;
+                ToolTipML=ENU=Specifies the number of sales orders awaiting approval.;
+                SourceExpr="Approvals - Sales Orders";
+                DrillDownPageID="Approval Entries";
+                ImplicitType=Integer }
+
+    { 1020006;2;Field     ;
+                Name="Approvals - Sales Invoices";
+                CaptionML=ENU=Sales Invoices;
+                ToolTipML=ENU=Specifies the number of sales invoices awaiting approval.;
+                SourceExpr="Approvals - Sales Invoices";
+                DrillDownPageID="Approval Entries";
+                ImplicitType=Integer }
+
+    { 10  ;1   ;Group     ;
+                Name=Customers;
+                CaptionML=ENU=Customers;
+                GroupType=CueGroup }
+
+    { 1020002;2;Field     ;
+                Name="Customers - Overdue";
+                CaptionML=ENU=Overdue;
+                ToolTipML=ENU=Specifies the number of overdue customers.;
+                SourceExpr="Customers - Overdue";
+                DrillDownPageID="Customer List - Collections";
+                ImplicitType=Integer }
+
+    { 6   ;2   ;Field     ;
+                Name="Customers - Blocked";
+                CaptionML=ENU=Blocked;
+                ToolTipML=ENU=Specifies the number of blocked customers.;
+                SourceExpr="Customers - Blocked";
+                DrillDownPageID="Customer List - Collections";
+                ImplicitType=Integer }
+
+    { 1   ;2   ;Field     ;
+                Name="Overdue Sales Invoices";
+                ToolTipML=ENU=Specifies the number of overdue sales invoices.;
+                SourceExpr="Overdue Sales Invoices";
+                DrillDownPageID="Customer Ledger Entries";
+                ImplicitType=Integer }
+
+    { 1400002;1;Group     ;
+                Name="Sales Orders";
+                CaptionML=ENU=Sales Orders;
+                GroupType=CueGroup }
+
+    { 1020000;2;Field     ;
+                Name="Sales Orders On Hold";
+                CaptionML=ENU=On Hold;
+                ToolTipML=ENU=Specifies the number of sales orders that are on hold.;
+                SourceExpr="Sales Orders On Hold";
+                DrillDownPageID="Customer Order Header Status";
+                ImplicitType=Integer }
+
+    { 14  ;2   ;Field     ;
+                Name="SOs Pending Approval";
+                CaptionML=ENU=Pending Approval;
+                ToolTipML=ENU=Specifies the number of sales orders that are pending approval.;
+                SourceExpr="SOs Pending Approval";
+                DrillDownPageID="Customer Order Header Status";
+                ImplicitType=Integer }
+
+    { 12  ;2   ;Field     ;
+                Name="Approved Sales Orders";
+                CaptionML=ENU=Approved;
+                ToolTipML=ENU=Specifies the number of approved sales orders.;
+                SourceExpr="Approved Sales Orders";
+                DrillDownPageID="Customer Order Header Status";
+                ImplicitType=Integer }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

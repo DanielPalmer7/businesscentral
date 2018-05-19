@@ -1,0 +1,106 @@
+OBJECT Codeunit 7323 Whse.-Act.-Post (Yes/No)
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160912.667T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Warehouse Activity Line";
+    OnRun=BEGIN
+            WhseActivLine.COPY(Rec);
+            Code;
+            COPY(WhseActivLine);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1002 : TextConst 'ENU=&Receive,Receive &and Invoice';
+      WhseActivLine@1007 : Record "Warehouse Activity Line";
+      WhseActivityPost@1008 : Codeunit "Whse.-Activity-Post";
+      Selection@1003 : Integer;
+      Text001@1000 : TextConst 'ENU=&Ship,Ship &and Invoice';
+      Text002@1001 : TextConst 'ENU=Do you want to post the %1 and %2?';
+      PrintDoc@1004 : Boolean;
+
+    LOCAL PROCEDURE Code@1();
+    VAR
+      HideDialog@1000 : Boolean;
+    BEGIN
+      HideDialog := false;
+      OnBeforeConfirmPost(WhseActivLine,HideDialog,Selection);
+
+      with WhseActivLine do begin
+        if not HideDialog then
+          case "Activity Type" of
+            "Activity Type"::"Invt. Put-away":
+              if not SelectForPutAway then
+                exit;
+            else
+              if not SelectForOtherTypes then
+                exit;
+          end;
+
+        WhseActivityPost.SetInvoiceSourceDoc(Selection = 2);
+        WhseActivityPost.PrintDocument(PrintDoc);
+        WhseActivityPost.RUN(WhseActivLine);
+        CLEAR(WhseActivityPost);
+      end;
+    END;
+
+    [External]
+    PROCEDURE PrintDocument@2(SetPrint@1000 : Boolean);
+    BEGIN
+      PrintDoc := SetPrint;
+    END;
+
+    LOCAL PROCEDURE SelectForPutAway@3() : Boolean;
+    BEGIN
+      with WhseActivLine do
+        if ("Source Document" = "Source Document"::"Prod. Output") or
+           ("Source Document" = "Source Document"::"Inbound Transfer") or
+           ("Source Document" = "Source Document"::"Prod. Consumption")
+        then begin
+          if not CONFIRM(Text002,false,"Activity Type","Source Document") then
+            exit(false);
+        end else begin
+          Selection := STRMENU(Text000,2);
+          if Selection = 0 then
+            exit(false);
+        end;
+
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE SelectForOtherTypes@4() : Boolean;
+    BEGIN
+      with WhseActivLine do
+        if ("Source Document" = "Source Document"::"Prod. Consumption") or
+           ("Source Document" = "Source Document"::"Outbound Transfer")
+        then begin
+          if not CONFIRM(Text002,false,"Activity Type","Source Document") then
+            exit(false);
+        end else begin
+          Selection := STRMENU(Text001,2);
+          if Selection = 0 then
+            exit(false);
+        end;
+
+      exit(true);
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeConfirmPost@7(VAR WhseActivLine@1000 : Record "Warehouse Activity Line";VAR HideDialog@1001 : Boolean;VAR Selection@1002 : Integer);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,62 @@
+OBJECT Page 1052 Reminder Terms Translation
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161331.703T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Reminder Terms Translation;
+    SourceTable="Reminder Terms Translation";
+    DataCaptionExpr=PageCaption;
+    OnOpenPage=BEGIN
+                 PageCaption := "Reminder Terms Code";
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1000;    ;Container ;
+                Name=Reminder Terms Translation;
+                ContainerType=ContentArea }
+
+    { 1004;1   ;Group     ;
+                Name=Control1004;
+                GroupType=Repeater }
+
+    { 1001;2   ;Field     ;
+                Name="Reminder Terms Code";
+                ToolTipML=ENU=Specifies translation of reminder terms so that customers are reminded in their own language.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Reminder Terms Code";
+                Visible=false;
+                ImplicitType=Code10 }
+
+    { 1002;2   ;Field     ;
+                Name="Language Code";
+                ToolTipML=ENU=Specifies the language that is used when translating specified text on documents to foreign business partner, such as an item description on an order confirmation.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Language Code";
+                ImplicitType=Code10 }
+
+    { 1003;2   ;Field     ;
+                Name="Note About Line Fee on Report";
+                ToolTipML=ENU=Specifies that any notes about line fees will be added to the reminder.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Note About Line Fee on Report";
+                ImplicitType=Text150 }
+
+  }
+  CODE
+  {
+    VAR
+      PageCaption@1000 : Text;
+
+    BEGIN
+    END.
+  }
+}
+

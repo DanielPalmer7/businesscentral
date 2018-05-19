@@ -1,0 +1,33 @@
+OBJECT Table 2000000179 OData Edm Type
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.947T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Key                 ;Code50         }
+    { 2   ;   ;Description         ;Text250        }
+    { 10  ;   ;Edm Xml             ;BLOB          ;SubType=User-Defined }
+  }
+  KEYS
+  {
+    {    ;Key                                     ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

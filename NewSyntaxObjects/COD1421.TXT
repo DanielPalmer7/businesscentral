@@ -1,0 +1,27 @@
+OBJECT Codeunit 1421 Doc. Exch. Serv. - Recv. Docs.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=VAR
+            DocExchServiceSetup@1001 : Record "Doc. Exch. Service Setup";
+            DocExchServiceMgt@1000 : Codeunit "Doc. Exch. Service Mgt.";
+          BEGIN
+            DocExchServiceSetup.GET;
+            DocExchServiceMgt.ReceiveDocuments(DocExchServiceSetup.RECORDID);
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

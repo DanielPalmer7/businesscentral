@@ -1,0 +1,72 @@
+OBJECT Page 748 VAT Clause Translations
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161312.823T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Tax Clause Translations;
+    SourceTable="VAT Clause Translation";
+    DataCaptionFields="VAT Clause Code";
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Control2;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="Language Code";
+                ToolTipML=ENU=Specifies the language that is used when translating specified text on documents to foreign business partner, such as an item description on an order confirmation.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Language Code";
+                ImplicitType=Code10 }
+
+    { 4   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies the translation of the tax clause description. The translated version of the description is displayed as the tax clause, based on the Language Code setting on the Customer card.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=Text250 }
+
+    { 5   ;2   ;Field     ;
+                Name="Description 2";
+                ToolTipML=ENU=Specifies the translation of the additional tax clause description.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Description 2";
+                ImplicitType=Text250 }
+
+    { 6   ;0   ;Container ;
+                Name=Control6;
+                ContainerType=FactBoxArea }
+
+    { 7   ;1   ;Part      ;
+                Name=Control7;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 8   ;1   ;Part      ;
+                Name=Control8;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

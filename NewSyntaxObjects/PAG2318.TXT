@@ -1,0 +1,551 @@
+OBJECT Page 2318 BC O365 Sales Customer Card
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161408.247T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Contact;
+    SourceTable=Customer;
+    DataCaptionExpr=Name;
+    PageType=Card;
+    OnInit=VAR
+             O365SalesInitialSetup@1000 : Record "O365 Sales Initial Setup";
+           BEGIN
+             if O365SalesInitialSetup.GET then
+               IsUsingVAT := O365SalesInitialSetup.IsUsingVAT;
+           END;
+
+    OnOpenPage=BEGIN
+                 SETRANGE("Date Filter",0D,WORKDATE);
+               END;
+
+    OnNewRecord=BEGIN
+                  OnNewRec;
+                END;
+
+    OnInsertRecord=BEGIN
+                     if Name = '' then
+                       CustomerCardState := CustomerCardState::Prompt
+                     else
+                       CustomerCardState := CustomerCardState::Keep;
+
+                     exit(true);
+                   END;
+
+    OnModifyRecord=BEGIN
+                     if Name = '' then
+                       CustomerCardState := CustomerCardState::Prompt
+                     else
+                       CustomerCardState := CustomerCardState::Keep;
+
+                     exit(true);
+                   END;
+
+    OnDeleteRecord=BEGIN
+                     O365SalesManagement.BlockCustomerAndDeleteContact(Rec);
+                   END;
+
+    OnQueryClosePage=BEGIN
+                       exit(CanExitAfterProcessingCustomer);
+                     END;
+
+    OnAfterGetCurrRecord=VAR
+                           TaxArea@1001 : Record "Tax Area";
+                           LanguageManagement@1000 : Codeunit LanguageManagement;
+                         BEGIN
+                           CreateCustomerFromTemplate;
+
+                           OverdueAmount := CalcOverdueBalance;
+
+                           if TaxArea.GET("Tax Area Code") then
+                             TaxAreaDescription := TaxArea.GetDescriptionInCurrentLanguage;
+
+                           BlockedStatus := IsBlocked;
+
+                           // Supergroup is visible only if one of the two subgroups is visible
+                           SalesAndPaymentsVisible := (not TotalsHidden) or
+                             (("Contact Type" = "Contact Type"::Company) and IsUsingVAT);
+
+                           LanguageName := LanguageManagement.GetWindowsLanguageNameFromLanguageCode("Language Code");
+                           CountryRegionCode := "Country/Region Code";
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 11      ;0   ;ActionContainer;
+                      Name=ActionContainer11;
+                      ActionContainerType=ActionItems }
+      { 9       ;1   ;Action    ;
+                      Name=NewSalesInvoice;
+                      CaptionML=ENU=New Invoice;
+                      ToolTipML=ENU=Create a new invoice for the customer.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      Visible=NewDocumentActionVisible;
+                      Enabled=Name <> '';
+                      PromotedIsBig=true;
+                      Image=Invoicing-MDL-Invoice;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 O365SalesManagement.OpenNewInvoiceForCustomer(Rec);
+                               END;
+                                }
+      { 10      ;1   ;Action    ;
+                      Name=NewSalesQuote;
+                      CaptionML=ENU=New Estimate;
+                      ToolTipML=ENU=Create an estimate for the customer.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      Visible=NewDocumentActionVisible;
+                      Enabled=Name <> '';
+                      PromotedIsBig=true;
+                      Image=Invoicing-MDL-Quote;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 O365SalesManagement.OpenNewQuoteForCustomer(Rec);
+                               END;
+                                }
+      { 24      ;1   ;Action    ;
+                      Name=Delete;
+                      CaptionML=ENU=Delete;
+                      ToolTipML=ENU=Delete the record.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Invoicing-MDL-Delete;
+                      OnAction=BEGIN
+                                 if not CONFIRM(DeleteQst,false) then
+                                   exit;
+                                 O365SalesManagement.BlockCustomerAndDeleteContact(Rec);
+                                 CurrPage.CLOSE;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=General;
+                CaptionML=ENU=Basic Profile;
+                GroupType=Group }
+
+    { 3   ;2   ;Field     ;
+                Name=Name;
+                CaptionML=ENU=Contact Name;
+                ToolTipML=ENU=Specifies the customer's name.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Name;
+                Importance=Promoted;
+                OnValidate=BEGIN
+                             CurrPage.SAVERECORD;
+                           END;
+
+                ImplicitType=Text50 }
+
+    { 25  ;2   ;Field     ;
+                Name="Contact Type";
+                ToolTipML=ENU=Specifies if the contact is a company or a person.;
+                OptionCaptionML=ENU=Company contact,Person;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Contact Type";
+                OnValidate=BEGIN
+                             CurrPage.UPDATE(true);
+                           END;
+
+                ImplicitType=Option }
+
+    { 26  ;1   ;Group     ;
+                Name="Contact Info";
+                CaptionML=ENU=Contact Info;
+                GroupType=Group }
+
+    { 4   ;2   ;Field     ;
+                Name="E-Mail";
+                ExtendedDatatype=E-Mail;
+                CaptionML=ENU=Email Address;
+                ToolTipML=ENU=Specifies the customer's email address.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="E-Mail";
+                Importance=Promoted;
+                OnValidate=VAR
+                             MailManagement@1000 : Codeunit "Mail Management";
+                           BEGIN
+                             if "E-Mail" <> '' then
+                               MailManagement.CheckValidEmailAddress("E-Mail");
+                           END;
+
+                ImplicitType=Text80 }
+
+    { 7   ;2   ;Field     ;
+                Name="Phone No.";
+                CaptionML=ENU=Phone Number;
+                ToolTipML=ENU=Specifies the customer's telephone number.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Phone No.";
+                Importance=Promoted;
+                ImplicitType=Text30 }
+
+    { 30  ;2   ;Field     ;
+                Name=LanguageName;
+                CaptionML=ENU=Preferred Language;
+                ToolTipML=ENU=Specifies the preferred language for the contact.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=LanguageName;
+                Importance=Promoted;
+                Visible=FALSE;
+                OnValidate=VAR
+                             LanguageManagement@1001 : Codeunit LanguageManagement;
+                             NewLanguageCode@1000 : Code[10];
+                           BEGIN
+                             NewLanguageCode :=
+                               LanguageManagement.GetLanguageCodeFromLanguageID(
+                                 LanguageManagement.GetWindowsLanguageIDFromLanguageName(LanguageName));
+                             if NewLanguageCode <> '' then
+                               "Language Code" := NewLanguageCode;
+                             UpdateLanguageCodeOnUnpostedDocuments;
+                             CurrPage.UPDATE;
+                           END;
+
+                OnLookup=BEGIN
+                           LookupLanguage;
+                         END;
+
+                ImplicitType=Text;
+                QuickEntry=FALSE }
+
+    { 27  ;1   ;Group     ;
+                Name="Business Address";
+                CaptionML=ENU=Business Address;
+                GroupType=Group }
+
+    { 15  ;2   ;Field     ;
+                Name=Address;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Address;
+                ImplicitType=Text50 }
+
+    { 17  ;2   ;Field     ;
+                Name="Address 2";
+                ToolTipML=ENU=Specifies additional address information.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Address 2";
+                ImplicitType=Text50 }
+
+    { 22  ;2   ;Field     ;
+                Name=City;
+                Lookup=false;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=City;
+                ImplicitType=Text30 }
+
+    { 18  ;2   ;Field     ;
+                Name="Post Code";
+                Lookup=false;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Post Code";
+                ImplicitType=Code20 }
+
+    { 20  ;2   ;Field     ;
+                Name=County;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=County;
+                ImplicitType=Text30 }
+
+    { 23  ;2   ;Field     ;
+                Name=CountryRegionCode;
+                Lookup=true;
+                CaptionML=ENU=Country/Region Code;
+                ToolTipML=ENU=Specifies the country/region of the address.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=CountryRegionCode;
+                TableRelation="Country/Region";
+                LookupPageID="BC O365 Country/Region List";
+                OnValidate=BEGIN
+                             CountryRegionCode := O365SalesInvoiceMgmt.FindCountryCodeFromInput(CountryRegionCode);
+                             "Country/Region Code" := CountryRegionCode;
+                           END;
+
+                ImplicitType=Code10 }
+
+    { 28  ;1   ;Group     ;
+                Name="Sales and Payments";
+                CaptionML=ENU=Sales and Payments;
+                Visible=SalesAndPaymentsVisible;
+                GroupType=Group }
+
+    { 16  ;2   ;Group     ;
+                Name=Control16;
+                Visible=NOT TotalsHidden;
+                GroupType=Group }
+
+    { 5   ;3   ;Field     ;
+                Name="Balance (LCY)";
+                Lookup=false;
+                DrillDown=false;
+                CaptionML=ENU=Outstanding;
+                ToolTipML=ENU=Specifies the customer's balance.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Balance (LCY)";
+                AutoFormatType=10;
+                AutoFormatExpr='1';
+                ImplicitType=Decimal }
+
+    { 6   ;3   ;Field     ;
+                Name=OverdueAmount;
+                Lookup=false;
+                DrillDown=false;
+                CaptionML=ENU=Overdue;
+                ToolTipML=ENU=Specifies payments from the customer that are overdue per today's date.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=OverdueAmount;
+                AutoFormatType=10;
+                AutoFormatExpr='1';
+                Editable=FALSE;
+                Style=Unfavorable;
+                StyleExpr=OverdueAmount > 0;
+                ImplicitType=Decimal }
+
+    { 8   ;3   ;Field     ;
+                Name="Sales (LCY)";
+                Lookup=false;
+                DrillDown=false;
+                CaptionML=ENU=Total Sales (Excl. Tax);
+                ToolTipML=ENU=Specifies the total net amount of sales to the customer in $.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Sales (LCY)";
+                AutoFormatType=10;
+                AutoFormatExpr='1';
+                ImplicitType=Decimal }
+
+    { 13  ;2   ;Group     ;
+                Name=Control13;
+                Visible=("Contact Type" = "Contact Type"::Company) AND IsUsingVAT;
+                GroupType=Group }
+
+    { 21  ;3   ;Field     ;
+                Name="VAT Registration No.";
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="VAT Registration No.";
+                ImplicitType=Text20 }
+
+    { 12  ;1   ;Group     ;
+                Name=Tax Information;
+                CaptionML=ENU=Tax;
+                Visible=NOT IsUsingVAT;
+                GroupType=Group }
+
+    { 14  ;2   ;Field     ;
+                Name="Tax Liable";
+                ToolTipML=ENU=Specifies if the sales invoice contains sales tax.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Tax Liable";
+                ImplicitType=Boolean }
+
+    { 19  ;2   ;Field     ;
+                Name=TaxAreaDescription;
+                CaptionML=ENU=Tax Rate;
+                ToolTipML=ENU=Specifies the customer's tax area.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                NotBlank=true;
+                SourceExpr=TaxAreaDescription;
+                Importance=Promoted;
+                Editable=FALSE;
+                OnLookup=VAR
+                           TaxArea@1001 : Record "Tax Area";
+                         BEGIN
+                           if PAGE.RUNMODAL(PAGE::"O365 Tax Area List",TaxArea) = ACTION::LookupOK then begin
+                             VALIDATE("Tax Area Code",TaxArea.Code);
+                             TaxAreaDescription := TaxArea.GetDescriptionInCurrentLanguage;
+                           end;
+                         END;
+
+                OnAssistEdit=VAR
+                               TaxArea@1000 : Record "Tax Area";
+                             BEGIN
+                               if PAGE.RUNMODAL(PAGE::"O365 Tax Area List",TaxArea) = ACTION::LookupOK then begin
+                                 VALIDATE("Tax Area Code",TaxArea.Code);
+                                 TaxAreaDescription := TaxArea.GetDescriptionInCurrentLanguage;
+                                 CurrPage.UPDATE;
+                               end;
+                             END;
+
+                ImplicitType=Text50;
+                QuickEntry=FALSE }
+
+    { 34  ;1   ;Group     ;
+                Name=Status;
+                CaptionML=ENU=Status;
+                Visible=BlockedStatus;
+                GroupType=Group }
+
+    { 35  ;2   ;Field     ;
+                Name=BlockedStatus;
+                CaptionML=ENU=Blocked;
+                ToolTipML=ENU=Specifies if you want to block the customer for any further business.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=BlockedStatus;
+                OnValidate=BEGIN
+                             if not BlockedStatus then
+                               if CONFIRM(UnblockCustomerQst) then begin
+                                 VALIDATE(Blocked,Blocked::" ");
+                                 if not ContBusRel.FindByRelation(ContBusRel."Link to Table"::Customer,"No.") then
+                                   CustContUpdate.OnInsert(Rec)
+                               end else
+                                 BlockedStatus := true
+                             else
+                               VALIDATE(Blocked,Blocked::All)
+                           END;
+
+                ImplicitType=Boolean }
+
+    { 32  ;1   ;Group     ;
+                Name=Control32;
+                GroupType=Group }
+
+    { 31  ;2   ;Group     ;
+                Name=Privacy;
+                CaptionML=ENU=Privacy;
+                GroupType=Group;
+                InstructionalTextML=ENU=Export customer privacy data in an Excel file and email it to yourself for review before sending it to the customer. }
+
+    { 29  ;3   ;Field     ;
+                Name=ExportData;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=ExportDataLbl;
+                Editable=FALSE;
+                OnDrillDown=BEGIN
+                              SETRECFILTER;
+                              PAGE.RUNMODAL(PAGE::"O365 Export Customer Data",Rec);
+                            END;
+
+                ImplicitType=TextConst;
+                ShowCaption=false }
+
+  }
+  CODE
+  {
+    VAR
+      ContBusRel@1017 : Record "Contact Business Relation";
+      CustContUpdate@1006 : Codeunit "CustCont-Update";
+      O365SalesManagement@1013 : Codeunit "O365 Sales Management";
+      O365SalesInvoiceMgmt@1014 : Codeunit "O365 Sales Invoice Mgmt";
+      CustomerCardState@1000 : 'Keep,Delete,Prompt';
+      NewMode@1007 : Boolean;
+      IsUsingVAT@1005 : Boolean;
+      NewDocumentActionVisible@1010 : Boolean;
+      OverdueAmount@1008 : Decimal;
+      TaxAreaDescription@1004 : Text[50];
+      DeleteQst@1002 : TextConst 'ENU=Are you sure you want to delete the customer?';
+      TotalsHidden@1009 : Boolean;
+      SalesAndPaymentsVisible@1011 : Boolean;
+      LanguageName@1012 : Text;
+      ClosePageQst@1016 : TextConst 'ENU=You haven''t specified a name. Do you want to save this customer?';
+      CountryRegionCode@1015 : Code[10];
+      BlockedStatus@1022 : Boolean;
+      UnblockCustomerQst@1003 : TextConst 'ENU=Are you sure you want to unblock the customer for further business?';
+      ExportDataLbl@1001 : TextConst 'ENU=Export customer privacy data';
+
+    LOCAL PROCEDURE CanExitAfterProcessingCustomer@2() : Boolean;
+    BEGIN
+      if "No." = '' then
+        exit(true);
+
+      if CustomerCardState = CustomerCardState::Delete then
+        exit(DeleteCustomerRelatedData);
+
+      if GUIALLOWED and (CustomerCardState = CustomerCardState::Prompt) and not IsBlocked
+      then begin
+        if CONFIRM(ClosePageQst,true) then
+          exit(true);
+        exit(DeleteCustomerRelatedData);
+      end;
+
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE DeleteCustomerRelatedData@4() : Boolean;
+    BEGIN
+      CustContUpdate.DeleteCustomerContacts(Rec);
+
+      // workaround for bug: delete for new empty record returns false
+      if DELETE(true) then;
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE OnNewRec@1();
+    VAR
+      DocumentNoVisibility@1000 : Codeunit DocumentNoVisibility;
+    BEGIN
+      if GUIALLOWED and DocumentNoVisibility.CustomerNoSeriesIsDefault then
+        NewMode := true;
+    END;
+
+    LOCAL PROCEDURE CreateCustomerFromTemplate@3();
+    VAR
+      MiniCustomerTemplate@1001 : Record "Mini Customer Template";
+      Customer@1000 : Record Customer;
+      O365TaxSettingsManagement@1020000 : Codeunit "O365 Tax Settings Management";
+    BEGIN
+      if NewMode then begin
+        O365TaxSettingsManagement.CheckCustomerTemplateTaxIntegrity;
+        if MiniCustomerTemplate.NewCustomerFromTemplate(Customer) then
+          COPY(Customer);
+
+        TotalsHidden := true;
+
+        CustomerCardState := CustomerCardState::Delete;
+        NewMode := false;
+        CurrPage.UPDATE;
+      end;
+    END;
+
+    PROCEDURE SetNewDocumentActionsVisible@5();
+    BEGIN
+      NewDocumentActionVisible := true;
+    END;
+
+    LOCAL PROCEDURE LookupLanguage@11();
+    VAR
+      Language@1002 : Record Language;
+      LanguageManagement@1001 : Codeunit LanguageManagement;
+      LanguageID@1000 : Integer;
+    BEGIN
+      if "Language Code" <> '' then
+        if not Language.GET("Language Code") then
+          Language."Windows Language ID" := WINDOWSLANGUAGE;
+      LanguageID := Language."Windows Language ID";
+      LanguageManagement.LookupApplicationLanguage(LanguageID);
+      Language.SETRANGE("Windows Language ID",LanguageID);
+      if Language.FINDFIRST then
+        "Language Code" := Language.Code
+      else
+        "Language Code" := '';
+
+      UpdateLanguageCodeOnUnpostedDocuments;
+      CurrPage.UPDATE;
+    END;
+
+    LOCAL PROCEDURE UpdateLanguageCodeOnUnpostedDocuments@6();
+    VAR
+      SalesHeader@1002 : Record "Sales Header";
+    BEGIN
+      if "Language Code" = xRec."Language Code" then
+        exit;
+      SalesHeader.SETRANGE("Bill-to Customer No.","No.");
+      SalesHeader.MODIFYALL("Language Code","Language Code");
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

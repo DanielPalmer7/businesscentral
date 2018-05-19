@@ -1,0 +1,118 @@
+OBJECT Table 9510 Email Parameter
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160235.47T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Email Parameter;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Document No         ;Code20        ;CaptionML=ENU=Document No }
+    { 2   ;   ;Document Type       ;Option        ;TableRelation="Sales Header"."Document Type";
+                                                   CaptionML=ENU=Document Type;
+                                                   OptionCaptionML=ENU=Quote,Order,Invoice,Credit Memo,Blanket Order,Return Order;
+                                                   OptionString=Quote,Order,Invoice,"Credit Memo","Blanket Order","Return Order" }
+    { 3   ;   ;Parameter Type      ;Option        ;CaptionML=ENU=Parameter Type;
+                                                   OptionCaptionML=ENU=" ,Subject,Address,Body";
+                                                   OptionString=" ",Subject,Address,Body }
+    { 4   ;   ;Parameter Value     ;Text250       ;CaptionML=ENU=Parameter Value }
+    { 5   ;   ;Parameter BLOB      ;BLOB          ;CaptionML=ENU=Parameter BLOB }
+  }
+  KEYS
+  {
+    {    ;"Document No","Document Type","Parameter Type";
+                                                   Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      ParameterNotSupportedErr@1001 : TextConst 'ENU=Report usage is not supported.';
+
+    PROCEDURE GetEntryWithReportUsage@2(DocumentNo@1002 : Code[20];ReportUsage@1001 : Integer;ParameterType@1000 : Option) : Boolean;
+    VAR
+      ReportSelections@1004 : Record "Report Selections";
+      DocumentType@1003 : Option;
+    BEGIN
+      if not ReportSelections.ReportUsageToDocumentType(DocumentType,ReportUsage) then
+        exit(false);
+      exit(GET(DocumentNo,DocumentType,ParameterType));
+    END;
+
+    PROCEDURE GetParameterValue@1() : Text;
+    BEGIN
+      CALCFIELDS("Parameter BLOB");
+      if "Parameter BLOB".HASVALUE then
+        exit(GetTextFromBLOB);
+
+      exit("Parameter Value");
+    END;
+
+    PROCEDURE SaveParameterValue@3(DocumentNo@1000 : Code[20];DocumentType@1001 : Integer;ParameterType@1002 : Option;ParameterValue@1003 : Text);
+    VAR
+      ParameterAlreadyExists@1004 : Boolean;
+    BEGIN
+      ParameterAlreadyExists := GET(DocumentNo,DocumentType,ParameterType);
+      if not ParameterAlreadyExists then begin
+        INIT;
+        "Document No" := DocumentNo;
+        "Document Type" := DocumentType;
+        "Parameter Type" := ParameterType;
+      end;
+
+      CLEAR("Parameter Value");
+      CLEAR("Parameter BLOB");
+      if MAXSTRLEN("Parameter Value") > STRLEN(ParameterValue) then
+        "Parameter Value" := COPYSTR(ParameterValue,1,MAXSTRLEN("Parameter Value"))
+      else
+        WriteToBLOB(ParameterValue);
+
+      if ParameterAlreadyExists then
+        MODIFY
+      else
+        INSERT;
+    END;
+
+    PROCEDURE SaveParameterValueWithReportUsage@5(DocumentNo@1000 : Code[20];ReportUsage@1001 : Integer;ParameterType@1002 : Option;ParameterValue@1003 : Text);
+    VAR
+      ReportSelections@1005 : Record "Report Selections";
+      DocumentType@1004 : Option;
+    BEGIN
+      if not ReportSelections.ReportUsageToDocumentType(DocumentType,ReportUsage) then
+        ERROR(ParameterNotSupportedErr);
+      SaveParameterValue(DocumentNo,DocumentType,ParameterType,ParameterValue);
+    END;
+
+    LOCAL PROCEDURE WriteToBLOB@15(ParameterValue@1004 : Text);
+    VAR
+      TempBlob@1000 : Record TempBlob;
+    BEGIN
+      CLEAR("Parameter BLOB");
+      TempBlob.WriteAsText(ParameterValue,TEXTENCODING::Windows);
+      "Parameter BLOB" := TempBlob.Blob;
+    END;
+
+    LOCAL PROCEDURE GetTextFromBLOB@14() : Text;
+    VAR
+      TempBlob@1000 : Record TempBlob;
+      CR@1001 : Text[1];
+    BEGIN
+      CALCFIELDS("Parameter BLOB");
+      CR[1] := 10;
+      TempBlob.Blob := "Parameter BLOB";
+      exit(TempBlob.ReadAsText(CR,TEXTENCODING::Windows));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

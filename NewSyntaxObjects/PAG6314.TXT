@@ -1,0 +1,82 @@
+OBJECT Page 6314 PBI Sales Pipeline
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161545.617T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=PBI Sales Pipeline;
+    SourceTable="Power BI Chart Buffer";
+    PageType=List;
+    SourceTableTemporary=true;
+    OnOpenPage=VAR
+                 PBISalesPipelineChartCalc@1000 : Codeunit "PBI Sales Pipeline Chart Calc.";
+               BEGIN
+                 PBISalesPipelineChartCalc.GetValues(Rec);
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=ID;
+                CaptionML=ENU=ID;
+                ToolTipML=ENU=Specifies the ID.;
+                ApplicationArea=#All;
+                SourceExpr=ID;
+                ImplicitType=Integer }
+
+    { 6   ;2   ;Field     ;
+                Name="Row No.";
+                CaptionML=ENU=Stage;
+                ToolTipML=ENU=Specifies the stage of the sales pipeline that this entry is at.;
+                ApplicationArea=#All;
+                SourceExpr="Row No.";
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=Value;
+                CaptionML=ENU=Value;
+                ToolTipML=ENU=Specifies the value.;
+                ApplicationArea=#All;
+                SourceExpr=Value;
+                ImplicitType=Decimal }
+
+    { 7   ;2   ;Field     ;
+                Name="Measure Name";
+                CaptionML=ENU=Measure Name;
+                ToolTipML=ENU=Specifies the name.;
+                ApplicationArea=#All;
+                SourceExpr="Measure Name";
+                ImplicitType=Text120 }
+
+    { 5   ;2   ;Field     ;
+                Name="Measure No.";
+                CaptionML=ENU=Sales Cycle Code;
+                ToolTipML=ENU=Specifies a code for the sales process.;
+                ApplicationArea=#All;
+                SourceExpr="Measure No.";
+                ImplicitType=Code20 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

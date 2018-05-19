@@ -1,0 +1,46 @@
+OBJECT Page 10240 B10 Adjustments
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161723.670T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=B10 Adjustments;
+    SourceTable="B10 Adjustment";
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1480000;1;Group     ;
+                Name=Control1480000;
+                GroupType=Repeater }
+
+    { 1480003;2;Field     ;
+                Name=Date;
+                ToolTipML=ENU=Specifies the effective date of the B-10 adjustment rate.;
+                SourceExpr=Date;
+                ImplicitType=Date }
+
+    { 1480005;2;Field     ;
+                Name="Adjustment Amount";
+                ToolTipML=ENU=Specifies the published B-10 amount for the effective date.;
+                SourceExpr="Adjustment Amount";
+                ImplicitType=Decimal }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,37 @@
+OBJECT Table 5919 Resolution Code
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160207.173T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Resolution Code;
+    LookupPageID="Resolution Codes";
+    DrillDownPageID="Resolution Codes";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text80        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+    {    ;Description                              }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

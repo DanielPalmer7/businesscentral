@@ -1,0 +1,35 @@
+OBJECT Table 5944 Troubleshooting Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160208.337T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Troubleshooting Line;
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;TableRelation="Troubleshooting Header";
+                                                   CaptionML=ENU=No. }
+    { 2   ;   ;Line No.            ;Integer       ;CaptionML=ENU=Line No. }
+    { 3   ;   ;Comment             ;Text80        ;CaptionML=ENU=Comment }
+  }
+  KEYS
+  {
+    {    ;"No.","Line No."                        ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

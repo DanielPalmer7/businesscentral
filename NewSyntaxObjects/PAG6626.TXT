@@ -1,0 +1,161 @@
+OBJECT Page 6626 Purchase Line Archive List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161558.120T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Purchase Line Archive List;
+    SourceTable="Purchase Line Archive";
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 18      ;0   ;ActionContainer;
+                      Name=ActionContainer18;
+                      ActionContainerType=RelatedInformation }
+      { 17      ;1   ;ActionGroup;
+                      Name="&Line";
+                      CaptionML=ENU=&Line;
+                      Image=Line }
+      { 16      ;2   ;Action    ;
+                      Name=ShowDocument;
+                      CaptionML=ENU=Show Document;
+                      ToolTipML=ENU=View the related document.;
+                      ApplicationArea=#Basic,#Suite;
+                      Image=View;
+                      OnAction=VAR
+                                 PurchaseHeaderArchive@1000 : Record "Purchase Header Archive";
+                               BEGIN
+                                 PurchaseHeaderArchive.GET("Document Type","Document No.","Doc. No. Occurrence","Version No.");
+                                 case "Document Type" of
+                                   "Document Type"::Order:
+                                     PAGE.RUN(PAGE::"Purchase Order Archive",PurchaseHeaderArchive);
+                                   "Document Type"::Quote:
+                                     PAGE.RUN(PAGE::"Purchase Quote Archive",PurchaseHeaderArchive);
+                                   "Document Type"::"Blanket Order":
+                                     PAGE.RUN(PAGE::"Blanket Purchase Order Archive",PurchaseHeaderArchive);
+                                   "Document Type"::"Return Order":
+                                     PAGE.RUN(PAGE::"Purchase Return Order Archive",PurchaseHeaderArchive);
+                                 end;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 15  ;0   ;Container ;
+                Name=Control15;
+                ContainerType=ContentArea }
+
+    { 14  ;1   ;Group     ;
+                Name=Control14;
+                GroupType=Repeater }
+
+    { 13  ;2   ;Field     ;
+                Name="Document Type";
+                ToolTipML=ENU=Specifies the type of purchase document.;
+                ApplicationArea=#All;
+                SourceExpr="Document Type";
+                ImplicitType=Option }
+
+    { 12  ;2   ;Field     ;
+                Name="Document No.";
+                ToolTipML=ENU=Specifies the document number.;
+                ApplicationArea=#All;
+                SourceExpr="Document No.";
+                ImplicitType=Code20 }
+
+    { 11  ;2   ;Field     ;
+                Name="Buy-from Vendor No.";
+                ToolTipML=ENU=Specifies the name of the vendor who delivered the items.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Buy-from Vendor No.";
+                ImplicitType=Code20 }
+
+    { 10  ;2   ;Field     ;
+                Name="Line No.";
+                ToolTipML=ENU=Specifies the number of the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Line No.";
+                Visible=FALSE;
+                ImplicitType=Integer }
+
+    { 9   ;2   ;Field     ;
+                Name=Type;
+                ToolTipML=ENU=Specifies the entry type.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Type;
+                ImplicitType=Option }
+
+    { 8   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the archived purchase line.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                ImplicitType=Code20 }
+
+    { 7   ;2   ;Field     ;
+                Name="Variant Code";
+                ToolTipML=ENU=Specifies the variant of the item on the line.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Variant Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 6   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the record.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+    { 5   ;2   ;Field     ;
+                Name="Location Code";
+                ToolTipML=ENU=Specifies a code for the location where you want the items to be placed when they are received.;
+                ApplicationArea=#Location;
+                SourceExpr="Location Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 4   ;2   ;Field     ;
+                Name="Unit of Measure";
+                ToolTipML=ENU=Specifies the unit of measure used for the item, for example bottle or piece.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Unit of Measure";
+                ImplicitType=Text10 }
+
+    { 3   ;2   ;Field     ;
+                Name=Quantity;
+                ToolTipML=ENU=Specifies the quantity of the record.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Quantity;
+                ImplicitType=Decimal }
+
+    { 2   ;2   ;Field     ;
+                Name=Amount;
+                ToolTipML=ENU=Specifies the sum of amounts in the Line Amount field on the purchase lines.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Amount;
+                ImplicitType=Decimal }
+
+    { 1   ;2   ;Field     ;
+                Name="Amount Including VAT";
+                ToolTipML=ENU=Specifies the net amount, including Tax, for this line.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Amount Including VAT";
+                ImplicitType=Decimal }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

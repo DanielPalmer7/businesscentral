@@ -1,0 +1,193 @@
+OBJECT Page 9017 Service Technician Role Center
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161633.923T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[@@@="{Dependency=Match,""ProfileDescription_OUTBOUNDTECHNICIAN""}";
+               ENU=Outbound Technician - Customer Service];
+    PageType=RoleCenter;
+    ActionList=ACTIONS
+    {
+      { 1900000006;0 ;ActionContainer;
+                      Name=ActionContainer1900000006;
+                      ActionContainerType=Reports }
+      { 12      ;1   ;Action    ;
+                      Name="Service &Order";
+                      CaptionML=ENU=Service &Order;
+                      ToolTipML=ENU=Create a new service order to perform service on a customer's item.;
+                      ApplicationArea=#Service;
+                      RunObject=Report "Service Order";
+                      Image=Document }
+      { 13      ;1   ;Action    ;
+                      Name="Service Items Out of &Warranty";
+                      CaptionML=ENU=Service Items Out of &Warranty;
+                      ToolTipML=ENU=View information about warranty end dates, serial numbers, number of active contracts, items description, and names of customers. You can print a list of service items that are out of warranty.;
+                      ApplicationArea=#Service;
+                      RunObject=Report "Service Items Out of Warranty";
+                      Image=Report }
+      { 14      ;1   ;Action    ;
+                      Name="Service Item &Line Labels";
+                      CaptionML=ENU=Service Item &Line Labels;
+                      ToolTipML=ENU=View the list of service items on service orders. The report shows the order number, service item number, serial number, and the name of the item.;
+                      ApplicationArea=#Service;
+                      RunObject=Report "Service Item Line Labels";
+                      Image=Report }
+      { 15      ;1   ;Action    ;
+                      Name="Service &Item Worksheet";
+                      CaptionML=ENU=Service &Item Worksheet;
+                      ToolTipML=ENU=View or edit information about service items, such as repair status, fault comments and codes, and cost. In this window, you can update information on the items such as repair status and fault and resolution codes. You can also enter new service lines for resource hours, for the use of spare parts and for specific service costs.;
+                      ApplicationArea=#Service;
+                      RunObject=Report "Service Item Worksheet";
+                      Image=ServiceItemWorksheet }
+      { 1900000011;0 ;ActionContainer;
+                      Name=ActionContainer1900000011;
+                      ActionContainerType=HomeItems }
+      { 5       ;1   ;Action    ;
+                      Name=ServiceOrders;
+                      CaptionML=ENU=Service Orders;
+                      ToolTipML=ENU=Open the list of ongoing service orders.;
+                      ApplicationArea=#Service;
+                      RunObject=Page "Service Orders";
+                      Image=Document }
+      { 17      ;1   ;Action    ;
+                      Name=ServiceOrdersInProcess;
+                      CaptionML=ENU=In Process;
+                      ToolTipML=ENU="View ongoing service orders. ";
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Service Orders";
+                      RunPageView=WHERE(Status=FILTER("In Process")) }
+      { 6       ;1   ;Action    ;
+                      Name="Service Item Lines";
+                      CaptionML=ENU=Service Item Lines;
+                      ToolTipML=ENU=View the list of ongoing service item lines.;
+                      ApplicationArea=#Service;
+                      RunObject=Page "Service Item Lines" }
+      { 18      ;1   ;Action    ;
+                      Name=Customers;
+                      CaptionML=ENU=Customers;
+                      ToolTipML=ENU=View or edit detailed information for the customers that you trade with. From each customer card, you can open related information, such as sales statistics and ongoing orders, and you can define special prices and line discounts that you grant if certain conditions are met.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Customer List";
+                      Image=Customer }
+      { 19      ;1   ;Action    ;
+                      Name=Loaners;
+                      CaptionML=ENU=Loaners;
+                      ToolTipML=ENU=View or select from items that you lend out temporarily to customers to replace items that they have in service.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Loaner List";
+                      Image=Loaners }
+      { 20      ;1   ;Action    ;
+                      Name="Service Items";
+                      CaptionML=ENU=Service Items;
+                      ToolTipML=ENU=View the list of service items.;
+                      ApplicationArea=#Service;
+                      RunObject=Page "Service Item List";
+                      Image=ServiceItem }
+      { 22      ;1   ;Action    ;
+                      Name=Items;
+                      CaptionML=ENU=Items;
+                      ToolTipML=ENU=View or edit detailed information for the products that you trade in. The item card can be of type Inventory or Service to specify if the item is a physical unit or a labor time unit. Here you also define if items in inventory or on incoming orders are automatically reserved for outbound documents and whether order tracking links are created between demand and supply to reflect planning actions.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Item List";
+                      Image=Item }
+      { 1900000012;0 ;ActionContainer;
+                      Name=ActionContainer1900000012;
+                      ActionContainerType=ActivityButtons }
+      { 1       ;0   ;ActionContainer;
+                      Name=ActionContainer1;
+                      ActionContainerType=NewDocumentItems }
+      { 3       ;1   ;Action    ;
+                      Name=Action3;
+                      CaptionML=ENU=Service &Order;
+                      ToolTipML=ENU=Create a new service order to perform service on a customer's item.;
+                      ApplicationArea=#Service;
+                      RunObject=Page "Service Order";
+                      Promoted=false;
+                      Image=Document;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 2       ;1   ;Action    ;
+                      Name="&Loaner";
+                      CaptionML=ENU=&Loaner;
+                      ToolTipML=ENU=View or select from items that you lend out temporarily to customers to replace items that they have in service.;
+                      ApplicationArea=#Service;
+                      RunObject=Page "Loaner Card";
+                      Promoted=false;
+                      Image=Loaner;
+                      PromotedCategory=Process;
+                      RunPageMode=Create }
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 7       ;1   ;Separator ;
+                      Name=Tasks;
+                      CaptionML=ENU=Tasks;
+                      IsHeader=true }
+      { 10      ;1   ;Action    ;
+                      Name="Service Item &Worksheet";
+                      CaptionML=ENU=Service Item &Worksheet;
+                      ToolTipML=ENU=Prepare to record service hours and spare parts used, repair status, fault comments, and cost.;
+                      ApplicationArea=#Service;
+                      RunObject=Page "Service Item Worksheet";
+                      Image=ServiceItemWorksheet }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000008;0;Container;
+                Name=Control1900000008;
+                ContainerType=RoleCenterArea }
+
+    { 1900724808;1;Group  ;
+                Name=Control1900724808 }
+
+    { 1900744308;2;Part   ;
+                Name=Control1900744308;
+                ApplicationArea=#Advanced;
+                PagePartID="Serv Outbound Technician Act.";
+                PartType=Page }
+
+    { 1900724708;1;Group  ;
+                Name=Control1900724708 }
+
+    { 8   ;2   ;Part      ;
+                Name=Control8;
+                ApplicationArea=#Advanced;
+                PagePartID="My Job Queue";
+                Visible=false;
+                PartType=Page }
+
+    { 1907692008;2;Part   ;
+                Name=Control1907692008;
+                ApplicationArea=#Advanced;
+                PagePartID="My Customers";
+                PartType=Page }
+
+    { 4   ;2   ;Part      ;
+                Name=Control4;
+                ApplicationArea=#Advanced;
+                PagePartID="Report Inbox Part";
+                Visible=FALSE;
+                PartType=Page }
+
+    { 1901377608;2;Part   ;
+                Name=Control1901377608;
+                ApplicationArea=#Advanced;
+                PartType=System;
+                SystemPartID=MyNotes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,441 @@
+OBJECT Page 9303 Blanket Sales Orders
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161700.130T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Blanket Sales Orders;
+    SourceTable="Sales Header";
+    SourceTableView=WHERE("Document Type"=CONST("Blanket Order"));
+    DataCaptionFields="Sell-to Customer No.";
+    PageType=List;
+    CardPageID="Blanket Sales Order";
+    RefreshOnActivate=true;
+    PromotedActionCategoriesML=ENU=New,Process,Report,Request Approval;
+    OnOpenPage=BEGIN
+                 SetSecurityFilterOnRespCenter;
+
+                 CopySellToCustomerFilter;
+               END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           SetControlAppearance;
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      Name=ActionContainer1900000003;
+                      ActionContainerType=RelatedInformation }
+      { 1102601015;1 ;ActionGroup;
+                      Name="O&rder";
+                      CaptionML=ENU=O&rder;
+                      Image=Order }
+      { 1102601017;2 ;Action    ;
+                      Name=Statistics;
+                      ShortCutKey=F7;
+                      CaptionML=ENU=Statistics;
+                      ToolTipML=ENU=View statistical information, such as the value of posted entries, for the record.;
+                      ApplicationArea=#Suite,#Advanced;
+                      Promoted=true;
+                      Image=Statistics;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 OnBeforeCalculateSalesTaxStatistics(Rec,true);
+                                 OpenSalesOrderStatistics;
+                               END;
+                                }
+      { 1102601019;2 ;Action    ;
+                      Name="Co&mments";
+                      CaptionML=ENU=Co&mments;
+                      ToolTipML=ENU=View or add comments for the record.;
+                      ApplicationArea=#Suite,#Advanced;
+                      RunObject=Page "Sales Comment Sheet";
+                      RunPageLink="Document Type"=CONST("Blanket Order"),
+                                  "No."=FIELD("No."),
+                                  "Document Line No."=CONST(0);
+                      Image=ViewComments }
+      { 1102601020;2 ;Action    ;
+                      Name=Dimensions;
+                      AccessByPermission=TableData Dimension=R;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=ENU=Dimensions;
+                      ToolTipML=ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                      ApplicationArea=#Dimensions;
+                      Image=Dimensions;
+                      OnAction=BEGIN
+                                 ShowDocDim;
+                               END;
+                                }
+      { 1102601021;2 ;Action    ;
+                      Name=Approvals;
+                      AccessByPermission=TableData "Approval Entry"=R;
+                      CaptionML=ENU=Approvals;
+                      ToolTipML=ENU=View a list of the records that are waiting to be approved. For example, you can see who requested the record to be approved, when it was sent, and when it is due to be approved.;
+                      ApplicationArea=#Suite,#Advanced;
+                      Image=Approvals;
+                      OnAction=VAR
+                                 WorkflowsEntriesBuffer@1000 : Record "Workflows Entries Buffer";
+                               BEGIN
+                                 WorkflowsEntriesBuffer.RunWorkflowEntriesPage(RECORDID,DATABASE::"Sales Header","Document Type","No.");
+                               END;
+                                }
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 1102601000;1 ;ActionGroup;
+                      Name="F&unctions";
+                      CaptionML=ENU=F&unctions;
+                      Image=Action }
+      { 1102601013;2 ;Action    ;
+                      Name="Re&lease";
+                      ShortCutKey=Ctrl+F9;
+                      CaptionML=ENU=Re&lease;
+                      ToolTipML=ENU=Release the document to the next stage of processing. When a document is released, it will be included in all availability calculations from the expected receipt date of the items. You must reopen the document before you can make changes to it.;
+                      ApplicationArea=#Suite,#Advanced;
+                      Image=ReleaseDoc;
+                      OnAction=VAR
+                                 ReleaseSalesDoc@1000 : Codeunit "Release Sales Document";
+                               BEGIN
+                                 ReleaseSalesDoc.PerformManualRelease(Rec);
+                               END;
+                                }
+      { 1102601014;2 ;Action    ;
+                      Name="Re&open";
+                      CaptionML=ENU=Re&open;
+                      ToolTipML=ENU=Reopen the document to change it after it has been approved. Approved documents have the Released status and must be opened before they can be changed;
+                      ApplicationArea=#Suite,#Advanced;
+                      Image=ReOpen;
+                      OnAction=VAR
+                                 ReleaseSalesDoc@1001 : Codeunit "Release Sales Document";
+                               BEGIN
+                                 ReleaseSalesDoc.PerformManualReopen(Rec);
+                               END;
+                                }
+      { 73      ;1   ;Action    ;
+                      Name="Make &Order";
+                      CaptionML=ENU=Make &Order;
+                      ToolTipML=ENU=Convert the blanket sales order to a sales order.;
+                      ApplicationArea=#Suite,#Advanced;
+                      Promoted=true;
+                      Image=MakeOrder;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ApprovalsMgmt@1001 : Codeunit "Approvals Mgmt.";
+                               BEGIN
+                                 if ApprovalsMgmt.PrePostApprovalCheckSales(Rec) then
+                                   CODEUNIT.RUN(CODEUNIT::"Blnkt Sales Ord. to Ord. (Y/N)",Rec);
+                               END;
+                                }
+      { 78      ;1   ;Action    ;
+                      Name=Print;
+                      Ellipsis=true;
+                      CaptionML=ENU=&Print;
+                      ToolTipML=ENU=Prepare to print the document. A report request window for the document opens where you can specify what to include on the print-out.;
+                      ApplicationArea=#Suite,#Advanced;
+                      Promoted=true;
+                      Image=Print;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 DocPrint.PrintSalesHeader(Rec);
+                               END;
+                                }
+      { 3       ;1   ;ActionGroup;
+                      Name="Request Approval";
+                      CaptionML=ENU=Request Approval }
+      { 1102601010;2 ;Action    ;
+                      Name=SendApprovalRequest;
+                      CaptionML=ENU=Send A&pproval Request;
+                      ToolTipML=ENU=Request approval of the document.;
+                      ApplicationArea=#Suite,#Advanced;
+                      Promoted=true;
+                      Enabled=NOT OpenApprovalEntriesExist;
+                      PromotedIsBig=true;
+                      Image=SendApprovalRequest;
+                      PromotedCategory=Category4;
+                      PromotedOnly=true;
+                      OnAction=VAR
+                                 ApprovalsMgmt@1000 : Codeunit "Approvals Mgmt.";
+                               BEGIN
+                                 if ApprovalsMgmt.CheckSalesApprovalPossible(Rec) then
+                                   ApprovalsMgmt.OnSendSalesDocForApproval(Rec);
+                               END;
+                                }
+      { 1102601011;2 ;Action    ;
+                      Name=CancelApprovalRequest;
+                      CaptionML=ENU=Cancel Approval Re&quest;
+                      ToolTipML=ENU=Cancel the approval request.;
+                      ApplicationArea=#Suite,#Advanced;
+                      Promoted=true;
+                      Enabled=CanCancelApprovalForRecord;
+                      PromotedIsBig=true;
+                      Image=CancelApprovalRequest;
+                      PromotedCategory=Category4;
+                      PromotedOnly=true;
+                      OnAction=VAR
+                                 ApprovalsMgmt@1000 : Codeunit "Approvals Mgmt.";
+                               BEGIN
+                                 ApprovalsMgmt.OnCancelSalesApprovalRequest(Rec);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the involved entry or record, according to the specified number series.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="No.";
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name="Sell-to Customer No.";
+                ToolTipML=ENU=Specifies the number of the customer.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Sell-to Customer No.";
+                ImplicitType=Code20 }
+
+    { 6   ;2   ;Field     ;
+                Name="Sell-to Customer Name";
+                ToolTipML=ENU=Specifies the name of the customer.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Sell-to Customer Name";
+                ImplicitType=Text50 }
+
+    { 17  ;2   ;Field     ;
+                Name="External Document No.";
+                ToolTipML=ENU=Specifies a document number that refers to the customer's or vendor's numbering system.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="External Document No.";
+                ImplicitType=Code35 }
+
+    { 33  ;2   ;Field     ;
+                Name="Sell-to Post Code";
+                ToolTipML=ENU=Specifies the ZIP Code of the customer's main address.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Sell-to Post Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 29  ;2   ;Field     ;
+                Name="Sell-to Country/Region Code";
+                ToolTipML=ENU=Specifies the country/region code of the customer's main address.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Sell-to Country/Region Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 41  ;2   ;Field     ;
+                Name="Sell-to Contact";
+                ToolTipML=ENU=Specifies the name of the contact person at the customer's main address.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Sell-to Contact";
+                Visible=FALSE;
+                ImplicitType=Text50 }
+
+    { 13  ;2   ;Field     ;
+                Name="Bill-to Customer No.";
+                ToolTipML=ENU=Specifies the number of the customer that you send or sent the invoice or credit memo to.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Bill-to Customer No.";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 15  ;2   ;Field     ;
+                Name="Bill-to Name";
+                ToolTipML=ENU=Specifies the name of the customer that you send or sent the invoice or credit memo to.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Bill-to Name";
+                Visible=FALSE;
+                ImplicitType=Text50 }
+
+    { 39  ;2   ;Field     ;
+                Name="Bill-to Post Code";
+                ToolTipML=ENU=Specifies the ZIP Code of the customer's billing address.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Bill-to Post Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 35  ;2   ;Field     ;
+                Name="Bill-to Country/Region Code";
+                ToolTipML=ENU=Specifies the country/region code of the customer's billing address.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Bill-to Country/Region Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 159 ;2   ;Field     ;
+                Name="Bill-to Contact";
+                ToolTipML=ENU=Specifies the name of the contact person at the customer's billing address.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Bill-to Contact";
+                Visible=FALSE;
+                ImplicitType=Text50 }
+
+    { 155 ;2   ;Field     ;
+                Name="Ship-to Code";
+                ToolTipML=ENU=Specifies a code for an alternate shipment address if you want to ship to another address than the one that has been entered automatically. This field is also used in case of drop shipment.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Ship-to Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 153 ;2   ;Field     ;
+                Name="Ship-to Name";
+                ToolTipML=ENU=Specifies the name of the customer at the address that the items are shipped to.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Ship-to Name";
+                Visible=FALSE;
+                ImplicitType=Text50 }
+
+    { 27  ;2   ;Field     ;
+                Name="Ship-to Post Code";
+                ToolTipML=ENU=Specifies the ZIP Code of the address that the items are shipped to.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Ship-to Post Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 23  ;2   ;Field     ;
+                Name="Ship-to Country/Region Code";
+                ToolTipML=ENU=Specifies the country/region code of the address that the items are shipped to.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Ship-to Country/Region Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 143 ;2   ;Field     ;
+                Name="Ship-to Contact";
+                ToolTipML=ENU=Specifies the name of the contact person at the address that the items are shipped to.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Ship-to Contact";
+                Visible=FALSE;
+                ImplicitType=Text50 }
+
+    { 139 ;2   ;Field     ;
+                Name="Posting Date";
+                ToolTipML=ENU=Specifies the date when the posting of the sales document will be recorded.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Posting Date";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 121 ;2   ;Field     ;
+                Name="Shortcut Dimension 1 Code";
+                ToolTipML=ENU=Specifies the code for Shortcut Dimension 1, which is one of two global dimension codes that you set up in the General Ledger Setup window.;
+                ApplicationArea=#Dimensions;
+                SourceExpr="Shortcut Dimension 1 Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 119 ;2   ;Field     ;
+                Name="Shortcut Dimension 2 Code";
+                ToolTipML=ENU=Specifies the code for Shortcut Dimension 2, which is one of two global dimension codes that you set up in the General Ledger Setup window.;
+                ApplicationArea=#Dimensions;
+                SourceExpr="Shortcut Dimension 2 Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 123 ;2   ;Field     ;
+                Name="Location Code";
+                ToolTipML=ENU=Specifies the location from where inventory items to the customer on the sales document are to be shipped by default.;
+                ApplicationArea=#Location;
+                SourceExpr="Location Code";
+                ImplicitType=Code10 }
+
+    { 99  ;2   ;Field     ;
+                Name="Salesperson Code";
+                ToolTipML=ENU=Specifies the name of the sales person who is assigned to the customer.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Salesperson Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 21  ;2   ;Field     ;
+                Name="Assigned User ID";
+                ToolTipML=ENU=Specifies the ID of the user who is responsible for the document.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Assigned User ID";
+                ImplicitType=Code50 }
+
+    { 11  ;2   ;Field     ;
+                Name="Currency Code";
+                ToolTipML=ENU=Specifies the currency of amounts on the sales document.;
+                ApplicationArea=#Suite,#Advanced;
+                SourceExpr="Currency Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1902018507;1;Part   ;
+                Name=Control1902018507;
+                ApplicationArea=#Suite,#Advanced;
+                SubPageLink="No."=FIELD("Bill-to Customer No.");
+                PagePartID="Customer Statistics FactBox";
+                PartType=Page }
+
+    { 1900316107;1;Part   ;
+                Name=Control1900316107;
+                ApplicationArea=#Suite,#Advanced;
+                SubPageLink="No."=FIELD("Sell-to Customer No.");
+                PagePartID="Customer Details FactBox";
+                PartType=Page }
+
+    { 1900383207;1;Part   ;
+                Name=Control1900383207;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      DocPrint@1102601000 : Codeunit "Document-Print";
+      OpenApprovalEntriesExist@1002 : Boolean;
+      CanCancelApprovalForRecord@1000 : Boolean;
+
+    LOCAL PROCEDURE SetControlAppearance@5();
+    VAR
+      ApprovalsMgmt@1000 : Codeunit "Approvals Mgmt.";
+    BEGIN
+      OpenApprovalEntriesExist := ApprovalsMgmt.HasOpenApprovalEntries(RECORDID);
+
+      CanCancelApprovalForRecord := ApprovalsMgmt.CanCancelApprovalForRecord(RECORDID);
+    END;
+
+    [Integration]
+    [External]
+    LOCAL PROCEDURE OnBeforeCalculateSalesTaxStatistics@1020000(VAR SalesHeader@1000 : Record "Sales Header";ShowDialog@1001 : Boolean);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

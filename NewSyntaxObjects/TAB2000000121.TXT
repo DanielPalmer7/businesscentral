@@ -1,0 +1,39 @@
+OBJECT Table 2000000121 User Property
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.803T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;User Security ID    ;GUID          ;TableRelation=User."User Security ID";
+                                                   TestTableRelation=false }
+    { 2   ;   ;Password            ;Text80         }
+    { 3   ;   ;Name Identifier     ;Text250        }
+    { 4   ;   ;Authentication Key  ;Text80         }
+    { 5   ;   ;WebServices Key     ;Text80         }
+    { 6   ;   ;WebServices Key Expiry Date;DateTime }
+    { 7   ;   ;Authentication Object ID;Text80     }
+    { 8   ;   ;Directory Role ID   ;Text80         }
+  }
+  KEYS
+  {
+    {    ;"User Security ID"                      ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

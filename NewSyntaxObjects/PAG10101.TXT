@@ -1,0 +1,398 @@
+OBJECT Page 10101 Sales Tax Journal
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161719.750T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Sales Tax Journal;
+    SaveValues=true;
+    SourceTable="Gen. Journal Line";
+    DelayedInsert=true;
+    DataCaptionFields="Journal Batch Name";
+    PageType=Card;
+    AutoSplitKey=true;
+    OnInit=BEGIN
+             TotalBalanceVisible := true;
+             BalanceVisible := true;
+           END;
+
+    OnOpenPage=VAR
+                 JnlSelected@1030000 : Boolean;
+               BEGIN
+                 BalAccName := '';
+                 OpenedFromBatch := ("Journal Batch Name" <> '') and ("Journal Template Name" = '');
+                 if OpenedFromBatch then begin
+                   CurrentJnlBatchName := "Journal Batch Name";
+                   GenJnlManagement.OpenJnl(CurrentJnlBatchName,Rec);
+                   exit;
+                 end;
+                 GenJnlManagement.TemplateSelection(PAGE::"Sales Tax Journal",10,false,Rec,JnlSelected);
+                 if not JnlSelected then
+                   ERROR('');
+                 GenJnlManagement.OpenJnl(CurrentJnlBatchName,Rec);
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       ShowShortcutDimCode(ShortcutDimCode);
+                       AfterGetCurrentRecord;
+                     END;
+
+    OnNewRecord=BEGIN
+                  UpdateBalance;
+                  SetUpNewLine(xRec,Balance,BelowxRec);
+                  CLEAR(ShortcutDimCode);
+                  CLEAR(AccName);
+                  AfterGetCurrentRecord;
+                END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      Name=ActionContainer1900000003;
+                      ActionContainerType=RelatedInformation }
+      { 1030000 ;1   ;ActionGroup;
+                      Name="&Line";
+                      CaptionML=ENU=&Line;
+                      Image=Line }
+      { 1030001 ;2   ;Action    ;
+                      Name=Dimensions;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=ENU=Dimensions;
+                      ToolTipML=ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                      ApplicationArea=#Suite;
+                      Promoted=true;
+                      Image=Dimensions;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 ShowDimensions;
+                                 CurrPage.SAVERECORD;
+                               END;
+                                }
+      { 1030002 ;1   ;ActionGroup;
+                      Name="A&ccount";
+                      CaptionML=ENU=A&ccount;
+                      Image=ChartOfAccounts }
+      { 1030003 ;2   ;Action    ;
+                      Name=Card;
+                      ShortCutKey=Shift+F7;
+                      CaptionML=ENU=Card;
+                      ToolTipML=ENU=Open the card for the customer.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Codeunit "Gen. Jnl.-Show Card";
+                      Image=EditLines }
+      { 1030004 ;2   ;Action    ;
+                      Name="Ledger E&ntries";
+                      ShortCutKey=Ctrl+F7;
+                      CaptionML=ENU=Ledger E&ntries;
+                      ToolTipML=ENU=View the history of transactions that have been posted for the selected record.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Codeunit "Gen. Jnl.-Show Entries" }
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 1030005 ;1   ;ActionGroup;
+                      Name="P&osting";
+                      CaptionML=ENU=P&osting;
+                      Image=Post }
+      { 1030006 ;2   ;Action    ;
+                      Name=Reconcile;
+                      ShortCutKey=Ctrl+F11;
+                      CaptionML=ENU=Reconcile;
+                      ToolTipML=ENU="View the balances on bank accounts that are marked for reconciliation, usually liquid accounts. ";
+                      ApplicationArea=#Basic,#Suite;
+                      Image=Reconcile;
+                      OnAction=BEGIN
+                                 GenJnlLine.COPY(Rec);
+                                 ManageSalesTaxJournal.CreateTempGenJnlLines(GenJnlLine,TempGenJnlLine);
+                                 GLReconcile.SetGenJnlLine(TempGenJnlLine);
+                                 GLReconcile.RUN;
+                               END;
+                                }
+      { 1030007 ;2   ;Action    ;
+                      Name="Test Report";
+                      Ellipsis=true;
+                      CaptionML=ENU=Test Report;
+                      ToolTipML=ENU=View a test report so that you can find and correct any errors before you perform the actual posting of the journal or document.;
+                      ApplicationArea=#Basic,#Suite;
+                      Image=TestReport;
+                      OnAction=BEGIN
+                                 GenJnlLine.COPY(Rec);
+                                 ManageSalesTaxJournal.CreateTempGenJnlLines(GenJnlLine,TempGenJnlLine);
+                                 ReportPrint.PrintGenJnlLine(TempGenJnlLine);
+                               END;
+                                }
+      { 1030008 ;2   ;Action    ;
+                      Name=Post;
+                      ShortCutKey=F9;
+                      CaptionML=ENU=P&ost;
+                      ToolTipML=ENU=Finalize the document or journal by posting the amounts and quantities to the related accounts in your company books.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Post;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CODEUNIT.RUN(CODEUNIT::"Post Sales Tax Jnl",Rec);
+                                 CurrentJnlBatchName := GETRANGEMAX("Journal Batch Name");
+                                 CurrPage.UPDATE(false);
+                               END;
+                                }
+      { 1030009 ;2   ;Action    ;
+                      Name="Post and &Print";
+                      ShortCutKey=Shift+F9;
+                      CaptionML=ENU=Post and &Print;
+                      ToolTipML=ENU=Finalize and prepare to print the document or journal. The values and quantities are posted to the related accounts. A report request window where you can specify what to include on the print-out.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=PostPrint;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CODEUNIT.RUN(CODEUNIT::"Post- Print Sales Tax Jnl",Rec);
+                                 CurrentJnlBatchName := GETRANGEMAX("Journal Batch Name");
+                                 CurrPage.UPDATE(false);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1030010;1;Field     ;
+                Name=CurrentJnlBatchName;
+                Lookup=true;
+                CaptionML=ENU=Batch Name;
+                ToolTipML=ENU=Specifies the journal batch.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CurrentJnlBatchName;
+                OnValidate=BEGIN
+                             GenJnlManagement.CheckName(CurrentJnlBatchName,Rec);
+                             CurrentJnlBatchNameOnAfterVali;
+                           END;
+
+                OnLookup=BEGIN
+                           CurrPage.SAVERECORD;
+                           GenJnlManagement.LookupName(CurrentJnlBatchName,Rec);
+                           CurrPage.UPDATE(false);
+                         END;
+
+                ImplicitType=Code10 }
+
+    { 1030011;1;Group     ;
+                Name=Control1030011;
+                GroupType=Repeater }
+
+    { 1030012;2;Field     ;
+                Name="Posting Date";
+                ToolTipML=ENU=Specifies the date when the sales tax journal line was posted.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Posting Date";
+                ImplicitType=Date }
+
+    { 1030013;2;Field     ;
+                Name="Document Date";
+                ToolTipML=ENU=Specifies the date on which you created the journal line.;
+                SourceExpr="Document Date";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 1030014;2;Field     ;
+                Name="Document Type";
+                ToolTipML=ENU=Specifies the type of the document on the journal line.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document Type";
+                ImplicitType=Option }
+
+    { 1030015;2;Field     ;
+                Name="Document No.";
+                ToolTipML=ENU=Specifies the number of the document on the journal line.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document No.";
+                ImplicitType=Code20 }
+
+    { 1030016;2;Field     ;
+                Name="Account Type";
+                ToolTipML=ENU=Specifies the type of the affected account.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Account Type";
+                OnValidate=BEGIN
+                             GenJnlManagement.GetAccounts(Rec,AccName,BalAccName);
+                           END;
+
+                ImplicitType=Option }
+
+    { 1030017;2;Field     ;
+                Name="Account No.";
+                ToolTipML=ENU=Specifies the number of the affected account.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Account No.";
+                OnValidate=BEGIN
+                             GenJnlManagement.GetAccounts(Rec,AccName,BalAccName);
+                             ShowShortcutDimCode(ShortcutDimCode);
+                           END;
+
+                ImplicitType=Code20 }
+
+    { 1030018;2;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the tax journal line.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+    { 1030019;2;Field     ;
+                Name="GST/HST";
+                ToolTipML=ENU=Specifies the type of goods and services tax (GST) for the general journal line.;
+                SourceExpr="GST/HST";
+                OnValidate=BEGIN
+                             case "GST/HST" of
+                               "GST/HST"::Acquisition:
+                                 ERROR(Text002);
+                             end;
+                           END;
+
+                ImplicitType=Option }
+
+    { 1030020;2;Field     ;
+                Name="Tax Group Code";
+                ToolTipML=ENU=Specifies the tax group that is used to calculate and post sales tax.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Tax Group Code";
+                Visible=TRUE;
+                ImplicitType=Code20 }
+
+    { 1030021;2;Field     ;
+                Name="Tax Jurisdiction Code";
+                ToolTipML=ENU=Specifies the tax jurisdiction that is used for the Tax Area Code field on the purchase or sales lines.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Tax Jurisdiction Code";
+                ImplicitType=Code10 }
+
+    { 1030022;2;Field     ;
+                Name=Amount;
+                ToolTipML=ENU=Specifies the tax amount.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Amount;
+                ImplicitType=Decimal }
+
+    { 1030023;2;Field     ;
+                Name="Bal. Account Type";
+                ToolTipML=ENU=Specifies the type of the G/L account or the bank account that a balancing entry will be posted to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Bal. Account Type";
+                ImplicitType=Option }
+
+    { 1030024;2;Field     ;
+                Name="Bal. Account No.";
+                ToolTipML=ENU=Specifies the number of the G/L account or the bank account that a balancing entry will be posted to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Bal. Account No.";
+                OnValidate=BEGIN
+                             GenJnlManagement.GetAccounts(Rec,AccName,BalAccName);
+                             ShowShortcutDimCode(ShortcutDimCode);
+                           END;
+
+                ImplicitType=Code20 }
+
+    { 1030025;1;Group     ;
+                Name=Control1030025 }
+
+    { 1030026;2;Field     ;
+                Name=Control1030026;
+                ApplicationArea=#Basic,#Suite;
+                CaptionClass=Text19039985 }
+
+    { 1030027;2;Field     ;
+                Name=AccName;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=AccName;
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 1030028;2;Field     ;
+                Name=BalAccName;
+                CaptionML=ENU=Bal. Account Name;
+                ToolTipML=ENU=Specifies the name of the balancing account.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=BalAccName;
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 1030029;2;Field     ;
+                Name=Balance;
+                CaptionML=ENU=Balance;
+                ToolTipML=ENU="Specifies the customer's balance. ";
+                ApplicationArea=#All;
+                SourceExpr=Balance + "Balance (LCY)" - xRec."Balance (LCY)";
+                AutoFormatType=1;
+                Visible=BalanceVisible;
+                Editable=FALSE }
+
+    { 1030030;2;Field     ;
+                Name=TotalBalance;
+                CaptionML=ENU=Total Balance;
+                ToolTipML=ENU=Specifies the total amount of the lines that are adjustments.;
+                ApplicationArea=#All;
+                SourceExpr=TotalBalance + "Balance (LCY)" - xRec."Balance (LCY)";
+                AutoFormatType=1;
+                Visible=TotalBalanceVisible;
+                Editable=FALSE }
+
+  }
+  CODE
+  {
+    VAR
+      GenJnlLine@1030000 : Record "Gen. Journal Line";
+      TempGenJnlLine@1030001 : TEMPORARY Record "Gen. Journal Line";
+      GLReconcile@1030002 : Page Reconciliation;
+      ManageSalesTaxJournal@1030003 : Codeunit "Manage Sales Tax Journal";
+      GenJnlManagement@1030004 : Codeunit GenJnlManagement;
+      ReportPrint@1030005 : Codeunit "Test Report-Print";
+      CurrentJnlBatchName@1030006 : Code[10];
+      AccName@1030007 : Text[50];
+      BalAccName@1030008 : Text[50];
+      Balance@1030009 : Decimal;
+      TotalBalance@1030010 : Decimal;
+      ShowBalance@1030011 : Boolean;
+      ShowTotalBalance@1030012 : Boolean;
+      ShortcutDimCode@1030013 : ARRAY [8] OF Code[20];
+      OpenedFromBatch@1030014 : Boolean;
+      Text002@1030017 : TextConst 'ENU="""GST/HST"" can not be Acquisition in Sales Tax Journal Line."';
+      BalanceVisible@1030015 : Boolean INDATASET;
+      TotalBalanceVisible@1030016 : Boolean INDATASET;
+      Text19039985@1030018 : TextConst 'ENU=Account Name';
+
+    LOCAL PROCEDURE UpdateBalance@1030000();
+    BEGIN
+      GenJnlManagement.CalcBalance(Rec,xRec,Balance,TotalBalance,ShowBalance,ShowTotalBalance);
+      BalanceVisible := ShowBalance;
+      TotalBalanceVisible := ShowTotalBalance;
+    END;
+
+    LOCAL PROCEDURE CurrentJnlBatchNameOnAfterVali@1030001();
+    BEGIN
+      CurrPage.SAVERECORD;
+      GenJnlManagement.SetName(CurrentJnlBatchName,Rec);
+      CurrPage.UPDATE(false);
+    END;
+
+    LOCAL PROCEDURE AfterGetCurrentRecord@1030002();
+    BEGIN
+      xRec := Rec;
+      GenJnlManagement.GetAccounts(Rec,AccName,BalAccName);
+      UpdateBalance;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

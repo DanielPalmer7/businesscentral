@@ -1,0 +1,30 @@
+OBJECT Codeunit 9901 Data Upgrade In Progress
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    EventSubscriberInstance=Manual;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    [EventSubscriber(Codeunit,9900,OnIsUpgradeInProgress)]
+    [Normal]
+    LOCAL PROCEDURE OnIsUpgradeInProgressHandler@100(VAR UpgradeIsInProgress@1000 : Boolean);
+    BEGIN
+      UpgradeIsInProgress := true;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

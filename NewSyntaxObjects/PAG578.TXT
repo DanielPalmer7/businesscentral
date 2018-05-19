@@ -1,0 +1,156 @@
+OBJECT Page 578 Change Global Dim. Log Entries
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161302.40T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Log Entries;
+    SourceTable="Change Global Dim. Log Entry";
+    SourceTableView=SORTING(Progress)
+                    WHERE("Table ID"=FILTER(>0));
+    PageType=ListPart;
+    OnAfterGetRecord=BEGIN
+                       if "Total Records" <> "Completed Records" then
+                         UpdateStatus;
+                       SetStyle;
+                     END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           if Status = Status::Incomplete then
+                             IsRerunEnabled := true
+                           else
+                             if Status = Status::" " then
+                               IsRerunEnabled := not AreAllLinesInBlankStatus
+                             else
+                               IsRerunEnabled := false;
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 8       ;    ;ActionContainer;
+                      Name=ActionContainer8;
+                      ActionContainerType=ActionItems }
+      { 9       ;1   ;Action    ;
+                      Name=Rerun;
+                      AccessByPermission=TableData "Change Global Dim. Log Entry"=M;
+                      CaptionML=ENU=Rerun;
+                      ToolTipML=ENU=Restart incomplete jobs for global dimension change. Jobs may stop with the Incomplete status because of capacity issues. Such issues can typically be resolved by choosing the Rerun action.;
+                      ApplicationArea=#Suite;
+                      Enabled=IsRerunEnabled;
+                      Image=RefreshLines;
+                      OnAction=BEGIN
+                                 Rerun;
+                               END;
+                                }
+      { 12      ;1   ;Action    ;
+                      Name=ShowError;
+                      CaptionML=ENU=Show Error;
+                      ToolTipML=ENU=View a message in the Job Queue Log Entries window about the error that stopped the global dimension change job.;
+                      ApplicationArea=#Suite;
+                      Enabled=IsRerunEnabled;
+                      Image=ErrorLog;
+                      OnAction=BEGIN
+                                 ShowError;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="Table ID";
+                ApplicationArea=#Suite;
+                SourceExpr="Table ID";
+                StyleExpr=Style;
+                ImplicitType=Integer }
+
+    { 4   ;2   ;Field     ;
+                Name="Table Name";
+                ApplicationArea=#Suite;
+                SourceExpr="Table Name";
+                StyleExpr=Style;
+                ImplicitType=Text30 }
+
+    { 7   ;2   ;Field     ;
+                Name=Status;
+                ApplicationArea=#Suite;
+                SourceExpr=Status;
+                StyleExpr=Style;
+                ImplicitType=Option }
+
+    { 5   ;2   ;Field     ;
+                Name="Total Records";
+                ApplicationArea=#Suite;
+                SourceExpr="Total Records";
+                ImplicitType=Integer }
+
+    { 6   ;2   ;Field     ;
+                Name=Progress;
+                ApplicationArea=#Suite;
+                SourceExpr=Progress;
+                ImplicitType=Decimal }
+
+    { 10  ;2   ;Field     ;
+                Name="Remaining Duration";
+                ToolTipML=ENU=Specifies the remaining duration of the job.;
+                ApplicationArea=#Suite;
+                SourceExpr="Remaining Duration";
+                ImplicitType=Duration }
+
+    { 11  ;2   ;Field     ;
+                Name="Earliest Start Date/Time";
+                ToolTipML=ENU=Specifies the earliest date and time when the job should be run.;
+                ApplicationArea=#Suite;
+                SourceExpr="Earliest Start Date/Time";
+                Visible=FALSE;
+                ImplicitType=DateTime }
+
+  }
+  CODE
+  {
+    VAR
+      IsRerunEnabled@1000 : Boolean;
+      Style@1001 : Text INDATASET;
+
+    LOCAL PROCEDURE AreAllLinesInBlankStatus@1() : Boolean;
+    VAR
+      ChangeGlobalDimLogEntry@1000 : Record "Change Global Dim. Log Entry";
+    BEGIN
+      ChangeGlobalDimLogEntry.SETFILTER(Status,'<>%1',ChangeGlobalDimLogEntry.Status::" ");
+      exit(ChangeGlobalDimLogEntry.ISEMPTY);
+    END;
+
+    LOCAL PROCEDURE SetStyle@7();
+    BEGIN
+      case Status of
+        Status::" ":
+          Style := 'Subordinate';
+        Status::Completed:
+          Style := 'Favorable';
+        Status::Scheduled,
+        Status::"In Progress":
+          Style := 'Ambiguous';
+        Status::Incomplete:
+          Style := 'Unfavorable'
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

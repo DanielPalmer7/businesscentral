@@ -1,0 +1,37 @@
+OBJECT Table 390 Availability at Date
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160111.647T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Availability at Date;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Period Start        ;Date          ;CaptionML=ENU=Period Start }
+    { 2   ;   ;Scheduled Receipt   ;Decimal       ;CaptionML=ENU=Scheduled Receipt;
+                                                   DecimalPlaces=0:5 }
+    { 3   ;   ;Gross Requirement   ;Decimal       ;CaptionML=ENU=Gross Requirement;
+                                                   DecimalPlaces=0:5 }
+    { 4   ;   ;Period End          ;Date          ;CaptionML=ENU=Period End }
+  }
+  KEYS
+  {
+    {    ;"Period Start"                          ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

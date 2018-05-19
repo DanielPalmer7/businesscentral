@@ -1,0 +1,439 @@
+OBJECT Codeunit 104001 UPG SaaS Plans and User Groups
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=120000T;
+    Version List=UPGTK12.00.00;
+  }
+  PROPERTIES
+  {
+    Subtype=Upgrade;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      OldDelegatedAdminPlanTxt@1013 : TextConst '@@@={Locked};ENU={62e90394-69f5-4237-9190-012177145e10}';
+      OldInternalAdminPlanTxt@1012 : TextConst '@@@={Locked};ENU={00000000-0000-0000-0000-000000000010}';
+      MadeiraPreviewIWPlanTxt@1010 : TextConst '@@@={Locked};ENU={3f2afeed-6fb5-4bf9-998f-f2912133aead}';
+      MicrosoftInvoicePlanTxt@1005 : TextConst '@@@={Locked};ENU={07eb0dc4-7da7-4e7b-bb42-2d44c5e08b08}';
+      FinancialsAccountantPlanTxt@1009 : TextConst '@@@={Locked};ENU={170991d7-b98e-41c5-83d4-db2052e1795f}';
+      FinancialsBusinessPlanTxt@1006 : TextConst '@@@={Locked};ENU={920656a2-7dd8-4c83-97b6-a356414dbd36}';
+      FinancialsTeamMemberPlanTxt@1007 : TextConst '@@@={Locked};ENU={d9a6391b-8970-4976-bd94-5f205007c8d8}';
+      AccountantPortalIWPlanTxt@1022 : TextConst '@@@={Locked};ENU={5d60ea51-0053-458f-80a8-b6f426a1a0c1}';
+      DelegatedAdminPlanTxt@1004 : TextConst '@@@={Locked};ENU={00000000-0000-0000-0000-000000000007}';
+      InternalAdminPlanTxt@1003 : TextConst '@@@={Locked};ENU={62e90394-69f5-4237-9190-012177145e10}';
+      FinancialsBusinessDevicePlanTxt@1008 : TextConst '@@@={Locked};ENU={100e1865-35d4-4463-aaff-d38eee3a1116}';
+      BusinessCentralPremiumUserPlanTxt@1039 : TextConst '@@@={Locked};ENU={8e9002c0-a1d8-4465-b952-817d2948e6e2}';
+      BusinessCentralISVEmbedBasicUserPlanTxt@1040 : TextConst '@@@={Locked};ENU={2ec8b6ca-ab13-4753-a479-8c2ffe4c323b}';
+      MadeiraPreviewIWDescriptionTxt@1021 : TextConst '@@@={Locked};ENU=Finance and Operations for IWs';
+      MicrosoftInvoiceDescriptionTxt@1016 : TextConst '@@@={Locked};ENU=Microsoft Invoice';
+      FinancialsAccountantDescriptionTxt@1020 : TextConst '@@@={Locked};ENU=Finance and Operations, External Accountant';
+      FinancialsBusinessDescriptionTxt@1018 : TextConst '@@@={Locked};ENU=Finance and Operations';
+      FinancialsTeamMemberDescriptionTxt@1017 : TextConst '@@@={Locked};ENU=Finance and Operations, Team Member';
+      AccountantPortalIWDescriptionTxt@1023 : TextConst '@@@={Locked};ENU=Dynamics 365 - Accountant Hub';
+      DelegatedAdminDescriptionTxt@1015 : TextConst '@@@={Locked};ENU=Administrator';
+      InternalAdminDescriptionTxt@1014 : TextConst '@@@={Locked};ENU=Internal Administrator';
+      FinancialsBusinessDeviceDescriptionTxt@1019 : TextConst '@@@={Locked};ENU=Finance and Operations, Device';
+      BusinessCentralPremiumUserDescriptionTxt@1041 : TextConst '@@@={Locked};ENU=Dynamics 365 Business Central, Premium User';
+      BusinessCentralISVEmbedBasicUserDescriptionTxt@1042 : TextConst '@@@={Locked};ENU=Dynamics 365 Business Central, ISV User';
+      ProfileAccountantTxt@1050 : TextConst 'ENU=Accountant';
+      ProfileBusinessManagerTxt@1028 : TextConst 'ENU=Business Manager';
+      ExternalAccountantUserGroupTok@1024 : TextConst '@@@={Locked};ENU=D365 EXT. ACCOUNTANT';
+      ExternalAccountantUserGroupDescriptionTxt@1011 : TextConst 'ENU=External Accountant';
+      ExtensionMgtD365UserGroupTok@1000 : TextConst '@@@={Locked};ENU=D365 EXTENSION MGT';
+      FullD365UserGroupTok@1001 : TextConst '@@@={Locked};ENU=D365 FULL ACCESS';
+      FullD365BusUserGroupTok@1002 : TextConst '@@@={Locked};ENU=D365 BUS FULL ACCESS';
+      InternalAdminUserGroupTok@1026 : TextConst '@@@={Locked};ENU=D365 INTERNAL ADMIN';
+      TeamMemberUserGroupTok@1030 : TextConst '@@@={Locked};ENU=D365 TEAM MEMBER';
+      RapidStartUserGroupTok@1031 : TextConst '@@@={Locked};ENU=D365 RAPIDSTART';
+      AccountantsUserGroupTok@1032 : TextConst '@@@={Locked};ENU=D365 ACCOUNTANTS';
+      PremiumD365BusUserGroupTok@1027 : TextConst '@@@={Locked};ENU=D365 BUS PREMIUM';
+      BasicISVD365UserGroupTok@1037 : TextConst '@@@={Locked};ENU=D365 BASIC ISV';
+      PremiumD365BusUserGroupDescriptionTxt@1025 : TextConst 'ENU=D365 Premium Business Access';
+      BasicISVD365UserGroupDescriptionTxt@1029 : TextConst 'ENU=D365 Basic ISV Access';
+      LocalPermissionSetTok@1034 : TextConst '@@@={Locked};ENU=LOCAL';
+      PremiumBusFullTok@1033 : TextConst '@@@={Locked};ENU=D365 BUS PREMIUM';
+      ReadTok@1035 : TextConst '@@@={Locked};ENU=D365 READ';
+      BusFullTok@1036 : TextConst '@@@={Locked};ENU=D365 BUS FULL ACCESS';
+      BasicTok@1038 : TextConst '@@@={Locked};ENU=D365 BASIC';
+
+    [UpgradePerDatabase]
+    PROCEDURE UpgradePlans@1();
+    BEGIN
+      RefreshAdminPlansForUpdate200;
+
+      InsertLatestPlansForUpdate210;
+      InsertLatestPlansForUpdate215;
+
+      InsertLatestUserGroupsForUpdate215;
+      UpdateExistingUserGroups;
+
+      LinkPlansToUserGroupsForUpdate210;
+      LinkPlansToUserGroupsForUpdate215;
+
+      LinkPlansToPermissionSetsForUpdate210;
+      LinkPlansToPermissionSetsForUpdate215;
+    END;
+
+    LOCAL PROCEDURE RefreshAdminPlansForUpdate200@3();
+    BEGIN
+      RenamePlan(OldDelegatedAdminPlanTxt,DelegatedAdminPlanTxt);
+      RenamePlan(OldInternalAdminPlanTxt,InternalAdminPlanTxt);
+    END;
+
+    LOCAL PROCEDURE RenamePlan@14(PlanID@1001 : GUID;NewPlanID@1002 : GUID);
+    VAR
+      Plan@1000 : Record Plan;
+    BEGIN
+      if not Plan.GET(PlanID) then begin
+        SENDTRACETAG('00001PJ','AL SaaS Upgrade',VERBOSITY::Normal,STRSUBSTNO('Plan %1 does not exist.',PlanID));
+        exit;
+      end;
+
+      RenamePlanPermissionSets(PlanID,NewPlanID);
+
+      if Plan.GET(NewPlanID) then
+        SENDTRACETAG('00001PK','AL SaaS Upgrade',VERBOSITY::Normal,STRSUBSTNO('Plan %1 already exists.',PlanID))
+      else begin
+        Plan.RENAME(NewPlanID);
+        SENDTRACETAG('00001PL','AL SaaS Upgrade',VERBOSITY::Normal,STRSUBSTNO('Plan %1 was renamed to Plan %2.',PlanID,NewPlanID));
+      end;
+    END;
+
+    LOCAL PROCEDURE RenamePlanPermissionSets@9(PlanID@1002 : GUID;NewPlanID@1000 : GUID);
+    VAR
+      NewPlanPermissionSet@1004 : Record "Plan Permission Set";
+      PlanPermissionSet@1003 : Record "Plan Permission Set";
+    BEGIN
+      PlanPermissionSet.SETRANGE("Plan ID",PlanID);
+      if not PlanPermissionSet.FINDSET then begin
+        SENDTRACETAG('00001PM','AL SaaS Upgrade',VERBOSITY::Normal,
+          STRSUBSTNO('There are no Plan Permission Set records to rename for Plan %1.',PlanID));
+        exit;
+      end;
+
+      repeat
+        if NewPlanPermissionSet.GET(PlanPermissionSet."Plan ID",PlanPermissionSet."Permission Set ID") then
+          if NewPlanPermissionSet.GET(NewPlanID,PlanPermissionSet."Permission Set ID") then
+            SENDTRACETAG('00001PN','AL SaaS Upgrade',VERBOSITY::Normal,
+              STRSUBSTNO('The Plan %1 is already linked to Permission Set %2.',NewPlanID,PlanPermissionSet."Permission Set ID"))
+          else begin
+            NewPlanPermissionSet.RENAME(NewPlanID,PlanPermissionSet."Permission Set ID");
+            SENDTRACETAG('00001PO','AL SaaS Upgrade',VERBOSITY::Normal,
+              STRSUBSTNO('The Permission Set %1 linked to Plan %2 was renamed to link to Plan %3.',
+                PlanPermissionSet."Permission Set ID",PlanID,NewPlanID));
+          end;
+      until PlanPermissionSet.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE InsertLatestPlansForUpdate210@4();
+    BEGIN
+      AddPlan(MadeiraPreviewIWPlanTxt,MadeiraPreviewIWDescriptionTxt,PAGE::"Business Manager Role Center");
+
+      AddPlan(MicrosoftInvoicePlanTxt,MicrosoftInvoiceDescriptionTxt,PAGE::"Business Manager Role Center");
+
+      AddPlan(FinancialsAccountantPlanTxt,FinancialsAccountantDescriptionTxt,PAGE::"Accountant Role Center");
+      AddPlan(FinancialsBusinessPlanTxt,FinancialsBusinessDescriptionTxt,PAGE::"Business Manager Role Center");
+      AddPlan(FinancialsTeamMemberPlanTxt,FinancialsTeamMemberDescriptionTxt,PAGE::"Team Member Role Center");
+
+      // The role center ID is PAGE::"Acct Portal Role Center" that is available only via an extension
+      AddPlan(AccountantPortalIWPlanTxt,AccountantPortalIWDescriptionTxt,1151);
+
+      AddPlan(DelegatedAdminPlanTxt,DelegatedAdminDescriptionTxt,PAGE::"Business Manager Role Center");
+      AddPlan(InternalAdminPlanTxt,InternalAdminDescriptionTxt,PAGE::"Business Manager Role Center");
+
+      AddPlan(FinancialsBusinessDevicePlanTxt,FinancialsBusinessDeviceDescriptionTxt,PAGE::"Business Manager Role Center");
+    END;
+
+    LOCAL PROCEDURE InsertLatestPlansForUpdate215@20();
+    BEGIN
+      AddPlan(BusinessCentralPremiumUserPlanTxt,BusinessCentralPremiumUserDescriptionTxt,PAGE::"Business Manager Role Center");
+
+      AddPlan(
+        BusinessCentralISVEmbedBasicUserPlanTxt,BusinessCentralISVEmbedBasicUserDescriptionTxt,PAGE::"Business Manager Role Center");
+    END;
+
+    LOCAL PROCEDURE AddPlan@11(PlanID@1002 : GUID;PlanName@1001 : Text[50];RoleCenterID@1000 : Integer);
+    VAR
+      Plan@1003 : Record Plan;
+    BEGIN
+      if Plan.GET(PlanID) then
+        UpdatePlan(Plan,PlanName,RoleCenterID)
+      else
+        InsertPlan(PlanID,PlanName,RoleCenterID);
+    END;
+
+    LOCAL PROCEDURE UpdatePlan@6(VAR Plan@1000 : Record Plan;PlanName@1001 : Text[50];RoleCenterID@1002 : Integer);
+    BEGIN
+      Plan.Name := PlanName;
+      Plan."Role Center ID" := RoleCenterID;
+      Plan.MODIFY;
+      SENDTRACETAG('00001PP','AL SaaS Upgrade',VERBOSITY::Normal,
+        STRSUBSTNO('The details of Plan %1 has been updated.',Plan."Plan ID"));
+    END;
+
+    LOCAL PROCEDURE InsertPlan@8(PlanID@1000 : GUID;PlanName@1001 : Text[50];RoleCenterID@1002 : Integer);
+    VAR
+      Plan@1003 : Record Plan;
+    BEGIN
+      Plan.INIT;
+      Plan."Plan ID" := PlanID;
+      Plan.Name := PlanName;
+      Plan."Role Center ID" := RoleCenterID;
+      Plan.INSERT;
+      SENDTRACETAG('00001PQ','AL SaaS Upgrade',VERBOSITY::Normal,STRSUBSTNO('The Plan %1 has been added.',PlanID));
+    END;
+
+    LOCAL PROCEDURE InsertLatestUserGroupsForUpdate215@2();
+    BEGIN
+      CreatePremiumD365UserGroup;
+      CreateExternalAccountantUserGroup;
+      CreateBasicISVD365UserGroup;
+    END;
+
+    LOCAL PROCEDURE CreatePremiumD365UserGroup@16();
+    BEGIN
+      InsertUserGroup(PremiumD365BusUserGroupTok,PremiumD365BusUserGroupDescriptionTxt,ProfileBusinessManagerTxt,false);
+      InsertUserGroupPermissionSet(PremiumD365BusUserGroupTok,PremiumBusFullTok);
+    END;
+
+    LOCAL PROCEDURE CreateExternalAccountantUserGroup@17();
+    BEGIN
+      InsertUserGroup(ExternalAccountantUserGroupTok,ExternalAccountantUserGroupDescriptionTxt,ProfileAccountantTxt,false);
+      InsertUserGroupPermissionSet(ExternalAccountantUserGroupTok,BusFullTok);
+      InsertUserGroupPermissionSet(ExternalAccountantUserGroupTok,ReadTok);
+    END;
+
+    LOCAL PROCEDURE CreateBasicISVD365UserGroup@22();
+    BEGIN
+      InsertUserGroup(BasicISVD365UserGroupTok,BasicISVD365UserGroupDescriptionTxt,ProfileBusinessManagerTxt,false);
+      InsertUserGroupPermissionSet(BasicISVD365UserGroupTok,BasicTok);
+    END;
+
+    LOCAL PROCEDURE InsertUserGroup@13(UserGroupCode@1000 : Code[20];UserGroupName@1001 : Text[50];DefaultProfileID@1003 : Code[30];IsAssignedToNewUsers@1004 : Boolean);
+    VAR
+      UserGroup@1002 : Record "User Group";
+    BEGIN
+      if UserGroup.GET(UserGroupCode) then begin
+        SENDTRACETAG('00001T6','AL SaaS Upgrade',VERBOSITY::Normal,STRSUBSTNO('User Group %1 already exists.',UserGroupCode));
+        exit;
+      end;
+
+      UserGroup.INIT;
+      UserGroup.Code := UserGroupCode;
+      UserGroup.Name := UserGroupName;
+      UserGroup."Default Profile ID" := DefaultProfileID;
+      UserGroup."Assign to All New Users" := IsAssignedToNewUsers;
+      UserGroup.INSERT;
+      SENDTRACETAG('00001T7','AL SaaS Upgrade',VERBOSITY::Normal,STRSUBSTNO('The User Group %1 has been added.',UserGroupCode));
+
+      // Each user group must contain LOCAL permission set
+      InsertUserGroupPermissionSet(UserGroupCode,LocalPermissionSetTok);
+    END;
+
+    LOCAL PROCEDURE InsertUserGroupPermissionSet@10(UserGroupCode@1000 : Code[20];PermissionSetCode@1001 : Code[20]);
+    VAR
+      UserGroupPermissionSet@1002 : Record "User Group Permission Set";
+    BEGIN
+      if UserGroupPermissionSet.GET(UserGroupCode,PermissionSetCode) then begin
+        SENDTRACETAG('00001T8','AL SaaS Upgrade',VERBOSITY::Normal,
+          STRSUBSTNO('User Group %1 is already linked to Permission Set %2.',UserGroupCode,PermissionSetCode));
+        exit;
+      end;
+
+      UserGroupPermissionSet.INIT;
+      UserGroupPermissionSet."User Group Code" := UserGroupCode;
+      UserGroupPermissionSet."Role ID" := PermissionSetCode;
+      UserGroupPermissionSet.Scope := UserGroupPermissionSet.Scope::System;
+      UserGroupPermissionSet.INSERT;
+      SENDTRACETAG('00001T9','AL SaaS Upgrade',VERBOSITY::Normal,
+        STRSUBSTNO('User Group %1 was linked to Permission Set %2.',UserGroupCode,PermissionSetCode));
+    END;
+
+    LOCAL PROCEDURE UpdateExistingUserGroups@15();
+    BEGIN
+      AddReadAllToTeamMember;
+      ReplaceBusFullAccessWithPremium;
+    END;
+
+    LOCAL PROCEDURE AddReadAllToTeamMember@19();
+    BEGIN
+      InsertUserGroupPermissionSet(TeamMemberUserGroupTok,ReadTok);
+    END;
+
+    LOCAL PROCEDURE ReplaceBusFullAccessWithPremium@18();
+    BEGIN
+      RenameUserGroupPlan(MadeiraPreviewIWPlanTxt,FullD365BusUserGroupTok,PremiumD365BusUserGroupTok);
+    END;
+
+    LOCAL PROCEDURE RenameUserGroupPlan@21(PlanID@1001 : GUID;OldUserGroupCode@1002 : Code[20];NewUserGroupCode@1003 : Code[20]);
+    VAR
+      Plan@1004 : Record Plan;
+      UserGroup@1005 : Record "User Group";
+      NewUserGroupPlan@1000 : Record "User Group Plan";
+    BEGIN
+      if not Plan.GET(PlanID) then begin
+        SENDTRACETAG('00001TA','AL SaaS Upgrade',VERBOSITY::Error,STRSUBSTNO('Plan %1 does not exist.',PlanID));
+        exit;
+      end;
+
+      if not UserGroup.GET(NewUserGroupCode) then begin
+        SENDTRACETAG('00001TB','AL SaaS Upgrade',VERBOSITY::Error,STRSUBSTNO('User Group %1 does not exist.',NewUserGroupCode));
+        exit;
+      end;
+
+      if NewUserGroupPlan.GET(PlanID,OldUserGroupCode) then
+        if NewUserGroupPlan.GET(PlanID,NewUserGroupCode) then
+          SENDTRACETAG('00001TC','AL SaaS Upgrade',VERBOSITY::Normal,
+            STRSUBSTNO('The Plan %1 is already linked to User Group %2.',PlanID,NewUserGroupCode))
+        else begin
+          NewUserGroupPlan.RENAME(PlanID,NewUserGroupCode);
+          SENDTRACETAG('00001TD','AL SaaS Upgrade',VERBOSITY::Normal,
+            STRSUBSTNO('The Plan %1 linked to User Group %2 was renamed to link to User Group %3.',
+              PlanID,OldUserGroupCode,NewUserGroupCode));
+        end;
+    END;
+
+    LOCAL PROCEDURE LinkPlansToUserGroupsForUpdate210@7();
+    BEGIN
+      AddUserGroupPlan(MadeiraPreviewIWPlanTxt,PremiumD365BusUserGroupTok);
+      AddUserGroupPlan(MadeiraPreviewIWPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddUserGroupPlan(MicrosoftInvoicePlanTxt,FullD365BusUserGroupTok);
+
+      AddUserGroupPlan(FinancialsAccountantPlanTxt,ExternalAccountantUserGroupTok);
+      AddUserGroupPlan(FinancialsAccountantPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddUserGroupPlan(FinancialsBusinessPlanTxt,FullD365BusUserGroupTok);
+      AddUserGroupPlan(FinancialsBusinessPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddUserGroupPlan(FinancialsTeamMemberPlanTxt,TeamMemberUserGroupTok);
+
+      AddUserGroupPlan(AccountantPortalIWPlanTxt,AccountantsUserGroupTok);
+      AddUserGroupPlan(AccountantPortalIWPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddUserGroupPlan(DelegatedAdminPlanTxt,FullD365UserGroupTok);
+      AddUserGroupPlan(DelegatedAdminPlanTxt,RapidStartUserGroupTok);
+      AddUserGroupPlan(DelegatedAdminPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddUserGroupPlan(InternalAdminPlanTxt,InternalAdminUserGroupTok);
+
+      AddUserGroupPlan(FinancialsBusinessDevicePlanTxt,FullD365BusUserGroupTok);
+      AddUserGroupPlan(FinancialsBusinessDevicePlanTxt,FullD365UserGroupTok);
+    END;
+
+    LOCAL PROCEDURE LinkPlansToUserGroupsForUpdate215@34();
+    BEGIN
+      AddUserGroupPlan(BusinessCentralPremiumUserPlanTxt,PremiumD365BusUserGroupTok);
+      AddUserGroupPlan(BusinessCentralPremiumUserPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddUserGroupPlan(BusinessCentralISVEmbedBasicUserPlanTxt,BasicISVD365UserGroupTok);
+      AddUserGroupPlan(BusinessCentralISVEmbedBasicUserPlanTxt,ExtensionMgtD365UserGroupTok);
+    END;
+
+    LOCAL PROCEDURE AddUserGroupPlan@25(PlanID@1001 : GUID;UserGroupCode@1002 : Code[20]);
+    VAR
+      UserGroupPlan@1000 : Record "User Group Plan";
+    BEGIN
+      if UserGroupPlan.GET(PlanID,UserGroupCode) then begin
+        SENDTRACETAG('00001PR','AL SaaS Upgrade',VERBOSITY::Normal,
+          STRSUBSTNO('User Group %1 is already linked to Plan %2.',UserGroupCode,PlanID));
+        exit;
+      end;
+
+      UserGroupPlan.INIT;
+      UserGroupPlan."Plan ID" := PlanID;
+      UserGroupPlan."User Group Code" := UserGroupCode;
+      UserGroupPlan.INSERT;
+      SENDTRACETAG('00001PS','AL SaaS Upgrade',VERBOSITY::Normal,
+        STRSUBSTNO('User Group %1 was linked to Plan %2.',UserGroupCode,PlanID));
+    END;
+
+    LOCAL PROCEDURE LinkPlansToPermissionSetsForUpdate210@12();
+    BEGIN
+      AddPlanPermissionSetsFromUserGroup(MadeiraPreviewIWPlanTxt,PremiumD365BusUserGroupTok);
+      AddPlanPermissionSetsFromUserGroup(MadeiraPreviewIWPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddPlanPermissionSetsFromUserGroup(MicrosoftInvoicePlanTxt,FullD365BusUserGroupTok);
+
+      AddPlanPermissionSetsFromUserGroup(FinancialsAccountantPlanTxt,ExternalAccountantUserGroupTok);
+      AddPlanPermissionSetsFromUserGroup(FinancialsAccountantPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddPlanPermissionSetsFromUserGroup(FinancialsBusinessPlanTxt,FullD365BusUserGroupTok);
+      AddPlanPermissionSetsFromUserGroup(FinancialsBusinessPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddPlanPermissionSetsFromUserGroup(FinancialsTeamMemberPlanTxt,TeamMemberUserGroupTok);
+
+      AddPlanPermissionSetsFromUserGroup(AccountantPortalIWPlanTxt,AccountantsUserGroupTok);
+      AddPlanPermissionSetsFromUserGroup(AccountantPortalIWPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddPlanPermissionSetsFromUserGroup(DelegatedAdminPlanTxt,FullD365UserGroupTok);
+      AddPlanPermissionSetsFromUserGroup(DelegatedAdminPlanTxt,RapidStartUserGroupTok);
+      AddPlanPermissionSetsFromUserGroup(DelegatedAdminPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddPlanPermissionSetsFromUserGroup(InternalAdminPlanTxt,InternalAdminUserGroupTok);
+
+      AddPlanPermissionSetsFromUserGroup(FinancialsBusinessDevicePlanTxt,FullD365BusUserGroupTok);
+      AddPlanPermissionSetsFromUserGroup(FinancialsBusinessDevicePlanTxt,FullD365UserGroupTok);
+    END;
+
+    LOCAL PROCEDURE LinkPlansToPermissionSetsForUpdate215@23();
+    BEGIN
+      AddPlanPermissionSetsFromUserGroup(BusinessCentralPremiumUserPlanTxt,PremiumD365BusUserGroupTok);
+      AddPlanPermissionSetsFromUserGroup(BusinessCentralPremiumUserPlanTxt,ExtensionMgtD365UserGroupTok);
+
+      AddPlanPermissionSetsFromUserGroup(BusinessCentralISVEmbedBasicUserPlanTxt,BasicISVD365UserGroupTok);
+      AddPlanPermissionSetsFromUserGroup(BusinessCentralISVEmbedBasicUserPlanTxt,ExtensionMgtD365UserGroupTok);
+    END;
+
+    LOCAL PROCEDURE AddPlanPermissionSetsFromUserGroup@5(PlanID@1000 : GUID;UserGroupCode@1002 : Code[20]);
+    VAR
+      UserGroupPermissionSet@1003 : Record "User Group Permission Set";
+      UserGroupPlan@1001 : Record "User Group Plan";
+    BEGIN
+      if not UserGroupPlan.GET(PlanID,UserGroupCode) then begin
+        SENDTRACETAG('00001PT','AL SaaS Upgrade',VERBOSITY::Error,
+          STRSUBSTNO('User Group %1 was supposed to be linked to Plan %2.',UserGroupCode,PlanID));
+        exit;
+      end;
+
+      UserGroupPermissionSet.SETRANGE("User Group Code",UserGroupCode);
+      if not UserGroupPermissionSet.FINDSET then begin
+        SENDTRACETAG('00001PU','AL SaaS Upgrade',VERBOSITY::Warning,STRSUBSTNO('User Group %1 has no Permission Sets',UserGroupCode));
+        exit;
+      end;
+
+      repeat
+        AddPlanPermissionSet(PlanID,UserGroupPermissionSet."Role ID");
+      until UserGroupPermissionSet.NEXT = 0;
+
+      AddPlanPermissionSet(PlanID,LocalPermissionSetTok);
+    END;
+
+    LOCAL PROCEDURE AddPlanPermissionSet@28(PlanID@1002 : GUID;PermissionSetID@1001 : Code[20]);
+    VAR
+      PlanPermissionSet@1000 : Record "Plan Permission Set";
+    BEGIN
+      if PlanPermissionSet.GET(PlanID,PermissionSetID) then begin
+        SENDTRACETAG('00001PV','AL SaaS Upgrade',VERBOSITY::Normal,
+          STRSUBSTNO('Plan %1 is already linked to Permission set %2.',PlanID,PermissionSetID));
+        exit;
+      end;
+
+      PlanPermissionSet.INIT;
+      PlanPermissionSet."Plan ID" := PlanID;
+      PlanPermissionSet."Permission Set ID" := PermissionSetID;
+      PlanPermissionSet.INSERT;
+      SENDTRACETAG('00001PW','AL SaaS Upgrade',VERBOSITY::Normal,
+        STRSUBSTNO('Plan %1 was linked to Permission Set %2.',PlanID,PermissionSetID));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

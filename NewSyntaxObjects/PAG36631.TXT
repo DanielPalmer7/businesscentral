@@ -1,0 +1,482 @@
+OBJECT Page 36631 Customer List - Order Status
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161726.847T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Customer List - Order Status;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable=Customer;
+    PageType=List;
+    OnOpenPage=BEGIN
+                 SETRANGE("Date Filter",0D,WORKDATE - 1);
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      Name=ActionContainer1900000003;
+                      ActionContainerType=RelatedInformation }
+      { 1020018 ;1   ;ActionGroup;
+                      Name="&Customer";
+                      CaptionML=ENU=&Customer;
+                      Image=Customer }
+      { 1020019 ;2   ;Action    ;
+                      Name="Ledger E&ntries";
+                      ShortCutKey=Ctrl+F7;
+                      CaptionML=ENU=Ledger E&ntries;
+                      ToolTipML=ENU=View the history of transactions that have been posted for the selected record.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "Customer Ledger Entries";
+                      RunPageView=SORTING("Customer No.");
+                      RunPageLink="Customer No."=FIELD("No."),
+                                  "Posting Date"=FIELD(UPPERLIMIT("Date Filter")),
+                                  "Date Filter"=FIELD("Date Filter");
+                      Image=CustomerLedger }
+      { 1020020 ;2   ;ActionGroup;
+                      Name="Issued Documents";
+                      CaptionML=ENU=Issued Documents;
+                      Image=History }
+      { 1020021 ;3   ;Action    ;
+                      Name="Issued &Reminders";
+                      CaptionML=ENU=Issued &Reminders;
+                      ToolTipML=ENU=View the list of issued reminders.;
+                      RunObject=Page "Issued Reminder List";
+                      RunPageView=SORTING("Customer No.","Posting Date");
+                      RunPageLink="Customer No."=FIELD("No."),
+                                  "Document Date"=FIELD("Date Filter");
+                      Image=OrderReminder }
+      { 1020022 ;3   ;Action    ;
+                      Name="Issued &Finance Charge Memos";
+                      CaptionML=ENU=Issued &Finance Charge Memos;
+                      ToolTipML=ENU=View the list of issued finance charge memos.;
+                      RunObject=Page "Issued Fin. Charge Memo List";
+                      RunPageView=SORTING("Customer No.","Posting Date");
+                      RunPageLink="Customer No."=FIELD("No."),
+                                  "Document Date"=FIELD("Date Filter");
+                      Image=FinChargeMemo }
+      { 1020023 ;2   ;Action    ;
+                      Name="Co&mments";
+                      CaptionML=ENU=Co&mments;
+                      ToolTipML=ENU=View comments that apply.;
+                      RunObject=Page "Comment Sheet";
+                      RunPageLink="Table Name"=CONST(Customer),
+                                  "No."=FIELD("No.");
+                      Image=ViewComments }
+      { 1020024 ;2   ;Action    ;
+                      Name="Bank Accounts";
+                      CaptionML=ENU=Bank Accounts;
+                      ToolTipML=ENU=View or set up the customer's bank accounts. You can set up any number of bank accounts for each customer.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "Customer Bank Account List";
+                      RunPageLink="Customer No."=FIELD("No.");
+                      Image=BankAccount }
+      { 1020025 ;2   ;Action    ;
+                      Name="C&ontact";
+                      CaptionML=ENU=C&ontact;
+                      ToolTipML=ENU=Open the card for the contact person at the customer.;
+                      ApplicationArea=#Basic,#Suite;
+                      Image=ContactPerson;
+                      OnAction=BEGIN
+                                 ShowContact;
+                               END;
+                                }
+      { 1020026 ;2   ;Separator ;
+                      Name=Separator1020026 }
+      { 1020027 ;2   ;Action    ;
+                      Name=Statistics;
+                      ShortCutKey=F7;
+                      CaptionML=ENU=Statistics;
+                      ToolTipML=ENU=View statistical information, such as the value of posted entries, for the record.;
+                      RunObject=Page "Customer Statistics";
+                      RunPageLink="No."=FIELD("No."),
+                                  "Date Filter"=FIELD("Date Filter"),
+                                  "Global Dimension 1 Filter"=FIELD("Global Dimension 1 Filter"),
+                                  "Global Dimension 2 Filter"=FIELD("Global Dimension 2 Filter");
+                      Promoted=true;
+                      Image=Statistics;
+                      PromotedCategory=Process }
+      { 1020028 ;2   ;Action    ;
+                      Name="Statistics by C&urrencies";
+                      CaptionML=ENU=Statistics by C&urrencies;
+                      ToolTipML=ENU=View the customer's statistics for each currency for which there are transactions.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Cust. Stats. by Curr. Lines";
+                      RunPageLink="Customer Filter"=FIELD("No."),
+                                  "Global Dimension 1 Filter"=FIELD("Global Dimension 1 Filter"),
+                                  "Global Dimension 2 Filter"=FIELD("Global Dimension 2 Filter"),
+                                  "Date Filter"=FIELD("Date Filter");
+                      Image=Currencies }
+      { 1020029 ;2   ;Action    ;
+                      Name="Entry Statistics";
+                      CaptionML=ENU=Entry Statistics;
+                      ToolTipML=ENU=View statistics for customer ledger entries.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "Customer Entry Statistics";
+                      RunPageLink="No."=FIELD("No."),
+                                  "Date Filter"=FIELD("Date Filter"),
+                                  "Global Dimension 1 Filter"=FIELD("Global Dimension 1 Filter"),
+                                  "Global Dimension 2 Filter"=FIELD("Global Dimension 2 Filter");
+                      Image=EntryStatistics }
+      { 1020030 ;2   ;Action    ;
+                      Name="S&ales";
+                      CaptionML=ENU=S&ales;
+                      ToolTipML=ENU=View your sales to the customer by different periods.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Customer Sales";
+                      RunPageLink="No."=FIELD("No."),
+                                  "Global Dimension 1 Filter"=FIELD("Global Dimension 1 Filter"),
+                                  "Global Dimension 2 Filter"=FIELD("Global Dimension 2 Filter"),
+                                  "Date Filter"=FIELD("Date Filter");
+                      Image=Sales }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the record.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=Name;
+                ToolTipML=ENU=Specifies the name of the customer.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Name;
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 40  ;2   ;Field     ;
+                Name="Responsibility Center";
+                ToolTipML=ENU=Specifies the responsibility center related to the order.;
+                SourceExpr="Responsibility Center";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code10 }
+
+    { 43  ;2   ;Field     ;
+                Name="Location Code";
+                ToolTipML=ENU=Specifies the location code relating to the customer.;
+                SourceExpr="Location Code";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code10 }
+
+    { 54  ;2   ;Field     ;
+                Name="Post Code";
+                ToolTipML=ENU=Specifies the ZIP code relating to the customer.;
+                SourceExpr="Post Code";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 30  ;2   ;Field     ;
+                Name="Country/Region Code";
+                ToolTipML=ENU=Specifies a country/region code for the customer. This field is mostly used for registering EU VAT and reporting INTRASTAT.;
+                SourceExpr="Country/Region Code";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code10 }
+
+    { 1020016;2;Field     ;
+                Name="Payment Method Code";
+                ToolTipML=ENU=Specifies the code for the payment method.;
+                SourceExpr="Payment Method Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 8   ;2   ;Field     ;
+                Name="Payment Terms Code";
+                ToolTipML=ENU=Specifies a formula that calculates the payment due date, payment discount date, and payment discount amount on sales documents. By default, the payment term from the customer card is entered.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Payment Terms Code";
+                ImplicitType=Code10 }
+
+    { 61  ;2   ;Field     ;
+                Name="Reminder Terms Code";
+                ToolTipML=ENU=Specifies the code for the reminder terms.;
+                SourceExpr="Reminder Terms Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 48  ;2   ;Field     ;
+                Name="Fin. Charge Terms Code";
+                ToolTipML=ENU=Specifies the code for the finance charge terms calculated for the customer.;
+                SourceExpr="Fin. Charge Terms Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 1020000;2;Field     ;
+                Name="Credit Limit (LCY)";
+                ToolTipML=ENU=Specifies the maximum credit (in $) that can be extended to the customer.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Credit Limit (LCY)";
+                ImplicitType=Decimal }
+
+    { 1020010;2;Field     ;
+                Name="Balance Due (LCY)";
+                ToolTipML=ENU=Specifies payments from the customer that are overdue per today's date.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Balance Due (LCY)";
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 1020014;2;Field     ;
+                Name="Balance on Date (LCY)";
+                ToolTipML=ENU=Specifies a balance amount in local currency.;
+                SourceExpr="Balance on Date (LCY)";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 1020004;2;Field     ;
+                Name=Blocked;
+                ToolTipML=ENU=Specifies if the customer is blocked from posting.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Blocked;
+                ImplicitType=Option }
+
+    { 6   ;2   ;Field     ;
+                Name="Phone No.";
+                ToolTipML=ENU=Specifies the customer's phone number.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Phone No.";
+                ImplicitType=Text30 }
+
+    { 1020012;2;Field     ;
+                Name="E-Mail";
+                ToolTipML=ENU=Specifies the email address.;
+                SourceExpr="E-Mail";
+                Visible=FALSE;
+                ImplicitType=Text80 }
+
+    { 34  ;2   ;Field     ;
+                Name=Contact;
+                ToolTipML=ENU=Specifies the contact person at the customer.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Contact;
+                ImplicitType=Text50 }
+
+    { 1020002;2;Field     ;
+                Name="Collection Method";
+                ToolTipML=ENU=Specifies the method you normally use to collect payment from this customer, such as bank transfer or check.;
+                SourceExpr="Collection Method";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 32  ;2   ;Field     ;
+                Name="Fax No.";
+                ToolTipML=ENU=Specifies the fax number for the customer.;
+                SourceExpr="Fax No.";
+                Visible=FALSE;
+                ImplicitType=Text30 }
+
+    { 79  ;2   ;Field     ;
+                Name="IC Partner Code";
+                ToolTipML=ENU=Specifies the code for the company's intercompany (IC) partner.;
+                SourceExpr="IC Partner Code";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 36  ;2   ;Field     ;
+                Name="Salesperson Code";
+                ToolTipML=ENU=Specifies the code for the salesperson.;
+                SourceExpr="Salesperson Code";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 46  ;2   ;Field     ;
+                Name="Customer Price Group";
+                ToolTipML=ENU=Specifies the bill-to customer's customer discount group. When you enter an item on the sales line, the code is used to check whether the bill-to customer should receive a sales line discount on the item.;
+                SourceExpr="Customer Price Group";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code10 }
+
+    { 72  ;2   ;Field     ;
+                Name="Customer Disc. Group";
+                ToolTipML=ENU=Specifies the bill-to customer's customer discount group. When you enter an item on the sales line, the code is used to check whether the bill-to customer should receive a sales line discount on the item.;
+                SourceExpr="Customer Disc. Group";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 10  ;2   ;Field     ;
+                Name="Currency Code";
+                ToolTipML=ENU=Specifies the customer's default currency.;
+                SourceExpr="Currency Code";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code10 }
+
+    { 50  ;2   ;Field     ;
+                Name="Language Code";
+                ToolTipML=ENU=Specifies the code for the language.;
+                SourceExpr="Language Code";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code10 }
+
+    { 1020006;2;Field     ;
+                Name="Sales (LCY)";
+                ToolTipML=ENU=Specifies the sales, in local currency.;
+                SourceExpr="Sales (LCY)";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 1020008;2;Field     ;
+                Name="Profit (LCY)";
+                ToolTipML=ENU=Specifies the profit, in local currency.;
+                SourceExpr="Profit (LCY)";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 12  ;2   ;Field     ;
+                Name="Search Name";
+                ToolTipML=ENU=Specifies the search name.;
+                SourceExpr="Search Name";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code50 }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1901235907;1;Part   ;
+                Name=Control1901235907;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="Table Name"=CONST(Customer),
+                            "No."=FIELD("No.");
+                PagePartID="Comment Sheet";
+                Visible=TRUE;
+                Editable=FALSE;
+                PartType=Page }
+
+    { 1904036707;1;Part   ;
+                Name=Control1904036707;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="Bill-to Customer No."=FIELD("No.");
+                PagePartID="Order Header Status Factbox";
+                Visible=TRUE;
+                Editable=FALSE;
+                PartType=Page }
+
+    { 1904036807;1;Part   ;
+                Name=Control1904036807;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="Bill-to Customer No."=FIELD("No.");
+                PagePartID="Order Lines Status Factbox";
+                Visible=TRUE;
+                Editable=FALSE;
+                PartType=Page }
+
+    { 1902018507;1;Part   ;
+                Name=Control1902018507;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="No."=FIELD("No.");
+                PagePartID="Customer Statistics FactBox";
+                Visible=TRUE;
+                Editable=FALSE;
+                PartType=Page }
+
+    { 1903720907;1;Part   ;
+                Name=Control1903720907;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="No."=FIELD("No.");
+                PagePartID="Sales Hist. Sell-to FactBox";
+                Visible=TRUE;
+                Editable=FALSE;
+                PartType=Page }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                Editable=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+
+    [External]
+    PROCEDURE GetSelectionFilter@2() : Code[80];
+    VAR
+      Cust@1000 : Record Customer;
+      FirstCust@1001 : Code[30];
+      LastCust@1002 : Code[30];
+      SelectionFilter@1003 : Code[250];
+      CustCount@1004 : Integer;
+      More@1005 : Boolean;
+    BEGIN
+      CurrPage.SETSELECTIONFILTER(Cust);
+      CustCount := Cust.COUNT;
+      if CustCount > 0 then begin
+        Cust.FIND('-');
+        while CustCount > 0 do begin
+          CustCount := CustCount - 1;
+          Cust.MARKEDONLY(false);
+          FirstCust := Cust."No.";
+          LastCust := FirstCust;
+          More := (CustCount > 0);
+          while More do
+            if Cust.NEXT = 0 then
+              More := false
+            else
+              if not Cust.MARK then
+                More := false
+              else begin
+                LastCust := Cust."No.";
+                CustCount := CustCount - 1;
+                if CustCount = 0 then
+                  More := false;
+              end;
+          if SelectionFilter <> '' then
+            SelectionFilter := SelectionFilter + '|';
+          if FirstCust = LastCust then
+            SelectionFilter := SelectionFilter + FirstCust
+          else
+            SelectionFilter := SelectionFilter + FirstCust + '..' + LastCust;
+          if CustCount > 0 then begin
+            Cust.MARKEDONLY(true);
+            Cust.NEXT;
+          end;
+        end;
+      end;
+      exit(SelectionFilter);
+    END;
+
+    [External]
+    PROCEDURE SetSelection@1(VAR Cust@1000 : Record Customer);
+    BEGIN
+      CurrPage.SETSELECTIONFILTER(Cust);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

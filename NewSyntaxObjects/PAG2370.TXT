@@ -1,0 +1,72 @@
+OBJECT Page 2370 BC O365 Default Email Messages
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161410.570T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Default Email Messages;
+    PageType=StandardDialog;
+    OnOpenPage=BEGIN
+                 InvoiceEmailMessage := O365DefaultEmailMsg.GetMessage(O365DefaultEmailMsg."Document Type"::Invoice);
+                 QuoteEmailMessage := O365DefaultEmailMsg.GetMessage(O365DefaultEmailMsg."Document Type"::Quote);
+               END;
+
+    OnQueryClosePage=BEGIN
+                       if CloseAction <> ACTION::OK then
+                         exit;
+
+                       O365DefaultEmailMsg."Document Type" := O365DefaultEmailMsg."Document Type"::Invoice;
+                       O365DefaultEmailMsg.SetMessage(InvoiceEmailMessage);
+                       O365DefaultEmailMsg."Document Type" := O365DefaultEmailMsg."Document Type"::Quote;
+                       O365DefaultEmailMsg.SetMessage(QuoteEmailMessage);
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 4   ;1   ;Field     ;
+                Name=DefaultInvoiceEmailMessage;
+                CaptionML=ENU=Default Invoice Email Message;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=InvoiceEmailMessage;
+                MultiLine=true;
+                OnValidate=BEGIN
+                             if InvoiceEmailMessage = '' then
+                               InvoiceEmailMessage := ' ';
+                           END;
+                            }
+
+    { 2   ;1   ;Field     ;
+                Name=DefaultQuoteEmailMessage;
+                CaptionML=ENU=Default Quote Email Message;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=QuoteEmailMessage;
+                MultiLine=true;
+                OnValidate=BEGIN
+                             if QuoteEmailMessage = '' then
+                               QuoteEmailMessage := ' ';
+                           END;
+                            }
+
+  }
+  CODE
+  {
+    VAR
+      O365DefaultEmailMsg@1000 : Record "O365 Default Email Message";
+      InvoiceEmailMessage@1001 : Text;
+      QuoteEmailMessage@1002 : Text;
+
+    BEGIN
+    END.
+  }
+}
+

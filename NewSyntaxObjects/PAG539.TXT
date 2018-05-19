@@ -1,0 +1,30 @@
+OBJECT Page 539 Dimension Value Combinations
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161257.773T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Dimension Value Combinations;
+    SaveValues=true;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    LinksAllowed=false;
+    SourceTable="Dimension Value";
+    PageType=Card;
+  }
+  CONTROLS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

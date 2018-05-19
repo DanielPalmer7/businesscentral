@@ -1,0 +1,61 @@
+OBJECT Table 10000 PAC Web Service
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160235.700T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnDelete=BEGIN
+               ValidateUsage;
+               DeleteSubTables;
+             END;
+
+    CaptionML=ENU=PAC Web Service;
+    LookupPageID="PAC Web Services";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code }
+    { 21  ;   ;Name                ;Text50        ;CaptionML=ENU=Name }
+    { 22  ;   ;Certificate Thumbprint;Text250     ;CaptionML=ENU=Certificate Thumbprint }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      Text000@1020000 : TextConst 'ENU=You cannot delete the code %1 because it is used in the %2 window.';
+      PACWebServiceDetail@1020001 : Record "PAC Web Service Detail";
+
+    [External]
+    PROCEDURE ValidateUsage@1020000();
+    VAR
+      GeneralLedgerSetup@1020000 : Record "General Ledger Setup";
+    BEGIN
+      GeneralLedgerSetup.GET;
+      if (GeneralLedgerSetup."PAC Code" <> '') and (GeneralLedgerSetup."PAC Code" = Code) then
+        ERROR(Text000,Code,GeneralLedgerSetup.TABLECAPTION);
+    END;
+
+    [External]
+    PROCEDURE DeleteSubTables@1020002();
+    BEGIN
+      PACWebServiceDetail.SETRANGE("PAC Code",Code);
+      if not PACWebServiceDetail.ISEMPTY then
+        PACWebServiceDetail.DELETEALL;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

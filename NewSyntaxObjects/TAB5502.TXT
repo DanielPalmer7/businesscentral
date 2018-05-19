@@ -1,0 +1,138 @@
+OBJECT Table 5502 Tax Rate Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160148.947T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Tax Rate Buffer;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Tax Area ID         ;GUID          ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Tax Area ID;
+                                                   Editable=false }
+    { 2   ;   ;Tax Group ID        ;GUID          ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Tax Group ID;
+                                                   Editable=false }
+    { 3   ;   ;Tax Rate            ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Tax Rate;
+                                                   Editable=false }
+  }
+  KEYS
+  {
+    {    ;"Tax Area ID","Tax Group ID"            ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      RecordMustBeTemporaryErr@1000 : TextConst 'ENU=Tax Rate Buffer Entity must be used as a temporary record.';
+
+    PROCEDURE LoadRecords@1();
+    VAR
+      GeneralLedgerSetup@1002 : Record "General Ledger Setup";
+    BEGIN
+      if not ISTEMPORARY then
+        ERROR(RecordMustBeTemporaryErr);
+
+      if GeneralLedgerSetup.UseVat then
+        LoadVATRates
+      else
+        LoadSalesTaxRates;
+    END;
+
+    LOCAL PROCEDURE LoadVATRates@7();
+    VAR
+      TempTaxAreaBuffer@1002 : TEMPORARY Record "Tax Area Buffer";
+      TempTaxGroupBuffer@1001 : TEMPORARY Record "Tax Group Buffer";
+      VATPostingSetup@1000 : Record "VAT Posting Setup";
+    BEGIN
+      if not VATPostingSetup.FINDSET then
+        exit;
+
+      TempTaxGroupBuffer.LoadRecords;
+      TempTaxAreaBuffer.LoadRecords;
+
+      repeat
+        InsertTaxRate(
+          VATPostingSetup."VAT Prod. Posting Group",VATPostingSetup."VAT Bus. Posting Group",VATPostingSetup."VAT %",
+          TempTaxAreaBuffer,TempTaxGroupBuffer);
+      until VATPostingSetup.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE LoadSalesTaxRates@8();
+    VAR
+      TempTaxAreaBuffer@1001 : TEMPORARY Record "Tax Area Buffer";
+      TempSearchTaxAreaBuffer@1004 : TEMPORARY Record "Tax Area Buffer";
+      TempTaxGroupBuffer@1000 : TEMPORARY Record "Tax Group Buffer";
+      DummyTaxDetail@1002 : Record "Tax Detail";
+      TaxGroupsForTaxAreas@1005 : Query "Tax Groups For Tax Areas";
+      TaxRate@1003 : Decimal;
+    BEGIN
+      TempTaxAreaBuffer.LoadRecords;
+      if not TempTaxAreaBuffer.FIND('-') then
+        exit;
+
+      TempSearchTaxAreaBuffer.COPY(TempTaxAreaBuffer,true);
+      TempTaxGroupBuffer.LoadRecords;
+
+      repeat
+        TaxGroupsForTaxAreas.SETRANGE(Tax_Area_Code,TempTaxAreaBuffer.Code);
+        if not TaxGroupsForTaxAreas.OPEN then
+          exit;
+
+        if not TaxGroupsForTaxAreas.READ then
+          exit;
+
+        repeat
+          TaxRate := DummyTaxDetail.GetSalesTaxRate(TempTaxAreaBuffer.Code,TaxGroupsForTaxAreas.Tax_Group_Code,WORKDATE,true);
+          InsertTaxRate(
+            TaxGroupsForTaxAreas.Tax_Group_Code,TempTaxAreaBuffer.Code,TaxRate,TempSearchTaxAreaBuffer,TempTaxGroupBuffer);
+        until not TaxGroupsForTaxAreas.READ;
+      until TempTaxAreaBuffer.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE FindTaxGroupByCode@17(TaxGroupCode@1001 : Code[20];VAR TempTaxGroupBuffer@1000 : TEMPORARY Record "Tax Group Buffer") : Boolean;
+    BEGIN
+      TempTaxGroupBuffer.SETRANGE(Code,TaxGroupCode);
+      exit(TempTaxGroupBuffer.FINDFIRST);
+    END;
+
+    LOCAL PROCEDURE FindTaxAreaByCode@18(TaxAreaCode@1001 : Code[20];VAR TempTaxAreaBuffer@1000 : TEMPORARY Record "Tax Area Buffer") : Boolean;
+    BEGIN
+      TempTaxAreaBuffer.SETRANGE(Code,TaxAreaCode);
+      exit(TempTaxAreaBuffer.FINDFIRST);
+    END;
+
+    LOCAL PROCEDURE InsertTaxRate@2(TaxGroupCode@1000 : Code[20];TaxAreaCode@1001 : Code[20];TaxRate@1004 : Decimal;VAR TempTaxAreaBuffer@1002 : TEMPORARY Record "Tax Area Buffer";VAR TempTaxGroupBuffer@1003 : TEMPORARY Record "Tax Group Buffer");
+    BEGIN
+      CLEAR(Rec);
+      if TaxGroupCode <> '' then
+        if FindTaxGroupByCode(TaxGroupCode,TempTaxGroupBuffer) then
+          VALIDATE("Tax Group ID",TempTaxGroupBuffer.Id)
+        else
+          exit;
+
+      if TaxAreaCode <> '' then
+        if FindTaxAreaByCode(TaxAreaCode,TempTaxAreaBuffer) then
+          VALIDATE("Tax Area ID",TempTaxAreaBuffer.Id)
+        else
+          exit;
+
+      VALIDATE("Tax Rate",TaxRate);
+      if not INSERT(true) then
+        MODIFY(true);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

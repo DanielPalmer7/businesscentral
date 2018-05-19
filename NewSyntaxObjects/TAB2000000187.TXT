@@ -1,0 +1,36 @@
+OBJECT Table 2000000187 Tenant Profile Page Metadata
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.920T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;App ID              ;GUID           }
+    { 2   ;   ;Profile ID          ;Code30        ;TableRelation="Tenant Profile"."Profile ID" }
+    { 3   ;   ;Page ID             ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(Page)) }
+    { 4   ;   ;Page Metadata       ;BLOB           }
+    { 5   ;   ;Page AL             ;BLOB           }
+    { 6   ;   ;Owner               ;Option        ;OptionString=System,Tenant }
+  }
+  KEYS
+  {
+    {    ;"Profile ID","Page ID","App ID",Owner   ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

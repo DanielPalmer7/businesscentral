@@ -1,0 +1,46 @@
+OBJECT Query 5502 Tax Groups For Tax Areas
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161807.347T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Tax Groups For Tax Areas;
+  }
+  ELEMENTS
+  {
+    { 1   ;    ;DataItem;Tax_Area            ;
+               DataItemTable="Tax Area" }
+
+    { 2   ;1   ;Column  ;Tax_Area_Code       ;
+               DataSource=Code }
+
+    { 3   ;1   ;DataItem;Tax_Area_Line       ;
+               DataItemTable="Tax Area Line";
+               DataItemLink="Tax Area"=Tax_Area.Code;
+               DataItemLinkType=Exclude Row If No Match }
+
+    { 4   ;2   ;Column  ;Tax_Jurisdiction_Code;
+               DataSource=Tax Jurisdiction Code }
+
+    { 6   ;2   ;DataItem;Tax_Detail          ;
+               DataItemTable="Tax Detail";
+               DataItemLink="Tax Jurisdiction Code"=Tax_Area_Line."Tax Jurisdiction Code";
+               DataItemLinkType=Exclude Row If No Match }
+
+    { 5   ;3   ;Column  ;Tax_Group_Code      ;
+               DataSource=Tax Group Code }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,35 @@
+OBJECT Table 27010 SAT Classification
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160238.400T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+    CaptionML=ENU=SAT Classification;
+  }
+  FIELDS
+  {
+    { 1   ;   ;SAT Classification  ;Code10        ;CaptionML=ENU=SAT Classification;
+                                                   Description=[  Identifies the classification of product or service] }
+    { 2   ;   ;Description         ;Text150       ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;"SAT Classification"                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,35 @@
+OBJECT Table 2000000188 User Page Metadata
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.913T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;User SID            ;GUID          ;TableRelation=User."User Security ID";
+                                                   TestTableRelation=false }
+    { 2   ;   ;Page ID             ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(Page)) }
+    { 3   ;   ;Page Metadata       ;BLOB           }
+    { 4   ;   ;Page AL             ;BLOB           }
+  }
+  KEYS
+  {
+    {    ;"User SID","Page ID"                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,39 @@
+OBJECT Codeunit 5349 Auto Create Sales Orders
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Job Queue Entry";
+    OnRun=BEGIN
+            CODEUNIT.RUN(CODEUNIT::"CRM Integration Management");
+            COMMIT;
+            CreateNAVSalesOrdersFromSubmittedCRMSalesorders;
+          END;
+
+  }
+  CODE
+  {
+
+    LOCAL PROCEDURE CreateNAVSalesOrdersFromSubmittedCRMSalesorders@1();
+    VAR
+      CRMSalesorder@1000 : Record "CRM Salesorder";
+    BEGIN
+      CRMSalesorder.SETRANGE(StateCode,CRMSalesorder.StateCode::Submitted);
+      CRMSalesorder.SETRANGE(LastBackofficeSubmit,0D);
+      if CRMSalesorder.FINDSET(true) then
+        repeat
+          if CODEUNIT.RUN(CODEUNIT::"CRM Sales Order to Sales Order",CRMSalesorder) then
+            COMMIT;
+        until CRMSalesorder.NEXT = 0;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

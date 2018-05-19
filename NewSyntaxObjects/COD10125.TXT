@@ -1,0 +1,40 @@
+OBJECT Codeunit 10125 Posted Bank Rec.-Delete
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Posted Bank Rec. Header";
+    Permissions=TableData "Bank Comment Line"=rd,
+                TableData "Posted Bank Rec. Header"=rd,
+                TableData "Posted Bank Rec. Line"=rd,
+                TableData TableData10125=rd;
+    OnRun=BEGIN
+            PostedBankRecLines.SETRANGE("Bank Account No.","Bank Account No.");
+            PostedBankRecLines.SETRANGE("Statement No.","Statement No.");
+            PostedBankRecLines.DELETEALL;
+
+            BankRecCommentLines.SETRANGE("Table Name",BankRecCommentLines."Table Name"::"Posted Bank Rec.");
+            BankRecCommentLines.SETRANGE("Bank Account No.","Bank Account No.");
+            BankRecCommentLines.SETRANGE("No.","Statement No.");
+            BankRecCommentLines.DELETEALL;
+
+            DELETE;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      PostedBankRecLines@1020000 : Record "Posted Bank Rec. Line";
+      BankRecCommentLines@1020001 : Record "Bank Comment Line";
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,29 @@
+OBJECT Page 7173 Shipment Lines Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161613.813T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Lines;
+    SaveValues=true;
+    LinksAllowed=false;
+    SourceTable="Sales Shipment Line";
+    PageType=ListPart;
+  }
+  CONTROLS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,103 @@
+OBJECT Codeunit 6307 PBI Aged Inventory Calc.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      TempBusinessChartBuffer@1006 : TEMPORARY Record "Business Chart Buffer";
+      AgedInventoryChartMgt@1000 : Codeunit "Aged Inventory Chart Mgt.";
+
+    PROCEDURE GetValues@1(VAR TempPowerBIChartBuffer@1000 : TEMPORARY Record "Power BI Chart Buffer");
+    VAR
+      SelectedChartDefinition@1002 : Record "Chart Definition";
+      ChartManagement@1003 : Codeunit "Chart Management";
+      i@1001 : Integer;
+      DummyInvtValue@1007 : ARRAY [5] OF Decimal;
+      PeriodStartDate@1006 : ARRAY [6] OF Date;
+    BEGIN
+      for i := 0 to 4 do begin
+        CLEAR(DummyInvtValue);
+        ChartManagement.SetPeriodLength(SelectedChartDefinition,TempBusinessChartBuffer,i,false);
+        CalcPeriodStartDates(PeriodStartDate,AgedInventoryChartMgt.GetPeriodLengthInDays(TempBusinessChartBuffer));
+        AgedInventoryChartMgt.CalcInventoryValuePerAge(DummyInvtValue,PeriodStartDate);
+        InsertToBuffer(TempPowerBIChartBuffer,DummyInvtValue);
+      end;
+    END;
+
+    LOCAL PROCEDURE CalcPeriodStartDates@4047(VAR PeriodStartDate@4047 : ARRAY [6] OF Date;PeriodLength@4049 : Integer);
+    VAR
+      LogInManagement@1000 : Codeunit LogInManagement;
+      I@4048 : Integer;
+    BEGIN
+      PeriodStartDate[6] := LogInManagement.GetDefaultWorkDate;
+      PeriodStartDate[1] := 0D;
+      for I := 2 to 5 do
+        PeriodStartDate[I] := CALCDATE('<-' + FORMAT((6 - I) * PeriodLength) + 'D>',PeriodStartDate[6]);
+    END;
+
+    LOCAL PROCEDURE InsertToBuffer@10(VAR TempPowerBIChartBuffer@1002 : TEMPORARY Record "Power BI Chart Buffer";pInvtValue@1001 : ARRAY [5] OF Decimal);
+    VAR
+      i@1000 : Integer;
+    BEGIN
+      with TempPowerBIChartBuffer do
+        for i := 1 to 5 do begin
+          if FINDLAST then
+            ID += 1
+          else
+            ID := 1;
+          Value := pInvtValue[i];
+          "Period Type" := TempBusinessChartBuffer."Period Length";
+          Date := AddChartColumns(TempBusinessChartBuffer,-i);
+          "Period Type Sorting" := "Period Type";
+          INSERT;
+        end
+    END;
+
+    LOCAL PROCEDURE AddChartColumns@4051(VAR BusChartBuf@4047 : Record "Business Chart Buffer";I@1002 : Integer) : Text[30];
+    VAR
+      AgedInventoryChartMgt@1003 : Codeunit "Aged Inventory Chart Mgt.";
+      PeriodLengthOnXAxis@4049 : Integer;
+      XAxisValueTxt@1000 : Text[30];
+      LastXAxisValueTxt@1001 : Text[30];
+      J@1004 : Integer;
+      Value1@1005 : Integer;
+      Value2@1006 : Integer;
+    BEGIN
+      I := I + 5;
+
+      with BusChartBuf do begin
+        PeriodLengthOnXAxis := AgedInventoryChartMgt.GetPeriodLengthInDays(BusChartBuf);
+        if PeriodLengthOnXAxis = 365 then begin
+          PeriodLengthOnXAxis := 1;
+          XAxisValueTxt := AgedInventoryChartMgt.FromToYearsTxt;
+          LastXAxisValueTxt := AgedInventoryChartMgt.OverYearsTxt;
+        end else begin
+          XAxisValueTxt := AgedInventoryChartMgt.FromToDaysTxt;
+          LastXAxisValueTxt := AgedInventoryChartMgt.OverDaysTxt;
+        end;
+        if I < 4 then begin
+          J := I + 1;
+          Value1 := I * PeriodLengthOnXAxis;
+          Value2 := J * PeriodLengthOnXAxis;
+          exit(STRSUBSTNO(XAxisValueTxt,Value1,Value2));  // X-Axis value
+        end;
+      end;
+      exit(STRSUBSTNO(LastXAxisValueTxt,FORMAT(4 * PeriodLengthOnXAxis)));  // X-Axis value
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

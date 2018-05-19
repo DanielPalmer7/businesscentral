@@ -1,0 +1,34 @@
+OBJECT Table 53 Batch Processing Parameter Map
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160058.560T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Batch Processing Parameter Map;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Record ID           ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Record ID }
+    { 2   ;   ;Batch ID            ;GUID          ;CaptionML=ENU=Batch ID }
+  }
+  KEYS
+  {
+    {    ;"Record ID"                             ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

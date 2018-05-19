@@ -1,0 +1,24 @@
+OBJECT Codeunit 1271 Exp. Data Handling Gen. Jnl.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Gen. Journal Line";
+    Permissions=TableData "Gen. Journal Line"=rimd;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

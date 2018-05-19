@@ -1,0 +1,67 @@
+OBJECT Page 683 Server Printers
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161311.167T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Server Printers;
+    LinksAllowed=false;
+    SourceTable=Printer;
+    PageType=StandardDialog;
+    SourceTableTemporary=true;
+    OnOpenPage=BEGIN
+                 CODEUNIT.RUN(CODEUNIT::"Init. Server Printer Table",Rec);
+                 if SelectedPrinterName <> '' then begin
+                   ID := SelectedPrinterName;
+                   if FIND then;
+                 end;
+               END;
+
+  }
+  CONTROLS
+  {
+    { 3   ;0   ;Container ;
+                Name=Control3;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Control2;
+                GroupType=Repeater }
+
+    { 1   ;2   ;Field     ;
+                Name=ID;
+                CaptionML=ENU=Printer Name;
+                ToolTipML=ENU=Specifies the name of the printer.;
+                ApplicationArea=#Advanced;
+                SourceExpr=ID;
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+    VAR
+      SelectedPrinterName@1000 : Text[250];
+
+    [External]
+    PROCEDURE SetSelectedPrinterName@1(NewName@1000 : Text[250]);
+    BEGIN
+      SelectedPrinterName := NewName;
+    END;
+
+    [External]
+    PROCEDURE GetSelectedPrinterName@2() : Text[250];
+    BEGIN
+      exit(ID);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

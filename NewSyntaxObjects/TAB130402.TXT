@@ -1,0 +1,32 @@
+OBJECT Table 130402 CAL Test Codeunit
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=CAL Test Codeunit;
+  }
+  FIELDS
+  {
+    { 1   ;   ;ID                  ;Integer       ;CaptionML=ENU=ID }
+    { 2   ;   ;File                ;Text250       ;CaptionML=ENU=File }
+  }
+  KEYS
+  {
+    {    ;ID                                      ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

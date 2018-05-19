@@ -1,0 +1,53 @@
+OBJECT Page 10013 Vendor Locations
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161713.363T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Vendor Locations;
+    SourceTable="Vendor Location";
+    DataCaptionFields="Vendor No.";
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1480000;1;Group     ;
+                Name=Control1480000;
+                GroupType=Repeater }
+
+    { 1480001;2;Field     ;
+                Name="Location Code";
+                ToolTipML=ENU=Specifies the location code of the location for which this record is valid.;
+                SourceExpr="Location Code";
+                ImplicitType=Code10 }
+
+    { 1480003;2;Field     ;
+                Name="Business Presence";
+                ToolTipML=ENU=Specifies the alternative tax area code to use when the vendor does not have a Business Presence at the location.;
+                SourceExpr="Business Presence";
+                ImplicitType=Boolean }
+
+    { 1480005;2;Field     ;
+                Name="Alt. Tax Area Code";
+                ToolTipML=ENU=Specifies the alternative tax area code to use when the vendor does not have a Business Presence at the location.;
+                SourceExpr="Alt. Tax Area Code";
+                ImplicitType=Code20 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

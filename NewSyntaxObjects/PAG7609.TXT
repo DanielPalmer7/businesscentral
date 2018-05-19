@@ -1,0 +1,32 @@
+OBJECT Page 7609 Monthly Calendar
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161629.343T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Monthly Calendar;
+    SaveValues=true;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    LinksAllowed=false;
+    SourceTable=Date;
+    SourceTableView=WHERE("Period Type"=CONST(Week));
+    PageType=Card;
+  }
+  CONTROLS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

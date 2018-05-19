@@ -1,0 +1,35 @@
+OBJECT Table 283 Line Number Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160107.130T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Line Number Buffer;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Old Line Number     ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Old Line Number }
+    { 2   ;   ;New Line Number     ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=New Line Number }
+  }
+  KEYS
+  {
+    {    ;"Old Line Number"                       ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,127 @@
+OBJECT Table 2020 Image Analysis Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160130.500T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+    Permissions=TableData "Service Password"=rimd;
+    CaptionML=ENU=Image Analysis Setup;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=ENU=Primary Key }
+    { 2   ;   ;Period start date   ;DateTime      ;ObsoleteState=Pending;
+                                                   ObsoleteReason=Use of Table 2003 to track usage instead.;
+                                                   CaptionML=ENU=Period start date }
+    { 3   ;   ;Number of calls     ;Integer       ;ObsoleteState=Pending;
+                                                   ObsoleteReason=Use of Table 2003 to track usage instead.;
+                                                   CaptionML=ENU=Number of calls }
+    { 4   ;   ;Api Uri             ;Text250       ;OnValidate=BEGIN
+                                                                ValidateApiUri("Api Uri");
+                                                              END;
+
+                                                   CaptionML=ENU=Api Uri }
+    { 5   ;   ;Api Key Key         ;GUID          ;ExtendedDatatype=Masked;
+                                                   CaptionML=ENU=Api Key Key }
+    { 6   ;   ;Limit value         ;Integer       ;ObsoleteState=Pending;
+                                                   ObsoleteReason=Use of Table 2003 to track usage instead.;
+                                                   CaptionML=ENU=Limit value }
+    { 7   ;   ;Limit type          ;Option        ;ObsoleteState=Pending;
+                                                   ObsoleteReason=Use of Table 2003 to track usage instead.;
+                                                   CaptionML=ENU=Limit type;
+                                                   OptionCaptionML=ENU=Year,Month,Day,Hour;
+                                                   OptionString=Year,Month,Day,Hour }
+  }
+  KEYS
+  {
+    {    ;"Primary Key"                           ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      TooManyCallsErr@1007 : TextConst '@@@=%1 is the number of calls per time unit allowed, %2 is the time unit duration (year, month, day, or hour);ENU=Sorry, you''ll have to wait until the start of the next %2. You can analyze %1 images per %2, and you''ve already hit the limit.';
+      InvalidApiUriErr@1000 : TextConst 'ENU=The Api Uri must be a valid Uri for Cognitive Services.';
+
+    PROCEDURE Increment@2();
+    VAR
+      CortanaIntelligenceUsage@1002 : Record "Cortana Intelligence Usage";
+    BEGIN
+      GetSingleInstance;
+      if (GetApiKey <> '' ) and ("Api Uri" <> '') then
+        exit; // unlimited access for user's own service
+
+      CortanaIntelligenceUsage.IncrementTotalProcessingTime(CortanaIntelligenceUsage.Service::"Computer Vision",1);
+    END;
+
+    PROCEDURE IsUsageLimitReached@7(VAR UsageLimitError@1003 : Text;MaxCallsPerPeriod@1004 : Integer;PeriodType@1005 : 'Year,Month,Day,Hour') : Boolean;
+    VAR
+      CortanaIntelligenceUsage@1001 : Record "Cortana Intelligence Usage";
+    BEGIN
+      if (GetApiKey <> '' ) and ("Api Uri" <> '') then
+        exit(false); // unlimited access for user's own service
+
+      if CortanaIntelligenceUsage.IsAzureMLLimitReached(CortanaIntelligenceUsage.Service::"Computer Vision",MaxCallsPerPeriod) then begin
+        UsageLimitError := STRSUBSTNO(TooManyCallsErr,FORMAT(MaxCallsPerPeriod),LOWERCASE(FORMAT(PeriodType)));
+        exit(true);
+      end;
+
+      exit(false);
+    END;
+
+    PROCEDURE ValidateApiUri@1(ApiUri@1000 : Text);
+    VAR
+      RegEx@1001 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.RegularExpressions.Regex";
+    BEGIN
+      if ApiUri <> '' then
+        if not RegEx.IsMatch(ApiUri,'https://([a-z0-9]|\.)*\.api\.cognitive\.microsoft.com/.*') then
+          ERROR(InvalidApiUriErr);
+    END;
+
+    [External]
+    PROCEDURE SetApiKey@6(ApiKey@1000 : Text);
+    VAR
+      ServicePassword@1001 : Record "Service Password";
+    BEGIN
+      if ISNULLGUID("Api Key Key") or not ServicePassword.GET("Api Key Key") then begin
+        ServicePassword.SavePassword(ApiKey);
+        ServicePassword.INSERT(true);
+        "Api Key Key" := ServicePassword.Key;
+      end else begin
+        ServicePassword.SavePassword(ApiKey);
+        ServicePassword.MODIFY(true);
+      end;
+    END;
+
+    [External]
+    PROCEDURE GetApiKey@8() : Text;
+    VAR
+      ServicePassword@1000 : Record "Service Password";
+    BEGIN
+      if not ISNULLGUID("Api Key Key") then
+        if ServicePassword.GET("Api Key Key") then
+          exit(ServicePassword.GetPassword);
+    END;
+
+    [External]
+    PROCEDURE GetSingleInstance@9();
+    BEGIN
+      if not GET then begin
+        INIT;
+        INSERT;
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,26 @@
+OBJECT Codeunit 1621 PEPPOL Service Validation
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Service Header";
+    OnRun=VAR
+            PEPPOLValidation@1000 : Codeunit "PEPPOL Validation";
+          BEGIN
+            PEPPOLValidation.CheckServiceHeader(Rec);
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

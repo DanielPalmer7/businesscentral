@@ -1,0 +1,121 @@
+OBJECT Query 261 G/L Entries
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161758.373T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=G/L Entries;
+  }
+  ELEMENTS
+  {
+    { 1   ;    ;DataItem;G_L_Entry           ;
+               DataItemTable="G/L Entry" }
+
+    { 2   ;1   ;Column  ;Entry_No            ;
+               DataSource=Entry No. }
+
+    { 29  ;1   ;Column  ;Transaction_No      ;
+               DataSource=Transaction No. }
+
+    { 3   ;1   ;Column  ;G_L_Account_No      ;
+               DataSource=G/L Account No. }
+
+    { 4   ;1   ;Column  ;Posting_Date        ;
+               DataSource=Posting Date }
+
+    { 7   ;1   ;Column  ;Document_Date       ;
+               DataSource=Document Date }
+
+    { 5   ;1   ;Column  ;Document_Type       ;
+               DataSource=Document Type }
+
+    { 6   ;1   ;Column  ;Document_No         ;
+               DataSource=Document No. }
+
+    { 9   ;1   ;Column  ;Source_Code         ;
+               DataSource=Source Code }
+
+    { 10  ;1   ;Column  ;Job_No              ;
+               DataSource=Job No. }
+
+    { 13  ;1   ;Column  ;Business_Unit_Code  ;
+               DataSource=Business Unit Code }
+
+    { 14  ;1   ;Column  ;Reason_Code         ;
+               DataSource=Reason Code }
+
+    { 15  ;1   ;Column  ;Gen_Posting_Type    ;
+               DataSource=Gen. Posting Type }
+
+    { 16  ;1   ;Column  ;Gen_Bus_Posting_Group;
+               DataSource=Gen. Bus. Posting Group }
+
+    { 17  ;1   ;Column  ;Gen_Prod_Posting_Group;
+               DataSource=Gen. Prod. Posting Group }
+
+    { 18  ;1   ;Column  ;Tax_Area_Code       ;
+               DataSource=Tax Area Code }
+
+    { 19  ;1   ;Column  ;Tax_Liable          ;
+               DataSource=Tax Liable }
+
+    { 20  ;1   ;Column  ;Tax_Group_Code      ;
+               DataSource=Tax Group Code }
+
+    { 21  ;1   ;Column  ;Use_Tax             ;
+               DataSource=Use Tax }
+
+    { 22  ;1   ;Column  ;VAT_Bus_Posting_Group;
+               DataSource=VAT Bus. Posting Group }
+
+    { 23  ;1   ;Column  ;VAT_Prod_Posting_Group;
+               DataSource=VAT Prod. Posting Group }
+
+    { 32  ;1   ;Column  ;IC_Partner_Code     ;
+               DataSource=IC Partner Code }
+
+    { 8   ;1   ;Column  ;Amount              ;
+               DataSource=Amount }
+
+    { 27  ;1   ;Column  ;Debit_Amount        ;
+               DataSource=Debit Amount }
+
+    { 28  ;1   ;Column  ;Credit_Amount       ;
+               DataSource=Credit Amount }
+
+    { 12  ;1   ;Column  ;VAT_Amount          ;
+               DataSource=VAT Amount }
+
+    { 11  ;1   ;Column  ;Additional_Currency_Amount;
+               DataSource=Additional-Currency Amount }
+
+    { 25  ;1   ;Column  ;Add_Currency_Debit_Amount;
+               DataSource=Add.-Currency Debit Amount }
+
+    { 26  ;1   ;Column  ;Add_Currency_Credit_Amount;
+               DataSource=Add.-Currency Credit Amount }
+
+    { 24  ;1   ;Column  ;Dimension_Set_ID    ;
+               DataSource=Dimension Set ID }
+
+    { 30  ;1   ;DataItem;G_L_Account         ;
+               DataItemTable="G/L Account";
+               DataItemLink="No."=G_L_Entry."G/L Account No." }
+
+    { 31  ;2   ;Column  ;G_L_Account_Name    ;
+               DataSource=Name }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

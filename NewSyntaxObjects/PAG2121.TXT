@@ -1,0 +1,117 @@
+OBJECT Page 2121 O365 Posted Sales Inv. Att.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161401.377T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Attachments;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="Sales Invoice Header";
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 IsPhone := not (ClientTypeManagement.GetCurrentClientType in [CLIENTTYPE::Tablet,CLIENTTYPE::Web]);
+                 if IsPhone then
+                   CameraAvailable := CurrPage.PhoneIncomingDocAttachFactBox.PAGE.GetCameraAvailable
+                 else
+                   CameraAvailable := CurrPage.WebIncomingDocAttachFactBox.PAGE.GetCameraAvailable;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 3       ;    ;ActionContainer;
+                      Name=ActionContainer3;
+                      ActionContainerType=ActionItems }
+      { 5       ;1   ;Action    ;
+                      Name=ImportNewPhone;
+                      CaptionML=ENU=Attach Picture;
+                      ToolTipML=ENU=Attach a picture to the invoice.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      Visible=IsPhone;
+                      PromotedIsBig=true;
+                      Image=Attach;
+                      OnAction=BEGIN
+                                 CurrPage.PhoneIncomingDocAttachFactBox.PAGE.ImportNewFile;
+                               END;
+                                }
+      { 7       ;1   ;Action    ;
+                      Name=ImportNewWeb;
+                      CaptionML=ENU=Add Attachments;
+                      ToolTipML=ENU=Attach an attachment to the invoice.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      Visible=NOT IsPhone;
+                      PromotedIsBig=true;
+                      Image=Attach;
+                      OnAction=BEGIN
+                                 CurrPage.WebIncomingDocAttachFactBox.PAGE.ImportNewFile;
+                               END;
+                                }
+      { 4       ;1   ;Action    ;
+                      Name=TakePicture;
+                      CaptionML=ENU=Take Picture;
+                      ToolTipML=ENU=Activate the camera on the device.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      Visible=CameraAvailable;
+                      PromotedIsBig=true;
+                      Image=Camera;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 if IsPhone then
+                                   CurrPage.PhoneIncomingDocAttachFactBox.PAGE.TakeNewPicture
+                                 else
+                                   CurrPage.WebIncomingDocAttachFactBox.PAGE.TakeNewPicture;
+                               END;
+
+                      Gesture=None }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Attachments;
+                CaptionML=ENU=Attachments;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Part      ;
+                Name=PhoneIncomingDocAttachFactBox;
+                CaptionML=ENU=Attachments;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SubPageLink="Posting Date"=FIELD("Posting Date"),
+                            "Document No."=FIELD("No.");
+                PagePartID="O365 Incoming Doc. Attch. List";
+                Visible=IsPhone;
+                PartType=Page;
+                ShowFilter=false }
+
+    { 6   ;1   ;Part      ;
+                Name=WebIncomingDocAttachFactBox;
+                CaptionML=ENU=Attachments;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SubPageLink="Posting Date"=FIELD("Posting Date"),
+                            "Document No."=FIELD("No.");
+                PagePartID="BC O365 Inc. Doc. Attch. List";
+                Visible=NOT IsPhone;
+                PartType=Page;
+                ShowFilter=false }
+
+  }
+  CODE
+  {
+    VAR
+      ClientTypeManagement@1002 : Codeunit ClientTypeManagement;
+      CameraAvailable@1000 : Boolean;
+      IsPhone@1001 : Boolean;
+
+    BEGIN
+    END.
+  }
+}
+

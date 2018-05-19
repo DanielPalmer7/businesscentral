@@ -1,0 +1,28 @@
+OBJECT Page 7186 Purch. Cr. Memo Lines Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161614.363T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Lines;
+    MultipleNewLines=true;
+    SourceTable="Purch. Cr. Memo Line";
+    PageType=ListPart;
+  }
+  CONTROLS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

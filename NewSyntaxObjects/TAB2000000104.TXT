@@ -1,0 +1,33 @@
+OBJECT Table 2000000104 Debugger Watch
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.770T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;ID                  ;Integer       ;AutoIncrement=true }
+    { 7   ;   ;Path                ;Text124        }
+  }
+  KEYS
+  {
+    {    ;ID                                      ;Clustered=true }
+    {    ;Path                                     }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

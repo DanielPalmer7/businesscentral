@@ -1,0 +1,75 @@
+OBJECT Page 10151 O365 Tax Settings List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161723.613T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Tax Rates;
+    DeleteAllowed=false;
+    SourceTable="Tax Area";
+    PageType=List;
+    CardPageID="O365 Tax Settings Card";
+    RefreshOnActivate=true;
+    OnAfterGetRecord=BEGIN
+                       DefaultCode := O365TaxSettingsManagement.GetDefaultTaxArea;
+                       if Code = DefaultCode then
+                         StyleExpr := 'Strong'
+                       else
+                         StyleExpr := 'Standard';
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 1020004 ;    ;ActionContainer;
+                      Name=ActionContainer1020004;
+                      ActionContainerType=ActionItems }
+      { 1020003 ;1   ;Action    ;
+                      Name=Open;
+                      ShortCutKey=Return;
+                      CaptionML=ENU=Open;
+                      ToolTipML=ENU=Open the card for the selected record.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Image=ViewDetails;
+                      OnAction=BEGIN
+                                 PAGE.RUN(PAGE::"O365 Tax Settings Card",Rec);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1020000;0;Container ;
+                Name=Control1020000;
+                ContainerType=ContentArea }
+
+    { 1020001;1;Group     ;
+                Name=Control1020001;
+                GroupType=Repeater }
+
+    { 1020002;2;Field     ;
+                Name=GetDescriptionInCurrentLanguage;
+                ToolTipML=ENU=Specifies the tax rate used to calculate tax on what you buy or sell.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=GetDescriptionInCurrentLanguage;
+                Editable=FALSE;
+                StyleExpr=StyleExpr;
+                ImplicitType=Text50 }
+
+  }
+  CODE
+  {
+    VAR
+      O365TaxSettingsManagement@1020001 : Codeunit "O365 Tax Settings Management";
+      DefaultCode@1020002 : Code[20];
+      StyleExpr@1020000 : Text;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,36 @@
+OBJECT Table 2000000177 Tenant Profile
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.900T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;App ID              ;GUID           }
+    { 2   ;   ;Profile ID          ;Code30         }
+    { 3   ;   ;Description         ;Text250        }
+    { 4   ;   ;Role Center ID      ;Integer       ;TableRelation=AllObjWithCaption."Object ID" WHERE ("Object Type"=CONST(Page)) }
+    { 5   ;   ;Default Role Center ;Boolean        }
+    { 6   ;   ;Disable Personalization;Boolean     }
+  }
+  KEYS
+  {
+    {    ;"App ID","Profile ID"                   ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

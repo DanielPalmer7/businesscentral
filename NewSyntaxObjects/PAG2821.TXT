@@ -1,0 +1,183 @@
+OBJECT Page 2821 Native - PDFs
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161414.130T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=[@@@={Locked};
+               ENU=nativeInvoicingPDFs];
+    SourceTable="Attachment Entity Buffer";
+    PageType=List;
+    SourceTableTemporary=true;
+    OnOpenPage=BEGIN
+                 BINDSUBSCRIPTION(NativeAPILanguageHandler);
+               END;
+
+    OnFindRecord=VAR
+                   DocumentId@1005 : GUID;
+                   DocumentIdFilter@1001 : Text;
+                   FilterView@1000 : Text;
+                 BEGIN
+                   if not PdfGenerated then begin
+                     FilterView := GETVIEW;
+                     DocumentIdFilter := GETFILTER("Document Id");
+                     if DocumentIdFilter = '' then
+                       DocumentIdFilter := GETFILTER(Id);
+                     SETVIEW(FilterView);
+                     DocumentId := GetDocumentId(DocumentIdFilter);
+                     if ISNULLGUID(DocumentId) then
+                       exit(false);
+                     GeneratePdf(DocumentId);
+                   end;
+                   exit(true);
+                 END;
+
+    ODataKeyFields="Document Id";
+  }
+  CONTROLS
+  {
+    { 18  ;0   ;Container ;
+                Name=Control18;
+                ContainerType=ContentArea }
+
+    { 17  ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1   ;2   ;Field     ;
+                Name=documentId;
+                CaptionML=[@@@={Locked};
+                           ENU=documentId];
+                ApplicationArea=#All;
+                SourceExpr="Document Id";
+                ImplicitType=GUID }
+
+    { 7   ;2   ;Field     ;
+                Name=fileName;
+                CaptionML=[@@@={Locked};
+                           ENU=fileName];
+                ApplicationArea=#All;
+                SourceExpr="File Name";
+                ImplicitType=Text250 }
+
+    { 4   ;2   ;Field     ;
+                Name=content;
+                CaptionML=[@@@={Locked};
+                           ENU=content];
+                ApplicationArea=#All;
+                SourceExpr=Content;
+                ImplicitType=BLOB }
+
+  }
+  CODE
+  {
+    VAR
+      CannotFindDocumentErr@1006 : TextConst '@@@=%1 - Error Message;ENU=The document %1 cannot be found.';
+      CannotOpenFileErr@1005 : TextConst '@@@=%1 - Error Message;ENU=Opening the file failed because of the following error: \%1.';
+      DocumentIDNotSpecifiedForAttachmentsErr@1010 : TextConst 'ENU=You must specify a document ID to get the PDF.';
+      DocumentDoesNotExistErr@1009 : TextConst 'ENU=No document with the specified ID exists.';
+      NativeAPILanguageHandler@1000 : Codeunit "Native API - Language Handler";
+      PdfGenerated@1002 : Boolean;
+
+    LOCAL PROCEDURE GetDocumentId@5(DocumentIdFilter@1001 : Text) : GUID;
+    VAR
+      SalesHeader@1003 : Record "Sales Header";
+      SalesInvoiceHeader@1004 : Record "Sales Invoice Header";
+      DataTypeManagement@1006 : Codeunit "Data Type Management";
+      DocumentRecordRef@1000 : RecordRef;
+      DocumentIdFieldRef@1005 : FieldRef;
+      DocumentId@1002 : GUID;
+    BEGIN
+      if DocumentIdFilter = '' then
+        ERROR(DocumentIDNotSpecifiedForAttachmentsErr);
+
+      SalesHeader.SETFILTER(Id,DocumentIdFilter);
+      if SalesHeader.FINDFIRST then
+        DocumentRecordRef.GETTABLE(SalesHeader)
+      else begin
+        SalesInvoiceHeader.SETFILTER(Id,DocumentIdFilter);
+        if SalesInvoiceHeader.FINDFIRST then
+          DocumentRecordRef.GETTABLE(SalesInvoiceHeader)
+        else
+          ERROR(DocumentDoesNotExistErr);
+      end;
+
+      DataTypeManagement.FindFieldByName(DocumentRecordRef,DocumentIdFieldRef,SalesHeader.FIELDNAME(Id));
+      EVALUATE(DocumentId,FORMAT(DocumentIdFieldRef.VALUE));
+
+      exit(DocumentId);
+    END;
+
+    LOCAL PROCEDURE GeneratePdf@21(DocumentId@1009 : GUID);
+    VAR
+      CompanyInformation@1004 : Record "Company Information";
+      SalesInvoiceHeader@1002 : Record "Sales Invoice Header";
+      SalesHeader@1006 : Record "Sales Header";
+      ReportSelections@1005 : Record "Report Selections";
+      NativeReports@1011 : Codeunit "Native - Reports";
+      DocumentMailing@1003 : Codeunit "Document-Mailing";
+      File@1007 : File;
+      InStream@1008 : InStream;
+      OutStream@1010 : OutStream;
+      Path@1001 : Text[250];
+      Name@1000 : Text[250];
+      ReportId@1012 : Integer;
+    BEGIN
+      CompanyInformation.GET;
+      SalesHeader.SETRANGE(Id,DocumentId);
+      if SalesHeader.FINDFIRST then
+        case SalesHeader."Document Type" of
+          SalesHeader."Document Type"::Invoice:
+            begin
+              ReportId := NativeReports.DraftSalesInvoiceReportId;
+              ReportSelections.GetPdfReport(Path,ReportId,SalesHeader,SalesHeader."Sell-to Customer No.");
+              DocumentMailing.GetAttachmentFileName(Name,SalesHeader."No.",SalesHeader.GetDocTypeTxt,ReportId);
+            end;
+          SalesHeader."Document Type"::Quote:
+            begin
+              ReportId := NativeReports.SalesQuoteReportId;
+              ReportSelections.GetPdfReport(Path,ReportId,SalesHeader,SalesHeader."Sell-to Customer No.");
+              DocumentMailing.GetAttachmentFileName(Name,SalesHeader."No.",SalesHeader.GetDocTypeTxt,ReportId);
+            end;
+          else
+            ERROR(CannotFindDocumentErr,DocumentId);
+        end
+      else begin
+        SalesInvoiceHeader.SETRANGE(Id,DocumentId);
+        if SalesInvoiceHeader.FINDFIRST then begin
+          ReportId := NativeReports.PostedSalesInvoiceReportId;
+          ReportSelections.GetPdfReport(Path,ReportId,SalesInvoiceHeader,SalesInvoiceHeader."Sell-to Customer No.");
+          DocumentMailing.GetAttachmentFileName(Name,SalesInvoiceHeader."No.",SalesInvoiceHeader.GetDocTypeTxt,ReportId);
+        end else
+          ERROR(CannotFindDocumentErr,DocumentId);
+      end;
+
+      if not File.OPEN(Path) then
+        ERROR(CannotOpenFileErr,GETLASTERRORTEXT);
+
+      INIT;
+      Id := DocumentId;
+      "Document Id" := DocumentId;
+      "File Name" := Name;
+      Type := Type::PDF;
+      Content.CREATEOUTSTREAM(OutStream);
+      File.CREATEINSTREAM(InStream);
+      COPYSTREAM(OutStream,InStream);
+      File.CLOSE;
+      if ERASE(Path) then;
+      INSERT(true);
+
+      PdfGenerated := true;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

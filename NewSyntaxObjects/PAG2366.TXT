@@ -1,0 +1,102 @@
+OBJECT Page 2366 BC O365 Coupon List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161410.520T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Coupons;
+    SourceTable="O365 Coupon Claim";
+    PageType=List;
+    RefreshOnActivate=true;
+    ShowFilter=false;
+    OnAfterGetRecord=BEGIN
+                       UpdateStatusText;
+                       if "Is applied" then begin
+                         StatusTextStyleExpr := 'Favorable';
+                         CodeStyleExpr := 'Subordinate';
+                       end else begin
+                         CLEAR(StatusTextStyleExpr);
+                         CLEAR(CodeStyleExpr);
+                       end;
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 16      ;    ;ActionContainer;
+                      Name=ActionContainer16;
+                      ActionContainerType=ActionItems }
+      { 7       ;1   ;Action    ;
+                      Name=Open;
+                      ShortCutKey=Return;
+                      CaptionML=ENU=Open;
+                      ToolTipML=ENU=Open the card for the selected record.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Visible=FALSE;
+                      Image=DocumentEdit;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 PAGE.RUNMODAL(PAGE::"BC O365 Coupon",Rec);
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=PseudoCode;
+                CaptionML=ENU=Code;
+                ToolTipML=ENU=Specifies the code of the coupon.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=GetCouponPseudoCode;
+                StyleExpr=CodeStyleExpr;
+                ImplicitType=Text }
+
+    { 6   ;2   ;Field     ;
+                Name=Offer;
+                ToolTipML=ENU=Specifies the coupon offer.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Offer;
+                ImplicitType=Text250 }
+
+    { 9   ;2   ;Field     ;
+                Name="Amount Text";
+                ToolTipML=ENU=Specifies the coupon amount.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Amount Text";
+                ImplicitType=Text30 }
+
+    { 4   ;2   ;Field     ;
+                Name="Status Text";
+                ToolTipML=ENU=Specifies the coupon status.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Status Text";
+                StyleExpr=StatusTextStyleExpr;
+                ImplicitType=Text50 }
+
+  }
+  CODE
+  {
+    VAR
+      StatusTextStyleExpr@1001 : Text;
+      CodeStyleExpr@1002 : Text;
+
+    BEGIN
+    END.
+  }
+}
+

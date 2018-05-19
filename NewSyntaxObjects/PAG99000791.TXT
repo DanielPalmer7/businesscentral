@@ -1,0 +1,97 @@
+OBJECT Page 99000791 Family List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161733.683T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Family List;
+    SourceTable=Family;
+    PageType=List;
+    CardPageID=Family;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the involved entry or record, according to the specified number series.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr="No.";
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description for a product family.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+    { 6   ;2   ;Field     ;
+                Name="Description 2";
+                ToolTipML=ENU=Specifies an additional description of the product family if there is not enough space in the Description field.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr="Description 2";
+                Visible=FALSE;
+                ImplicitType=Text50 }
+
+    { 8   ;2   ;Field     ;
+                Name="Routing No.";
+                ToolTipML=ENU=Specifies the number of the routing which is used for the production of the family.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr="Routing No.";
+                ImplicitType=Code20 }
+
+    { 1102601000;2;Field  ;
+                Name=Blocked;
+                ToolTipML=ENU=Specifies that the related record is blocked from being posted in transactions, for example a customer that is declared insolvent or an item that is placed in quarantine.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr=Blocked;
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 1102601002;2;Field  ;
+                Name="Last Date Modified";
+                ToolTipML=ENU=Specifies when the standard data of this production family was last modified.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr="Last Date Modified";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Name=Control1900383207;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

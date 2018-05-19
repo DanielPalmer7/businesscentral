@@ -1,0 +1,485 @@
+OBJECT Table 5505 Sales Quote Entity Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160149.43T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               "Last Modified Date Time" := CURRENTDATETIME;
+               UpdateReferencedRecordIds;
+             END;
+
+    OnModify=BEGIN
+               "Last Modified Date Time" := CURRENTDATETIME;
+               UpdateReferencedRecordIds;
+             END;
+
+    OnRename=BEGIN
+               "Last Modified Date Time" := CURRENTDATETIME;
+               UpdateReferencedRecordIds;
+             END;
+
+    CaptionML=ENU=Sales Quote Entity Buffer;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Document Type       ;Option        ;InitValue=Invoice;
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Document Type;
+                                                   OptionCaptionML=ENU=Quote,Order,Invoice,Credit Memo,Blanket Order,Return Order;
+                                                   OptionString=Quote,Order,Invoice,"Credit Memo","Blanket Order","Return Order" }
+    { 2   ;   ;Sell-to Customer No.;Code20        ;TableRelation=Customer;
+                                                   OnValidate=BEGIN
+                                                                UpdateCustomerId;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Sell-to Customer No.;
+                                                   NotBlank=true }
+    { 3   ;   ;No.                 ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=No. }
+    { 11  ;   ;Your Reference      ;Text35        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Your Reference }
+    { 20  ;   ;Posting Date        ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Posting Date }
+    { 23  ;   ;Payment Terms Code  ;Code10        ;TableRelation="Payment Terms";
+                                                   OnValidate=BEGIN
+                                                                UpdatePaymentTermsId;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Payment Terms Code }
+    { 24  ;   ;Due Date            ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Due Date }
+    { 27  ;   ;Shipment Method Code;Code10        ;TableRelation="Shipment Method";
+                                                   OnValidate=BEGIN
+                                                                UpdateShipmentMethodId;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Shipment Method Code }
+    { 31  ;   ;Customer Posting Group;Code20      ;TableRelation="Customer Posting Group";
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Customer Posting Group }
+    { 32  ;   ;Currency Code       ;Code10        ;TableRelation=Currency;
+                                                   OnValidate=BEGIN
+                                                                UpdateCurrencyId;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Currency Code }
+    { 35  ;   ;Prices Including VAT;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Prices Including Tax }
+    { 43  ;   ;Salesperson Code    ;Code20        ;TableRelation="Salesperson/Purchaser";
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Salesperson Code }
+    { 56  ;   ;Recalculate Invoice Disc.;Boolean  ;FieldClass=FlowField;
+                                                   CalcFormula=Exist("Sales Line" WHERE ("Document Type"=CONST(Invoice),
+                                                                                         "Document No."=FIELD("No."),
+                                                                                         "Recalculate Invoice Disc."=CONST(true)));
+                                                   CaptionML=ENU=Recalculate Invoice Disc.;
+                                                   Editable=false }
+    { 60  ;   ;Amount              ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Amount;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr="Currency Code" }
+    { 61  ;   ;Amount Including VAT;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Amount Including Tax;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr="Currency Code" }
+    { 70  ;   ;VAT Registration No.;Text20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Tax Registration No. }
+    { 79  ;   ;Sell-to Customer Name;Text50       ;TableRelation=Customer.Name;
+                                                   ValidateTableRelation=false;
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Sell-to Customer Name }
+    { 81  ;   ;Sell-to Address     ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Sell-to Address }
+    { 82  ;   ;Sell-to Address 2   ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Sell-to Address 2 }
+    { 83  ;   ;Sell-to City        ;Text30        ;TableRelation=IF ("Sell-to Country/Region Code"=CONST('')) "Post Code".City
+                                                                 ELSE IF ("Sell-to Country/Region Code"=FILTER(<>'')) "Post Code".City WHERE ("Country/Region Code"=FIELD("Sell-to Country/Region Code"));
+                                                   ValidateTableRelation=false;
+                                                   TestTableRelation=false;
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Sell-to City }
+    { 84  ;   ;Sell-to Contact     ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Sell-to Contact }
+    { 88  ;   ;Sell-to Post Code   ;Code20        ;TableRelation=IF ("Sell-to Country/Region Code"=CONST('')) "Post Code"
+                                                                 ELSE IF ("Sell-to Country/Region Code"=FILTER(<>'')) "Post Code" WHERE ("Country/Region Code"=FIELD("Sell-to Country/Region Code"));
+                                                   ValidateTableRelation=false;
+                                                   TestTableRelation=false;
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Sell-to ZIP Code }
+    { 89  ;   ;Sell-to County      ;Text30        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Sell-to State }
+    { 90  ;   ;Sell-to Country/Region Code;Code10 ;TableRelation="Country/Region";
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Sell-to Country/Region Code }
+    { 99  ;   ;Document Date       ;Date          ;OnValidate=BEGIN
+                                                                VALIDATE("Posting Date","Document Date");
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Document Date }
+    { 100 ;   ;External Document No.;Code35       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=External Document No. }
+    { 114 ;   ;Tax Area Code       ;Code20        ;TableRelation="Tax Area";
+                                                   OnValidate=BEGIN
+                                                                if IsUsingVAT then
+                                                                  ERROR(SalesTaxOnlyFieldErr,FIELDCAPTION("Tax Area Code"));
+                                                              END;
+
+                                                   ValidateTableRelation=false;
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Tax Area Code }
+    { 115 ;   ;Tax Liable          ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Tax Liable }
+    { 116 ;   ;VAT Bus. Posting Group;Code20      ;TableRelation="VAT Business Posting Group";
+                                                   OnValidate=BEGIN
+                                                                if not IsUsingVAT then
+                                                                  ERROR(VATOnlyFieldErr,FIELDCAPTION("VAT Bus. Posting Group"));
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Tax Bus. Posting Group }
+    { 121 ;   ;Invoice Discount Calculation;Option;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Invoice Discount Calculation;
+                                                   OptionCaptionML=ENU=None,%,Amount;
+                                                   OptionString=None,"%",Amount }
+    { 122 ;   ;Invoice Discount Value;Decimal     ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Invoice Discount Value;
+                                                   AutoFormatType=1 }
+    { 152 ;   ;Quote Valid Until Date;Date        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Quote Valid Until Date }
+    { 153 ;   ;Quote Sent to Customer;DateTime    ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Quote Sent to Customer;
+                                                   Editable=false }
+    { 154 ;   ;Quote Accepted      ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Quote Accepted }
+    { 155 ;   ;Quote Accepted Date ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Quote Accepted Date;
+                                                   Editable=false }
+    { 167 ;   ;Last Email Sent Status;Option      ;ObsoleteState=Pending;
+                                                   ObsoleteReason=Do not store the sent status in the entity but calculate it on a fly to avoid etag change after quote sending.;
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Last Email Sent Status;
+                                                   OptionCaptionML=[@@@={Locked};
+                                                                    ENU=Not Sent,In Process,Finished,Error];
+                                                   OptionString="Not Sent","In Process",Finished,Error }
+    { 1304;   ;Cust. Ledger Entry No.;Integer     ;TableRelation="Cust. Ledger Entry"."Entry No.";
+                                                   TestTableRelation=false;
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Cust. Ledger Entry No. }
+    { 1305;   ;Invoice Discount Amount;Decimal    ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Invoice Discount Amount;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr="Currency Code" }
+    { 5052;   ;Sell-to Contact No. ;Code20        ;TableRelation=Contact;
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Sell-to Contact No. }
+    { 8000;   ;Id                  ;GUID          ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Id }
+    { 9600;   ;Total Tax Amount    ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Total Tax Amount;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr="Currency Code" }
+    { 9601;   ;Status              ;Option        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Status;
+                                                   OptionCaptionML=[@@@={Locked};
+                                                                    ENU=Draft,Sent,Accepted];
+                                                   OptionString=Draft,Sent,Accepted,"Expired " }
+    { 9602;   ;Posted              ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Posted }
+    { 9603;   ;Subtotal Amount     ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Subtotal Amount;
+                                                   Editable=false;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr="Currency Code" }
+    { 9624;   ;Discount Applied Before Tax;Boolean;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Discount Applied Before Tax }
+    { 9630;   ;Last Modified Date Time;DateTime   ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Last Modified Date Time }
+    { 9631;   ;Customer Id         ;GUID          ;TableRelation=Customer.Id;
+                                                   OnValidate=BEGIN
+                                                                UpdateCustomerNo;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Customer Id }
+    { 9633;   ;Contact Graph Id    ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Contact Graph Id }
+    { 9634;   ;Currency Id         ;GUID          ;TableRelation=Currency.Id;
+                                                   OnValidate=BEGIN
+                                                                UpdateCurrencyCode;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Currency Id }
+    { 9635;   ;Payment Terms Id    ;GUID          ;TableRelation="Payment Terms".Id;
+                                                   OnValidate=BEGIN
+                                                                UpdatePaymentTermsCode;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Payment Terms Id }
+    { 9636;   ;Shipment Method Id  ;GUID          ;TableRelation="Shipment Method".Id;
+                                                   OnValidate=BEGIN
+                                                                UpdateShipmentMethodCode;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Shipment Method Id }
+    { 9637;   ;Tax Area ID         ;GUID          ;OnValidate=BEGIN
+                                                                if IsUsingVAT then
+                                                                  UpdateVATBusinessPostingGroupCode
+                                                                else
+                                                                  UpdateTaxAreaCode;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Tax Area ID }
+  }
+  KEYS
+  {
+    {    ;"No."                                   ;Clustered=true }
+    {    ;Id                                       }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      SalesTaxOnlyFieldErr@1001 : TextConst '@@@=%1 - Name of the field, e.g. Tax Liable, Tax Group Code, VAT Business posting group;ENU=Current Tax setup is set to Tax. Field %1 can only be used with Sales Tax.';
+      VATOnlyFieldErr@1000 : TextConst '@@@=%1 - Name of the field, e.g. Tax Liable, Tax Group Code, VAT Business posting group;ENU=Current Tax setup is set to Sales Tax. Field %1 can only be used with tax.';
+
+    LOCAL PROCEDURE UpdateCustomerId@2();
+    VAR
+      Customer@1000 : Record Customer;
+    BEGIN
+      if "Sell-to Customer No." = '' then begin
+        CLEAR("Customer Id");
+        exit;
+      end;
+
+      if not Customer.GET("Sell-to Customer No.") then
+        exit;
+
+      "Customer Id" := Customer.Id;
+    END;
+
+    PROCEDURE UpdateCurrencyId@9();
+    VAR
+      Currency@1000 : Record Currency;
+    BEGIN
+      if "Currency Code" = '' then begin
+        CLEAR("Currency Id");
+        exit;
+      end;
+
+      if not Currency.GET("Currency Code") then
+        exit;
+
+      "Currency Id" := Currency.Id;
+    END;
+
+    PROCEDURE UpdatePaymentTermsId@57();
+    VAR
+      PaymentTerms@1000 : Record "Payment Terms";
+    BEGIN
+      if "Payment Terms Code" = '' then begin
+        CLEAR("Payment Terms Id");
+        exit;
+      end;
+
+      if not PaymentTerms.GET("Payment Terms Code") then
+        exit;
+
+      "Payment Terms Id" := PaymentTerms.Id;
+    END;
+
+    PROCEDURE UpdateShipmentMethodId@59();
+    VAR
+      ShipmentMethod@1000 : Record "Shipment Method";
+    BEGIN
+      if "Shipment Method Code" = '' then begin
+        CLEAR("Shipment Method Id");
+        exit;
+      end;
+
+      if not ShipmentMethod.GET("Shipment Method Code") then
+        exit;
+
+      "Shipment Method Id" := ShipmentMethod.Id;
+    END;
+
+    LOCAL PROCEDURE UpdateCustomerNo@1();
+    VAR
+      Customer@1000 : Record Customer;
+    BEGIN
+      if not ISNULLGUID("Customer Id") then begin
+        Customer.SETRANGE(Id,"Customer Id");
+        Customer.FINDFIRST;
+      end;
+
+      VALIDATE("Sell-to Customer No.",Customer."No.");
+    END;
+
+    LOCAL PROCEDURE UpdateCurrencyCode@10();
+    VAR
+      Currency@1000 : Record Currency;
+    BEGIN
+      if not ISNULLGUID("Currency Id") then begin
+        Currency.SETRANGE(Id,"Currency Id");
+        Currency.FINDFIRST;
+      end;
+
+      VALIDATE("Currency Code",Currency.Code);
+    END;
+
+    LOCAL PROCEDURE UpdatePaymentTermsCode@56();
+    VAR
+      PaymentTerms@1001 : Record "Payment Terms";
+    BEGIN
+      if not ISNULLGUID("Payment Terms Id") then begin
+        PaymentTerms.SETRANGE(Id,"Payment Terms Id");
+        PaymentTerms.FINDFIRST;
+      end;
+
+      VALIDATE("Payment Terms Code",PaymentTerms.Code);
+    END;
+
+    LOCAL PROCEDURE UpdateShipmentMethodCode@58();
+    VAR
+      ShipmentMethod@1001 : Record "Shipment Method";
+    BEGIN
+      if not ISNULLGUID("Shipment Method Id") then begin
+        ShipmentMethod.SETRANGE(Id,"Shipment Method Id");
+        ShipmentMethod.FINDFIRST;
+      end;
+
+      VALIDATE("Shipment Method Code",ShipmentMethod.Code);
+    END;
+
+    PROCEDURE UpdateReferencedRecordIds@5();
+    BEGIN
+      UpdateCustomerId;
+      UpdateCurrencyId;
+      UpdatePaymentTermsId;
+      UpdateShipmentMethodId;
+
+      UpdateGraphContactId;
+      UpdateTaxAreaId;
+    END;
+
+    PROCEDURE UpdateGraphContactId@6();
+    VAR
+      Contact@1000 : Record Contact;
+      GraphIntegrationRecord@1001 : Record "Graph Integration Record";
+      GraphID@1002 : Text[250];
+    BEGIN
+      if "Sell-to Contact No." = '' then begin
+        CLEAR("Contact Graph Id");
+        exit;
+      end;
+
+      if not Contact.GET("Sell-to Contact No.") then
+        exit;
+
+      if not GraphIntegrationRecord.FindIDFromRecordID(Contact.RECORDID,GraphID) then
+        exit;
+
+      "Contact Graph Id" := GraphID;
+    END;
+
+    LOCAL PROCEDURE UpdateTaxAreaId@65();
+    VAR
+      TaxArea@1000 : Record "Tax Area";
+      VATBusinessPostingGroup@1001 : Record "VAT Business Posting Group";
+    BEGIN
+      if IsUsingVAT then begin
+        if "VAT Bus. Posting Group" <> '' then begin
+          VATBusinessPostingGroup.SETRANGE(Code,"VAT Bus. Posting Group");
+          if VATBusinessPostingGroup.FINDFIRST then begin
+            "Tax Area ID" := VATBusinessPostingGroup.Id;
+            exit;
+          end;
+        end;
+
+        CLEAR("Tax Area ID");
+        exit;
+      end;
+
+      if "Tax Area Code" <> '' then begin
+        TaxArea.SETRANGE(Code,"Tax Area Code");
+        if TaxArea.FINDFIRST then begin
+          "Tax Area ID" := TaxArea.Id;
+          exit;
+        end;
+      end;
+
+      CLEAR("Tax Area ID");
+    END;
+
+    LOCAL PROCEDURE UpdateTaxAreaCode@66();
+    VAR
+      TaxArea@1000 : Record "Tax Area";
+    BEGIN
+      if not ISNULLGUID("Tax Area ID") then begin
+        TaxArea.SETRANGE(Id,"Tax Area ID");
+        if TaxArea.FINDFIRST then begin
+          VALIDATE("Tax Area Code",TaxArea.Code);
+          exit;
+        end;
+      end;
+
+      CLEAR("Tax Area Code");
+    END;
+
+    LOCAL PROCEDURE UpdateVATBusinessPostingGroupCode@15();
+    VAR
+      VATBusinessPostingGroup@1000 : Record "VAT Business Posting Group";
+    BEGIN
+      if ISNULLGUID("Tax Area ID") then begin
+        VATBusinessPostingGroup.SETRANGE(Id,"Tax Area ID");
+        if VATBusinessPostingGroup.FINDFIRST then begin
+          VALIDATE("VAT Bus. Posting Group",VATBusinessPostingGroup.Code);
+          exit;
+        end;
+      end;
+
+      CLEAR("VAT Bus. Posting Group");
+    END;
+
+    PROCEDURE IsUsingVAT@12() : Boolean;
+    VAR
+      GeneralLedgerSetup@1000 : Record "General Ledger Setup";
+    BEGIN
+      exit(GeneralLedgerSetup.UseVat);
+    END;
+
+    PROCEDURE GetParentRecordNativeInvoicing@3(VAR SalesHeader@1000 : Record "Sales Header") : Boolean;
+    BEGIN
+      SalesHeader.SETAUTOCALCFIELDS("Last Email Sent Time","Last Email Sent Status","Work Description");
+      exit(GetParentRecord(SalesHeader));
+    END;
+
+    LOCAL PROCEDURE GetParentRecord@4(VAR SalesHeader@1003 : Record "Sales Header") : Boolean;
+    VAR
+      MainRecordFound@1002 : Boolean;
+    BEGIN
+      MainRecordFound := SalesHeader.GET(SalesHeader."Document Type"::Quote,"No.");
+      exit(MainRecordFound);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

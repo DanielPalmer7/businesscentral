@@ -1,0 +1,320 @@
+OBJECT Table 10807 Sales Tax Setup Wizard
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160237.990T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Sales Tax Setup Wizard;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=ENU=Primary Key }
+    { 2   ;   ;Tax Account (Sales) ;Code20        ;TableRelation="G/L Account" WHERE ("Account Type"=CONST(Posting),
+                                                                                      "Income/Balance"=CONST("Balance Sheet"),
+                                                                                      Blocked=CONST(false));
+                                                   OnValidate=BEGIN
+                                                                if ("Tax Account (Sales)" = '') and ("Tax Account (Purchases)" = '') then
+                                                                  ERROR(TaxAccountRequiredErr);
+                                                              END;
+
+                                                   CaptionML=ENU=Tax Account (Sales) }
+    { 3   ;   ;Tax Account (Purchases);Code20     ;TableRelation="G/L Account" WHERE ("Account Type"=CONST(Posting),
+                                                                                      Blocked=CONST(false));
+                                                   OnValidate=BEGIN
+                                                                VALIDATE("Tax Account (Sales)");
+                                                              END;
+
+                                                   CaptionML=ENU=Tax Account (Purchases) }
+    { 4   ;   ;City                ;Text30        ;OnValidate=BEGIN
+                                                                if ("City Rate" > 0) and (DELCHR(City,'<>',' ') = '') then
+                                                                  ERROR(NotBlankErr,FIELDCAPTION(City),LOWERCASE(FIELDCAPTION(City)));
+                                                                ValidateJurisdiction;
+                                                                if City <> xRec.City then
+                                                                  "Tax Area Code" := '';
+                                                              END;
+
+                                                   CaptionML=ENU=City }
+    { 5   ;   ;City Rate           ;Decimal       ;OnValidate=BEGIN
+                                                                if ("City Rate" > 0) and (DELCHR(City,'<>',' ') = '') then
+                                                                  ERROR(NotBlankErr,FIELDCAPTION(City),LOWERCASE(FIELDCAPTION(City)));
+                                                              END;
+
+                                                   CaptionML=ENU=City Rate;
+                                                   DecimalPlaces=1:3;
+                                                   MinValue=0 }
+    { 6   ;   ;County              ;Text30        ;OnValidate=BEGIN
+                                                                if ("County Rate" > 0) and (DELCHR(County,'<>',' ') = '') then
+                                                                  ERROR(NotBlankErr,FIELDCAPTION(County),LOWERCASE(FIELDCAPTION(County)));
+                                                                ValidateJurisdiction;
+
+                                                                if County <> xRec.County then
+                                                                  "Tax Area Code" := '';
+                                                              END;
+
+                                                   CaptionML=ENU=County }
+    { 7   ;   ;County Rate         ;Decimal       ;OnValidate=BEGIN
+                                                                if ("County Rate" > 0) and (DELCHR(County,'<>',' ') = '') then
+                                                                  ERROR(NotBlankErr,FIELDCAPTION(County),LOWERCASE(FIELDCAPTION(County)));
+                                                              END;
+
+                                                   CaptionML=ENU=County Rate;
+                                                   DecimalPlaces=1:3;
+                                                   MinValue=0 }
+    { 8   ;   ;State               ;Code2         ;OnValidate=BEGIN
+                                                                if ("State Rate" > 0) and (DELCHR(State,'<>',' ') = '') then
+                                                                  ERROR(NotBlankErr,FIELDCAPTION(State),LOWERCASE(FIELDCAPTION(State)));
+                                                                ValidateJurisdiction;
+                                                                if State <> xRec.State then
+                                                                  "Tax Area Code" := '';
+                                                              END;
+
+                                                   CaptionML=ENU=State }
+    { 9   ;   ;State Rate          ;Decimal       ;OnValidate=BEGIN
+                                                                if ("State Rate" > 0) and (DELCHR(State,'<>',' ') = '') then
+                                                                  ERROR(NotBlankErr,FIELDCAPTION(State),LOWERCASE(FIELDCAPTION(State)));
+                                                              END;
+
+                                                   CaptionML=ENU=State Rate;
+                                                   DecimalPlaces=1:3;
+                                                   MinValue=0 }
+    { 10  ;   ;Tax Area Code       ;Code20        ;CaptionML=ENU=Tax Area Code }
+    { 10010;  ;Country/Region      ;Option        ;CaptionML=ENU=Country/Region;
+                                                   OptionCaptionML=ENU=US,CA;
+                                                   OptionString=US,CA }
+  }
+  KEYS
+  {
+    {    ;"Primary Key"                           ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      NotBlankErr@1020000 : TextConst '@@@="%1 = City, County, or State; %2 = city, county, or state";ENU=%1 must not be blank when a %2 tax rate is specified.';
+      TaxAccountRequiredErr@1020001 : TextConst 'ENU=You must specify at least one tax account.';
+      NotUniqueErr@1020002 : TextConst 'ENU=The City, County, and State must be unique.';
+      TaxableCodeTxt@1020006 : TextConst '@@@={Locked};ENU=TAXABLE';
+      TaxableDescriptionTxt@1020005 : TextConst 'ENU=Taxable';
+      CityTxt@1020007 : TextConst '@@@="%1 = Name of city; %2 = State abbreviation";ENU=City of %1, %2';
+      CountyTxt@1020004 : TextConst '@@@="%1 = Name of county; %2 = State abbreviation";ENU=%1 State, %2';
+      StateTxt@1020003 : TextConst '@@@="%1 = State abbreviation";ENU=State of %1';
+
+    LOCAL PROCEDURE ValidateJurisdiction@1020000();
+    VAR
+      HasError@1020000 : Boolean;
+    BEGIN
+      HasError := (UPPERCASE(City) = UPPERCASE(County)) and (City <> '');
+      HasError := HasError or ((UPPERCASE(City) = State) and (City <> ''));
+      HasError := HasError or ((UPPERCASE(County) = State) and (County <> ''));
+      if HasError then
+        ERROR(NotUniqueErr);
+    END;
+
+    [External]
+    PROCEDURE SetTaxGroup@1020017(VAR TaxGroup@1020000 : Record "Tax Group");
+    BEGIN
+      if not TaxGroup.GET(TaxableCodeTxt) then begin
+        TaxGroup.INIT;
+        TaxGroup.VALIDATE(Code,TaxableCodeTxt);
+        TaxGroup.VALIDATE(Description,TaxableDescriptionTxt);
+        TaxGroup.INSERT;
+      end;
+    END;
+
+    [External]
+    PROCEDURE SetTaxJurisdiction@1020018(Jurisdiction@1020000 : Text[30];Description@1020001 : Text[50];ReportToCode@1020002 : Code[10]);
+    VAR
+      TaxJurisdiction@1020003 : Record "Tax Jurisdiction";
+      JurisdictionCode@1020004 : Code[10];
+      NewJurisdiction@1020005 : Boolean;
+    BEGIN
+      if Jurisdiction = '' then
+        exit;
+
+      NewJurisdiction := GetTaxJurisdictionCode(Jurisdiction,JurisdictionCode);
+
+      if JurisdictionCode = '' then
+        JurisdictionCode := GenerateTaxJurisdictionCode;
+
+      if NewJurisdiction then begin
+        TaxJurisdiction.INIT;
+        TaxJurisdiction.VALIDATE(Code,JurisdictionCode);
+        TaxJurisdiction.INSERT;
+      end else
+        TaxJurisdiction.GET(JurisdictionCode);
+
+      TaxJurisdiction.VALIDATE(Description,Description);
+      TaxJurisdiction.VALIDATE(Name,Jurisdiction);
+      if ReportToCode <> '' then
+        TaxJurisdiction.VALIDATE("Report-to Jurisdiction",ReportToCode);
+      TaxJurisdiction.VALIDATE("Tax Account (Sales)","Tax Account (Sales)");
+      TaxJurisdiction.VALIDATE("Tax Account (Purchases)","Tax Account (Purchases)");
+      TaxJurisdiction.VALIDATE("Country/Region","Country/Region");
+      TaxJurisdiction.MODIFY;
+    END;
+
+    [External]
+    PROCEDURE SetTaxArea@1020019(VAR TaxArea@1020000 : Record "Tax Area");
+    BEGIN
+      if not TaxArea.GET("Tax Area Code") then begin
+        TaxArea.INIT;
+        TaxArea.VALIDATE(Code,"Tax Area Code");
+        TaxArea.VALIDATE(Description,"Tax Area Code");
+        TaxArea.VALIDATE("Country/Region","Country/Region");
+        TaxArea.INSERT;
+      end;
+    END;
+
+    [External]
+    PROCEDURE SetTaxAreaLine@1020044(TaxArea@1020000 : Record "Tax Area";Jurisdiction@1020001 : Text);
+    VAR
+      TaxAreaLine@1020002 : Record "Tax Area Line";
+      JurisdictionCode@1020003 : Code[10];
+    BEGIN
+      GetTaxJurisdictionCode(COPYSTR(Jurisdiction,1,MAXSTRLEN(City)),JurisdictionCode);
+
+      if JurisdictionCode <> '' then
+        if not TaxAreaLine.GET(TaxArea.Code,JurisdictionCode) then begin
+          TaxAreaLine.INIT;
+          TaxAreaLine.VALIDATE("Tax Area",TaxArea.Code);
+          TaxAreaLine.VALIDATE("Tax Jurisdiction Code",JurisdictionCode);
+          TaxAreaLine.INSERT;
+        end;
+    END;
+
+    [External]
+    PROCEDURE SetTaxDetail@1020020(Jurisdiction@1020000 : Text[30];Group@1020001 : Code[20];Tax@1020002 : Decimal);
+    VAR
+      TaxDetail@1020003 : Record "Tax Detail";
+      JurisdictionCode@1020004 : Code[10];
+    BEGIN
+      GetTaxJurisdictionCode(Jurisdiction,JurisdictionCode);
+
+      if JurisdictionCode <> '' then begin
+        TaxDetail.SETRANGE("Tax Jurisdiction Code",JurisdictionCode);
+        TaxDetail.SETRANGE("Tax Group Code",Group);
+        if not TaxDetail.ISEMPTY then
+          TaxDetail.DELETEALL;
+        TaxDetail.INIT;
+        TaxDetail.VALIDATE("Tax Jurisdiction Code",JurisdictionCode);
+        TaxDetail.VALIDATE("Tax Group Code",Group);
+        TaxDetail.VALIDATE("Tax Type",TaxDetail."Tax Type"::"Sales and Use Tax");
+        TaxDetail.VALIDATE("Effective Date",0D);
+        TaxDetail.VALIDATE("Maximum Amount/Qty.",0);
+        TaxDetail.VALIDATE("Tax Below Maximum",Tax);
+        TaxDetail.INSERT(true);
+      end;
+    END;
+
+    [External]
+    PROCEDURE GetDescription@1020062(Description@1020000 : Text;CityOrCounty@1020001 : Text[30]) Result : Text[50];
+    BEGIN
+      Result := COPYSTR(STRSUBSTNO(Description,CityOrCounty,State),1,50);
+      if State = '' then
+        Result := DELCHR(Result,'>',', ');
+    END;
+
+    [External]
+    PROCEDURE GetDefaultTaxGroupCode@1020001() : Code[20];
+    BEGIN
+      exit(UPPERCASE(TaxableCodeTxt));
+    END;
+
+    [External]
+    PROCEDURE GenerateTaxAreaCode@1020007() : Code[20];
+    VAR
+      TrucatedCity@1020000 : Text[18];
+      CommaSeparator@1020001 : Text[2];
+    BEGIN
+      TrucatedCity := COPYSTR(City,1,16);
+      if (STRLEN(TrucatedCity) > 0) and (STRLEN(State) > 0) then
+        CommaSeparator := ', ';
+      exit(STRSUBSTNO('%1%2%3',TrucatedCity,CommaSeparator,State));
+    END;
+
+    LOCAL PROCEDURE GenerateTaxJurisdictionCode@1020005() JurisdictionCode : Code[10];
+    VAR
+      TaxJurisdiction@1020001 : Record "Tax Jurisdiction";
+      TypeHelper@1020000 : Codeunit "Type Helper";
+    BEGIN
+      repeat
+        JurisdictionCode := COPYSTR(TypeHelper.GetGuidAsString(CREATEGUID),1,MAXSTRLEN(JurisdictionCode));
+      until not TaxJurisdiction.GET(JurisdictionCode);
+    END;
+
+    LOCAL PROCEDURE GetTaxJurisdictionCode@1020010(JurisdictionName@1020000 : Text[30];VAR JurisdictionCode@1020001 : Code[10]) NewJurisdiction : Boolean;
+    VAR
+      TaxJurisdiction@1020002 : Record "Tax Jurisdiction";
+    BEGIN
+      if JurisdictionName = '' then
+        exit;
+
+      if STRLEN(DELCHR(JurisdictionName,'<>',' ')) < MAXSTRLEN(JurisdictionCode) then
+        JurisdictionCode := COPYSTR(DELCHR(JurisdictionName,'<>',' '),1,MAXSTRLEN(JurisdictionCode));
+
+      NewJurisdiction := true;
+      if JurisdictionCode <> '' then
+        if TaxJurisdiction.GET(JurisdictionCode) then
+          NewJurisdiction := false;
+
+      if NewJurisdiction then begin
+        TaxJurisdiction.SETRANGE(Name,JurisdictionName);
+        if TaxJurisdiction.FINDFIRST then begin
+          JurisdictionCode := TaxJurisdiction.Code;
+          NewJurisdiction := false;
+        end;
+      end;
+    END;
+
+    [External]
+    PROCEDURE StoreSalesTaxSetup@1020003();
+    VAR
+      TaxGroup@1020001 : Record "Tax Group";
+      TaxArea@1020003 : Record "Tax Area";
+      TaxAreaLine@1020000 : Record "Tax Area Line";
+    BEGIN
+      if "Tax Area Code" = '' then begin
+        "Tax Area Code" := GenerateTaxAreaCode;
+        MODIFY;
+      end;
+      SetTaxGroup(TaxGroup);
+      SetTaxJurisdiction(State,STRSUBSTNO(StateTxt,State),State);
+      SetTaxJurisdiction(County,GetDescription(CountyTxt,County),State);
+      SetTaxJurisdiction(City,GetDescription(CityTxt,City),State);
+      SetTaxArea(TaxArea);
+
+      TaxAreaLine.SETRANGE("Tax Area","Tax Area Code");
+      if not TaxAreaLine.ISEMPTY then
+        TaxAreaLine.DELETEALL;
+      SetTaxAreaLine(TaxArea,State);
+      SetTaxAreaLine(TaxArea,County);
+      SetTaxAreaLine(TaxArea,City);
+      SetTaxDetail(State,TaxGroup.Code,"State Rate");
+      SetTaxDetail(County,TaxGroup.Code,"County Rate");
+      SetTaxDetail(City,TaxGroup.Code,"City Rate");
+    END;
+
+    PROCEDURE Initialize@1020002();
+    VAR
+      TaxSetup@1020000 : Record "Tax Setup";
+    BEGIN
+      if TaxSetup.GET then begin
+        if ("Tax Account (Sales)" = '') and (TaxSetup."Tax Account (Sales)" <> '') then
+          VALIDATE("Tax Account (Sales)",TaxSetup."Tax Account (Sales)");
+        if ("Tax Account (Purchases)" = '') and (TaxSetup."Tax Account (Purchases)" <> '') then
+          VALIDATE("Tax Account (Purchases)",TaxSetup."Tax Account (Purchases)");
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

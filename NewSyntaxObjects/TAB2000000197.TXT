@@ -1,0 +1,36 @@
+OBJECT Table 2000000197 Token Cache
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.953T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;User Security ID    ;GUID          ;TableRelation=User."User Security ID";
+                                                   TestTableRelation=false }
+    { 2   ;   ;User Unique ID      ;GUID           }
+    { 3   ;   ;Tenant ID           ;GUID           }
+    { 4   ;   ;Cache Write Time    ;DateTime       }
+    { 5   ;   ;Cache Data          ;BLOB           }
+  }
+  KEYS
+  {
+    {    ;"User Security ID"                      ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

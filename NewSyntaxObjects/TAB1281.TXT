@@ -1,0 +1,34 @@
+OBJECT Table 1281 Bank Data Conversion Pmt. Type
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160125.457T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Bank Data Conversion Pmt. Type;
+    LookupPageID="Bank Data Conv. Pmt. Types";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Text50        ;CaptionML=ENU=Code }
+    { 2   ;   ;Description         ;Text80        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

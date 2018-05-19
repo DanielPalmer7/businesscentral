@@ -1,0 +1,35 @@
+OBJECT Table 5306 Outlook Synch. Lookup Name
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160142.110T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Outlook Synch. Lookup Name;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=ENU=Entry No.;
+                                                   Editable=false }
+    { 2   ;   ;Name                ;Text80        ;CaptionML=ENU=Name }
+  }
+  KEYS
+  {
+    {    ;"Entry No."                             ;Clustered=true }
+    {    ;Name                                     }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,293 @@
+OBJECT Page 5333 CRM Skipped Records
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161439.180T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Coupled Data Synchronization Errors;
+    SourceTable="CRM Synch. Conflict Buffer";
+    PageType=List;
+    SourceTableTemporary=true;
+    PromotedActionCategoriesML=ENU=New,Process,Report,Synchronization,Broken Couplings;
+    OnOpenPage=BEGIN
+                 CRMIntegrationEnabled := CRMIntegrationManagement.IsCRMIntegrationEnabled;
+                 if not SetOutside and CRMIntegrationEnabled then
+                   CollectSkippedCRMIntegrationRecords;
+               END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           AreRecordsExist := true;
+                           IsOneOfRecordsDeleted := IsOneRecordDeleted;
+                           DoBothOfRecordsExist := DoBothRecordsExist;
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 4       ;    ;ActionContainer;
+                      Name=ActionContainer4;
+                      ActionContainerType=ActionItems }
+      { 6       ;1   ;Action    ;
+                      Name=Restore;
+                      AccessByPermission=TableData "CRM Integration Record"=IM;
+                      CaptionML=ENU=Retry;
+                      ToolTipML=ENU=Restore selected records for further Dynamics 365 for Sales synchronization.;
+                      ApplicationArea=#Suite;
+                      Promoted=true;
+                      Enabled=AreRecordsExist AND DoBothOfRecordsExist;
+                      PromotedIsBig=true;
+                      Image=ResetStatus;
+                      PromotedCategory=Category4;
+                      PromotedOnly=true;
+                      OnAction=VAR
+                                 CRMIntegrationRecord@1000 : Record "CRM Integration Record";
+                                 CRMIntegrationManagement@1001 : Codeunit "CRM Integration Management";
+                               BEGIN
+                                 SetCurrentSelectionFilter(CRMIntegrationRecord);
+                                 CRMIntegrationManagement.UpdateSkippedNow(CRMIntegrationRecord);
+                                 Refresh(CRMIntegrationRecord);
+                               END;
+                                }
+      { 9       ;1   ;Action    ;
+                      Name=CRMSynchronizeNow;
+                      CaptionML=ENU=Synchronize;
+                      ToolTipML=ENU=Send or get updated data to or from Dynamics 365 for Sales.;
+                      ApplicationArea=#Suite;
+                      Promoted=true;
+                      Enabled=AreRecordsExist AND DoBothOfRecordsExist;
+                      PromotedIsBig=true;
+                      Image=Refresh;
+                      PromotedCategory=Category4;
+                      PromotedOnly=true;
+                      OnAction=VAR
+                                 CRMIntegrationRecord@1000 : Record "CRM Integration Record";
+                                 CRMIntegrationManagement@1001 : Codeunit "CRM Integration Management";
+                               BEGIN
+                                 SetCurrentSelectionFilter(CRMIntegrationRecord);
+                                 CRMIntegrationManagement.UpdateMultipleNow(CRMIntegrationRecord);
+                                 Refresh(CRMIntegrationRecord);
+                               END;
+                                }
+      { 5       ;1   ;Action    ;
+                      Name=ShowLog;
+                      CaptionML=ENU=Synchronization Log;
+                      ToolTipML=ENU=View integration synchronization jobs for the skipped record.;
+                      ApplicationArea=#Suite;
+                      Promoted=true;
+                      Enabled=AreRecordsExist AND "Record Exists";
+                      Image=Log;
+                      PromotedCategory=Category4;
+                      PromotedOnly=true;
+                      OnAction=VAR
+                                 IntegrationRecord@1001 : Record "Integration Record";
+                                 CRMIntegrationManagement@1000 : Codeunit "CRM Integration Management";
+                               BEGIN
+                                 IntegrationRecord.FindByIntegrationId("Integration ID");
+                                 CRMIntegrationManagement.ShowLog(IntegrationRecord."Record ID");
+                               END;
+                                }
+      { 11      ;1   ;Action    ;
+                      Name=ManageCRMCoupling;
+                      CaptionML=ENU=Set Up Coupling;
+                      ToolTipML=ENU=Create or modify the coupling to a Dynamics 365 for Sales entity.;
+                      ApplicationArea=#Suite;
+                      Promoted=true;
+                      Enabled=AreRecordsExist AND "Record Exists";
+                      Image=LinkAccount;
+                      PromotedCategory=Category4;
+                      PromotedOnly=true;
+                      OnAction=VAR
+                                 CRMIntegrationRecord@1001 : Record "CRM Integration Record";
+                                 IntegrationRecord@1002 : Record "Integration Record";
+                                 CRMIntegrationManagement@1000 : Codeunit "CRM Integration Management";
+                               BEGIN
+                                 IntegrationRecord.GET("Integration ID");
+                                 if CRMIntegrationRecord.FindByRecordID(IntegrationRecord."Record ID") then
+                                   if CRMIntegrationManagement.DefineCoupling(IntegrationRecord."Record ID") then begin
+                                     CRMIntegrationRecord.SETRECFILTER;
+                                     Refresh(CRMIntegrationRecord);
+                                   end;
+                               END;
+                                }
+      { 10      ;1   ;Action    ;
+                      Name=DeleteCRMCoupling;
+                      AccessByPermission=TableData "CRM Integration Record"=D;
+                      CaptionML=ENU=Remove Coupling;
+                      ToolTipML=ENU=Delete the coupling to a Dynamics 365 for Sales entity.;
+                      ApplicationArea=#Suite;
+                      Promoted=true;
+                      Enabled=AreRecordsExist;
+                      Image=UnLinkAccount;
+                      PromotedCategory=Category4;
+                      PromotedOnly=true;
+                      OnAction=BEGIN
+                                 DeleteCoupling;
+                                 AreRecordsExist := false;
+                               END;
+                                }
+      { 7       ;1   ;Action    ;
+                      Name=RestoreDeletedRec;
+                      CaptionML=ENU=Restore Records;
+                      ToolTipML=ENU=Restore the deleted coupled entity in Dynamics 365 for Sales. A synchronization job is run to achieve this.;
+                      ApplicationArea=#Suite;
+                      Promoted=true;
+                      Enabled=AreRecordsExist AND IsOneOfRecordsDeleted;
+                      PromotedIsBig=true;
+                      Image=CreateMovement;
+                      PromotedCategory=Category5;
+                      PromotedOnly=true;
+                      OnAction=VAR
+                                 TempCRMSynchConflictBuffer@1000 : TEMPORARY Record "CRM Synch. Conflict Buffer";
+                               BEGIN
+                                 TempCRMSynchConflictBuffer.COPY(Rec,true);
+                                 CurrPage.SETSELECTIONFILTER(TempCRMSynchConflictBuffer);
+                                 TempCRMSynchConflictBuffer.RestoreDeletedRecords;
+                               END;
+                                }
+      { 3       ;1   ;Action    ;
+                      Name=DeleteCoupledRec;
+                      CaptionML=ENU=Delete Records;
+                      ToolTipML=ENU=Delete the coupled entity in Dynamics 365 for Sales.;
+                      ApplicationArea=#Suite;
+                      Promoted=true;
+                      Enabled=AreRecordsExist AND IsOneOfRecordsDeleted;
+                      PromotedIsBig=true;
+                      Image=CancelLine;
+                      PromotedCategory=Category5;
+                      PromotedOnly=true;
+                      OnAction=VAR
+                                 TempCRMSynchConflictBuffer@1000 : TEMPORARY Record "CRM Synch. Conflict Buffer";
+                               BEGIN
+                                 TempCRMSynchConflictBuffer.COPY(Rec,true);
+                                 CurrPage.SETSELECTIONFILTER(TempCRMSynchConflictBuffer);
+                                 TempCRMSynchConflictBuffer.DeleteCoupledRecords;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 12  ;2   ;Field     ;
+                Name="Table ID";
+                ApplicationArea=#Suite;
+                SourceExpr="Table ID";
+                ImplicitType=Integer }
+
+    { 13  ;2   ;Field     ;
+                Name="Table Name";
+                ApplicationArea=#Suite;
+                SourceExpr="Table Name";
+                ImplicitType=Text250 }
+
+    { 14  ;2   ;Field     ;
+                Name=Description;
+                ApplicationArea=#Suite;
+                SourceExpr=Description;
+                OnDrillDown=BEGIN
+                              CRMSynchHelper.ShowPage("Record ID");
+                            END;
+
+                ImplicitType=Text250 }
+
+    { 17  ;2   ;Field     ;
+                Name="Record Exists";
+                ApplicationArea=#Suite;
+                SourceExpr="Record Exists";
+                ImplicitType=Boolean }
+
+    { 8   ;2   ;Field     ;
+                Name="Int. Description";
+                CaptionML=ENU=Coupled To;
+                ApplicationArea=#Suite;
+                SourceExpr="Int. Description";
+                OnDrillDown=BEGIN
+                              CRMSynchHelper.ShowPage("Int. Record ID");
+                            END;
+
+                ImplicitType=Text250 }
+
+    { 18  ;2   ;Field     ;
+                Name="Int. Record Exists";
+                CaptionML=ENU=Coupled Record Exists;
+                ApplicationArea=#Suite;
+                SourceExpr="Int. Record Exists";
+                ImplicitType=Boolean }
+
+    { 15  ;2   ;Field     ;
+                Name="Error Message";
+                ApplicationArea=#Suite;
+                SourceExpr="Error Message";
+                ImplicitType=Text250 }
+
+    { 19  ;2   ;Field     ;
+                Name="Failed On";
+                ApplicationArea=#Suite;
+                SourceExpr="Failed On";
+                ImplicitType=DateTime }
+
+    { 16  ;2   ;Field     ;
+                Name="Deleted On";
+                ApplicationArea=#Suite;
+                SourceExpr="Deleted On";
+                ImplicitType=DateTime }
+
+  }
+  CODE
+  {
+    VAR
+      CRMIntegrationManagement@1001 : Codeunit "CRM Integration Management";
+      CRMSynchHelper@1005 : Codeunit "CRM Synch. Helper";
+      CRMIntegrationEnabled@1004 : Boolean;
+      AreRecordsExist@1000 : Boolean;
+      IsOneOfRecordsDeleted@1002 : Boolean;
+      DoBothOfRecordsExist@1006 : Boolean;
+      SetOutside@1003 : Boolean;
+
+    LOCAL PROCEDURE CollectSkippedCRMIntegrationRecords@1();
+    VAR
+      CRMIntegrationRecord@1000 : Record "CRM Integration Record";
+    BEGIN
+      CRMIntegrationRecord.SETRANGE(Skipped,true);
+      SetRecords(CRMIntegrationRecord);
+    END;
+
+    LOCAL PROCEDURE SetCurrentSelectionFilter@2(VAR CRMIntegrationRecord@1000 : Record "CRM Integration Record");
+    VAR
+      TempCRMSynchConflictBuffer@1001 : TEMPORARY Record "CRM Synch. Conflict Buffer";
+    BEGIN
+      TempCRMSynchConflictBuffer.COPY(Rec,true);
+      CurrPage.SETSELECTIONFILTER(TempCRMSynchConflictBuffer);
+      TempCRMSynchConflictBuffer.SetSelectionFilter(CRMIntegrationRecord);
+    END;
+
+    [External]
+    PROCEDURE SetRecords@3(VAR CRMIntegrationRecord@1000 : Record "CRM Integration Record");
+    BEGIN
+      Fill(CRMIntegrationRecord);
+      SetOutside := true;
+    END;
+
+    LOCAL PROCEDURE Refresh@4(VAR CRMIntegrationRecord@1000 : Record "CRM Integration Record");
+    BEGIN
+      UpdateSourceTable(CRMIntegrationRecord);
+      AreRecordsExist := false;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,1026 @@
+OBJECT Page 2812 Native - Sales Quotes
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161413.350T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[@@@={Locked};
+               ENU=nativeInvoicingSalesQuotes];
+    SourceTable="Sales Quote Entity Buffer";
+    DelayedInsert=true;
+    PageType=List;
+    OnOpenPage=BEGIN
+                 BINDSUBSCRIPTION(NativeAPILanguageHandler);
+               END;
+
+    OnAfterGetRecord=VAR
+                       SalesHeader@1001 : Record "Sales Header";
+                       GraphMgtSalesQuoteBuffer@1000 : Codeunit "Graph Mgt - Sales Quote Buffer";
+                       GraphMgtGeneralTools@1003 : Codeunit "Graph Mgt - General Tools";
+                     BEGIN
+                       if not GetParentRecordNativeInvoicing(SalesHeader) then begin
+                         GraphMgtGeneralTools.CleanAggregateWithoutParent(Rec);
+                         exit;
+                       end;
+
+                       SetCalculatedFields(SalesHeader);
+                       GraphMgtSalesQuoteBuffer.RedistributeInvoiceDiscounts(Rec);
+                     END;
+
+    OnNewRecord=BEGIN
+                  ClearCalculatedFields;
+                END;
+
+    OnInsertRecord=VAR
+                     SalesHeader@1002 : Record "Sales Header";
+                     GraphMgtSalesQuoteBuffer@1001 : Codeunit "Graph Mgt - Sales Quote Buffer";
+                   BEGIN
+                     CheckCustomer;
+                     ProcessBillingPostalAddress;
+
+                     GraphMgtSalesQuoteBuffer.PropagateOnInsert(Rec,TempFieldBuffer);
+                     SetDates;
+
+                     UpdateAttachments;
+                     UpdateLines;
+                     UpdateDiscount;
+                     UpdateCoupons;
+                     SetNoteForCustomer;
+
+                     if not GetParentRecordNativeInvoicing(SalesHeader) then
+                       ERROR(AggregateParentIsMissingErr);
+
+                     SetCalculatedFields(SalesHeader);
+
+                     exit(false);
+                   END;
+
+    OnModifyRecord=VAR
+                     SalesHeader@1001 : Record "Sales Header";
+                     GraphMgtSalesQuoteBuffer@1000 : Codeunit "Graph Mgt - Sales Quote Buffer";
+                   BEGIN
+                     if xRec.Id <> Id then
+                       ERROR(CannotChangeIDErr);
+
+                     ProcessBillingPostalAddress;
+
+                     GraphMgtSalesQuoteBuffer.PropagateOnModify(Rec,TempFieldBuffer);
+
+                     UpdateAttachments;
+                     UpdateLines;
+                     UpdateDiscount;
+                     UpdateCoupons;
+                     SetNoteForCustomer;
+
+                     if not GetParentRecordNativeInvoicing(SalesHeader) then
+                       ERROR(AggregateParentIsMissingErr);
+
+                     SetCalculatedFields(SalesHeader);
+
+                     exit(false);
+                   END;
+
+    OnDeleteRecord=VAR
+                     GraphMgtSalesQuoteBuffer@1000 : Codeunit "Graph Mgt - Sales Quote Buffer";
+                   BEGIN
+                     GraphMgtSalesQuoteBuffer.PropagateOnDelete(Rec);
+
+                     exit(false);
+                   END;
+
+    ODataKeyFields=Id;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 18  ;2   ;Field     ;
+                Name=id;
+                CaptionML=[@@@={Locked};
+                           ENU=id];
+                ApplicationArea=#All;
+                SourceExpr=Id;
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO(Id));
+                           END;
+
+                ImplicitType=GUID }
+
+    { 19  ;2   ;Field     ;
+                Name=number;
+                CaptionML=[@@@={Locked};
+                           ENU=Number];
+                ApplicationArea=#All;
+                SourceExpr="No.";
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("No."));
+                           END;
+
+                ImplicitType=Code20 }
+
+    { 16  ;2   ;Field     ;
+                Name=quoteDate;
+                CaptionML=[@@@={Locked};
+                           ENU=quoteDate];
+                ApplicationArea=#All;
+                SourceExpr="Document Date";
+                OnValidate=BEGIN
+                             DocumentDateVar := "Document Date";
+                             DocumentDateSet := true;
+
+                             RegisterFieldSet(FIELDNO("Document Date"));
+                             RegisterFieldSet(FIELDNO("Posting Date"));
+                           END;
+
+                ImplicitType=Date }
+
+    { 10  ;2   ;Field     ;
+                Name=dueDate;
+                CaptionML=[@@@={Locked};
+                           ENU=dueDate];
+                ApplicationArea=#All;
+                SourceExpr="Due Date";
+                OnValidate=BEGIN
+                             DueDateVar := "Due Date";
+                             DueDateSet := true;
+
+                             RegisterFieldSet(FIELDNO("Due Date"));
+                           END;
+
+                ImplicitType=Date }
+
+    { 24  ;2   ;Field     ;
+                Name=validUntilDate;
+                CaptionML=[@@@={Locked};
+                           ENU=validUntilDate];
+                ApplicationArea=#All;
+                SourceExpr="Quote Valid Until Date";
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("Quote Valid Until Date"));
+                           END;
+
+                ImplicitType=Date }
+
+    { 25  ;2   ;Field     ;
+                Name=status;
+                CaptionML=[@@@={Locked};
+                           ENU=status];
+                ToolTipML=ENU=Specifies the status of the Sales Quote (Draft,Sent,Accepted,Expired).;
+                ApplicationArea=#All;
+                SourceExpr=Status;
+                Editable=FALSE;
+                ImplicitType=Option }
+
+    { 36  ;2   ;Field     ;
+                Name=accepted;
+                CaptionML=ENU=accepted;
+                ApplicationArea=#All;
+                SourceExpr="Quote Accepted";
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("Quote Accepted"));
+                           END;
+
+                ImplicitType=Boolean }
+
+    { 9   ;2   ;Field     ;
+                Name=acceptedDate;
+                CaptionML=[@@@={Locked};
+                           ENU=acceptedDate];
+                ApplicationArea=#All;
+                SourceExpr="Quote Accepted Date";
+                ImplicitType=Date }
+
+    { 7   ;2   ;Field     ;
+                Name=customerId;
+                CaptionML=[@@@={Locked};
+                           ENU=customerId];
+                ApplicationArea=#All;
+                SourceExpr="Customer Id";
+                OnValidate=VAR
+                             O365SalesInvoiceMgmt@1000 : Codeunit "O365 Sales Invoice Mgmt";
+                           BEGIN
+                             Customer.SETRANGE(Id,"Customer Id");
+                             if not Customer.FINDFIRST then
+                               ERROR(CannotFindCustomerErr);
+
+                             O365SalesInvoiceMgmt.EnforceCustomerTemplateIntegrity(Customer);
+
+                             "Sell-to Customer No." := Customer."No.";
+                             RegisterFieldSet(FIELDNO("Customer Id"));
+                             RegisterFieldSet(FIELDNO("Sell-to Customer No."));
+                             CustomerIdSet := true;
+                           END;
+
+                ImplicitType=GUID }
+
+    { 6   ;2   ;Field     ;
+                Name=graphContactId;
+                CaptionML=[@@@={Locked};
+                           ENU=contactId];
+                ApplicationArea=#All;
+                SourceExpr="Contact Graph Id";
+                OnValidate=VAR
+                             Contact@1000 : Record Contact;
+                             Customer@1001 : Record Customer;
+                             GraphIntContact@1003 : Codeunit "Graph Int. - Contact";
+                           BEGIN
+                             if ("Contact Graph Id" = '') and CustomerIdSet then
+                               exit;
+
+                             RegisterFieldSet(FIELDNO("Contact Graph Id"));
+
+                             if "Contact Graph Id" = '' then
+                               ERROR(ContactIdHasToHaveValueErr);
+
+                             if not GraphIntContact.FindOrCreateCustomerFromGraphContactSafe("Contact Graph Id",Customer,Contact) then
+                               exit;
+
+                             UpdateCustomerFromGraphContactId(Customer);
+
+                             if Contact."Company No." = Customer."No." then begin
+                               VALIDATE("Sell-to Contact No.",Contact."No.");
+                               VALIDATE("Sell-to Contact",Contact.Name);
+
+                               RegisterFieldSet(FIELDNO("Sell-to Contact No."));
+                               RegisterFieldSet(FIELDNO("Sell-to Contact"));
+                             end;
+                           END;
+
+                ImplicitType=Text250 }
+
+    { 5   ;2   ;Field     ;
+                Name=customerNumber;
+                CaptionML=[@@@={Locked};
+                           ENU=customerNumber];
+                ApplicationArea=#All;
+                SourceExpr="Sell-to Customer No.";
+                OnValidate=VAR
+                             O365SalesInvoiceMgmt@1000 : Codeunit "O365 Sales Invoice Mgmt";
+                           BEGIN
+                             if Customer."No." <> '' then
+                               exit;
+
+                             if not Customer.GET("Sell-to Customer No.") then
+                               ERROR(CannotFindCustomerErr);
+
+                             O365SalesInvoiceMgmt.EnforceCustomerTemplateIntegrity(Customer);
+
+                             "Customer Id" := Customer.Id;
+                             RegisterFieldSet(FIELDNO("Customer Id"));
+                             RegisterFieldSet(FIELDNO("Sell-to Customer No."));
+                           END;
+
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=customerName;
+                CaptionML=[@@@={Locked};
+                           ENU=customerName];
+                ApplicationArea=#All;
+                SourceExpr="Sell-to Customer Name";
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 26  ;2   ;Field     ;
+                Name=customerEmail;
+                CaptionML=[@@@={Locked};
+                           ENU=customerEmail];
+                ToolTipML=ENU=Specifies the email address of the customer;
+                ApplicationArea=#All;
+                SourceExpr=CustomerEmail;
+                Editable=FALSE;
+                ImplicitType=Text }
+
+    { 23  ;2   ;Field     ;
+                Name=taxLiable;
+                CaptionML=ENU=taxLiable;
+                ToolTipML=ENU=Specifies if the sales invoice contains sales tax.;
+                ApplicationArea=#All;
+                SourceExpr="Tax Liable";
+                Importance=Additional;
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("Tax Liable"));
+                           END;
+
+                ImplicitType=Boolean }
+
+    { 20  ;2   ;Field     ;
+                Name=taxAreaId;
+                CaptionML=ENU=taxAreaId;
+                ApplicationArea=#All;
+                SourceExpr="Tax Area ID";
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("Tax Area ID"));
+
+                             if IsUsingVAT then
+                               RegisterFieldSet(FIELDNO("VAT Bus. Posting Group"))
+                             else
+                               RegisterFieldSet(FIELDNO("Tax Area Code"));
+                           END;
+
+                ImplicitType=GUID }
+
+    { 35  ;2   ;Field     ;
+                Name=taxAreaDisplayName;
+                CaptionML=ENU=taxAreaDisplayName;
+                ToolTipML=ENU=Specifies the tax area display name.;
+                ApplicationArea=#All;
+                SourceExpr=TaxAreaDisplayName;
+                Editable=FALSE;
+                ImplicitType=Text }
+
+    { 13  ;2   ;Field     ;
+                Name=taxRegistrationNumber;
+                CaptionML=ENU=taxRegistrationNumber;
+                ApplicationArea=#All;
+                SourceExpr="VAT Registration No.";
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("VAT Registration No."));
+                           END;
+
+                ImplicitType=Text20 }
+
+    { 3   ;2   ;Field     ;
+                Name=billingPostalAddress;
+                CaptionML=[@@@={Locked};
+                           ENU=billingPostalAddress];
+                ToolTipML=ENU=Specifies the billing address of the Sales Invoice.;
+                ApplicationArea=#All;
+                SourceExpr=BillingPostalAddressJSONText;
+                OnValidate=BEGIN
+                             BillingPostalAddressSet := true;
+                           END;
+
+                ODataEDMType=POSTALADDRESS;
+                ImplicitType=Text }
+
+    { 29  ;2   ;Field     ;
+                Name=pricesIncludeTax;
+                CaptionML=[@@@={Locked};
+                           ENU=pricesIncludeTax];
+                ApplicationArea=#All;
+                SourceExpr="Prices Including VAT";
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("Prices Including VAT"));
+                           END;
+
+                ImplicitType=Boolean }
+
+    { 12  ;2   ;Field     ;
+                Name=shipmentMethod;
+                CaptionML=[@@@={Locked};
+                           ENU=shipmentMethod];
+                ApplicationArea=#All;
+                SourceExpr="Shipment Method Code";
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("Shipment Method Code"));
+                           END;
+
+                ImplicitType=Code10 }
+
+    { 11  ;2   ;Field     ;
+                Name=salesperson;
+                CaptionML=[@@@={Locked};
+                           ENU=salesperson];
+                ApplicationArea=#All;
+                SourceExpr="Salesperson Code";
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("Salesperson Code"));
+                           END;
+
+                ImplicitType=Code20 }
+
+    { 39  ;2   ;Field     ;
+                Name=currencyCode;
+                CaptionML=[@@@={Locked};
+                           ENU=currencyCode];
+                ToolTipML=ENU=Specifies the currency code.;
+                ApplicationArea=#All;
+                SourceExpr=CurrencyCodeTxt;
+                Editable=FALSE;
+                ImplicitType=Text }
+
+    { 8   ;2   ;Field     ;
+                Name=lines;
+                CaptionML=[@@@={Locked};
+                           ENU=lines];
+                ToolTipML=ENU=Specifies Sales Invoice Lines;
+                ApplicationArea=#All;
+                SourceExpr=SalesQuoteLinesJSON;
+                OnValidate=BEGIN
+                             SalesLinesSet := PreviousSalesQuoteLinesJSON <> SalesQuoteLinesJSON;
+                           END;
+
+                ODataEDMType=Collection(NATIVE-SALESQUOTE-LINE);
+                ImplicitType=Text }
+
+    { 30  ;2   ;Field     ;
+                Name=subtotalAmount;
+                CaptionML=ENU=subtotalAmount;
+                ApplicationArea=#All;
+                SourceExpr="Subtotal Amount";
+                Editable=FALSe;
+                ImplicitType=Decimal }
+
+    { 14  ;2   ;Field     ;
+                Name=discountAmount;
+                CaptionML=[@@@={Locked};
+                           ENU=discountAmount];
+                ApplicationArea=#All;
+                SourceExpr="Invoice Discount Amount";
+                Editable=False;
+                ImplicitType=Decimal }
+
+    { 32  ;2   ;Field     ;
+                Name=discountAppliedBeforeTax;
+                CaptionML=[@@@={Locked};
+                           ENU=discountAppliedBeforeTax];
+                ApplicationArea=#All;
+                SourceExpr="Discount Applied Before Tax";
+                ImplicitType=Boolean }
+
+    { 31  ;2   ;Field     ;
+                Name=coupons;
+                CaptionML=[@@@={Locked};
+                           ENU=coupons];
+                ToolTipML=ENU=Specifies Sales Invoice Coupons.;
+                ApplicationArea=#All;
+                SourceExpr=CouponsJSON;
+                OnValidate=BEGIN
+                             CouponsSet := PreviousCouponsJSON <> CouponsJSON;
+                           END;
+
+                ODataEDMType=Collection(NATIVE-SALESDOCUMENT-COUPON);
+                ImplicitType=Text }
+
+    { 22  ;2   ;Field     ;
+                Name=totalAmountExcludingTax;
+                CaptionML=[@@@={Locked};
+                           ENU=totalAmountExcludingTax];
+                ApplicationArea=#All;
+                SourceExpr=Amount;
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 21  ;2   ;Field     ;
+                Name=totalTaxAmount;
+                CaptionML=[@@@={Locked};
+                           ENU=totalTaxAmount];
+                ToolTipML=ENU=Specifies the total tax amount for the sales invoice.;
+                ApplicationArea=#All;
+                SourceExpr="Total Tax Amount";
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("Total Tax Amount"));
+                           END;
+
+                ImplicitType=Decimal }
+
+    { 17  ;2   ;Field     ;
+                Name=totalAmountIncludingTax;
+                CaptionML=[@@@={Locked};
+                           ENU=totalAmountIncludingTax];
+                ApplicationArea=#All;
+                SourceExpr="Amount Including VAT";
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("Amount Including VAT"));
+                           END;
+
+                ImplicitType=Decimal }
+
+    { 27  ;2   ;Field     ;
+                Name=noteForCustomer;
+                CaptionML=ENU=noteForCustomer;
+                ToolTipML=ENU=Specifies the note for the customer.;
+                ApplicationArea=#All;
+                SourceExpr=WorkDescription;
+                OnValidate=BEGIN
+                             NoteForCustomerSet := true;
+                           END;
+
+                ImplicitType=Text }
+
+    { 15  ;2   ;Field     ;
+                Name=lastModifiedDateTime;
+                CaptionML=[@@@={Locked};
+                           ENU=lastModifiedDateTime];
+                ApplicationArea=#All;
+                SourceExpr="Last Modified Date Time";
+                Editable=FALSE;
+                ImplicitType=DateTime }
+
+    { 33  ;2   ;Field     ;
+                Name=attachments;
+                CaptionML=[@@@={Locked};
+                           ENU=attachments];
+                ToolTipML=ENU=Specifies Attachments;
+                ApplicationArea=#All;
+                SourceExpr=AttachmentsJSON;
+                OnValidate=BEGIN
+                             IsAttachmentsSet := AttachmentsJSON <> PreviousAttachmentsJSON;
+                           END;
+
+                ODataEDMType=Collection(NATIVE-ATTACHMENT);
+                ImplicitType=Text }
+
+    { 34  ;2   ;Field     ;
+                Name=invoiceDiscountCalculation;
+                CaptionML=ENU=invoiceDiscountCalculation;
+                OptionCaptionML=[@@@={Locked};
+                                 ENU=,%,Amount];
+                ApplicationArea=#All;
+                SourceExpr="Invoice Discount Calculation";
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("Invoice Discount Calculation"));
+                             DiscountAmountSet := true;
+                           END;
+
+                ImplicitType=Option }
+
+    { 28  ;2   ;Field     ;
+                Name=invoiceDiscountValue;
+                CaptionML=ENU=invoiceDiscountValue;
+                ApplicationArea=#All;
+                SourceExpr="Invoice Discount Value";
+                OnValidate=BEGIN
+                             RegisterFieldSet(FIELDNO("Invoice Discount Value"));
+                             DiscountAmountSet := true;
+                           END;
+
+                ImplicitType=Decimal }
+
+    { 46  ;2   ;Field     ;
+                Name=lastEmailSentStatus;
+                CaptionML=[@@@={Locked};
+                           ENU=lastEmailSentStatus];
+                ToolTipML=ENU=Specifies the status of the last sent email, Not Sent, In Process, Finished, or Error.;
+                ApplicationArea=#All;
+                SourceExpr=LastEmailSentStatus;
+                Editable=FALSE;
+                ImplicitType=Option }
+
+    { 37  ;2   ;Field     ;
+                Name=lastEmailSentTime;
+                CaptionML=[@@@={Locked};
+                           ENU=lastEmailSentTime];
+                ToolTipML=ENU=Specifies the time that the last email was sent.;
+                ApplicationArea=#All;
+                SourceExpr=LastEmailSentTime;
+                Editable=FALSE;
+                ImplicitType=DateTime }
+
+    { 38  ;2   ;Field     ;
+                Name=isCustomerBlocked;
+                CaptionML=[@@@={Locked};
+                           ENU=isCustomerBlocked];
+                ToolTipML=ENU=Specifies if the customer is blocked.;
+                ApplicationArea=#All;
+                SourceExpr=IsCustomerBlocked;
+                Editable=FALSE;
+                ImplicitType=Boolean }
+
+  }
+  CODE
+  {
+    VAR
+      TempFieldBuffer@1004 : TEMPORARY Record "Field Buffer";
+      Customer@1006 : Record Customer;
+      DummySalesLine@1002 : Record "Sales Line";
+      NativeAPILanguageHandler@1033 : Codeunit "Native API - Language Handler";
+      BillingPostalAddressJSONText@1000 : Text;
+      CustomerEmail@1010 : Text;
+      SalesQuoteLinesJSON@1003 : Text;
+      PreviousSalesQuoteLinesJSON@1001 : Text;
+      CouponsJSON@1022 : Text;
+      PreviousCouponsJSON@1021 : Text;
+      AttachmentsJSON@1024 : Text;
+      TaxAreaDisplayName@1030 : Text;
+      PreviousAttachmentsJSON@1025 : Text;
+      BillingPostalAddressSet@1005 : Boolean;
+      CannotFindCustomerErr@1008 : TextConst 'ENU=The customer cannot be found.';
+      ContactIdHasToHaveValueErr@1007 : TextConst 'ENU=Contact Id must have a value set.';
+      CannotChangeIDErr@1009 : TextConst 'ENU=The id cannot be changed.';
+      SalesLinesSet@1015 : Boolean;
+      CouponsSet@1023 : Boolean;
+      DiscountAmountSet@1014 : Boolean;
+      IsAttachmentsSet@1026 : Boolean;
+      InvoiceDiscountAmount@1013 : Decimal;
+      WorkDescription@1012 : Text;
+      CustomerNotProvidedErr@1016 : TextConst 'ENU=A customerNumber or a customerID must be provided.';
+      NoteForCustomerSet@1017 : Boolean;
+      DocumentDateSet@1020 : Boolean;
+      DocumentDateVar@1019 : Date;
+      DueDateSet@1018 : Boolean;
+      DueDateVar@1011 : Date;
+      CannotFindQuoteErr@1041 : TextConst 'ENU=The quote cannot be found.';
+      EmptyEmailErr@1043 : TextConst 'ENU=The send-to email is empty. Specify email either for the customer or for the quote in email preview.';
+      InvoiceDiscountPctMustBePositiveErr@1028 : TextConst 'ENU=Invoice discount percentage must be positive.';
+      InvoiceDiscountPctMustBeBelowHundredErr@1027 : TextConst 'ENU=Invoice discount percentage must be below 100.';
+      InvoiceDiscountAmtMustBePositiveErr@1029 : TextConst 'ENU=Invoice discount must be positive.';
+      CustomerIdSet@1032 : Boolean;
+      LastEmailSentTime@1031 : DateTime;
+      LastEmailSentStatus@1034 : '"Not Sent","In Process",Finished,Error';
+      AggregateParentIsMissingErr@1035 : TextConst 'ENU=Please try the operation again. If the error persists, please contact support.';
+      CurrencyCodeTxt@1038 : Text;
+      LCYCurrencyCode@1037 : Code[10];
+      IsCustomerBlocked@1036 : Boolean;
+
+    LOCAL PROCEDURE SetCalculatedFields@6(VAR SalesHeader@1006 : Record "Sales Header");
+    VAR
+      TempSalesInvoiceLineAggregate@1002 : TEMPORARY Record "Sales Invoice Line Aggregate";
+      DummyNativeAPITaxSetup@1005 : Record "Native - API Tax Setup";
+      GraphMgtSalesQuote@1000 : Codeunit "Graph Mgt - Sales Quote";
+      NativeEDMTypes@1001 : Codeunit "Native - EDM Types";
+      NativeCoupons@1003 : Codeunit "Native - Coupons";
+      NativeAttachments@1004 : Codeunit "Native - Attachments";
+      GraphMgtGeneralTools@1007 : Codeunit "Graph Mgt - General Tools";
+    BEGIN
+      BillingPostalAddressJSONText := GraphMgtSalesQuote.BillToCustomerAddressToJSON(Rec);
+      CurrencyCodeTxt := GraphMgtGeneralTools.TranslateNAVCurrencyCodeToCurrencyCode(LCYCurrencyCode,"Currency Code");
+
+      if "Sell-to Customer No." <> '' then
+        if Customer.GET("Sell-to Customer No.") then begin
+          CustomerEmail := Customer."E-Mail";
+          IsCustomerBlocked := Customer.IsBlocked
+        end else begin
+          IsCustomerBlocked := false;
+          CustomerEmail := '';
+        end;
+
+      LoadLines(TempSalesInvoiceLineAggregate,Rec);
+      SalesQuoteLinesJSON := NativeEDMTypes.WriteSalesLinesJSON(TempSalesInvoiceLineAggregate);
+      PreviousSalesQuoteLinesJSON := SalesQuoteLinesJSON;
+
+      CouponsJSON := NativeCoupons.WriteCouponsJSON(DummySalesLine."Document Type"::Quote,"No.",false);
+      PreviousCouponsJSON := CouponsJSON;
+
+      AttachmentsJSON := NativeAttachments.GenerateAttachmentsJSON(Id);
+      PreviousAttachmentsJSON := AttachmentsJSON;
+      TaxAreaDisplayName := DummyNativeAPITaxSetup.GetTaxAreaDisplayName("Tax Area ID");
+
+      GetNoteForCustomer(SalesHeader);
+      GetLastEmailSentFields(SalesHeader);
+    END;
+
+    LOCAL PROCEDURE ClearCalculatedFields@10();
+    BEGIN
+      CLEAR(BillingPostalAddressJSONText);
+      CLEAR(SalesQuoteLinesJSON);
+      CLEAR(PreviousSalesQuoteLinesJSON);
+      CLEAR(SalesLinesSet);
+      CLEAR(AttachmentsJSON);
+      CLEAR(PreviousAttachmentsJSON);
+      CLEAR(IsAttachmentsSet);
+      CLEAR(WorkDescription);
+      CLEAR(TaxAreaDisplayName);
+      CLEAR(LastEmailSentTime);
+      CLEAR(LastEmailSentStatus);
+      CLEAR(CurrencyCodeTxt);
+      TempFieldBuffer.DELETEALL;
+    END;
+
+    LOCAL PROCEDURE RegisterFieldSet@11(FieldNo@1000 : Integer);
+    VAR
+      LastOrderNo@1001 : Integer;
+    BEGIN
+      LastOrderNo := 1;
+      if TempFieldBuffer.FINDLAST then
+        LastOrderNo := TempFieldBuffer.Order + 1;
+
+      CLEAR(TempFieldBuffer);
+      TempFieldBuffer.Order := LastOrderNo;
+      TempFieldBuffer."Table ID" := DATABASE::"Sales Quote Entity Buffer";
+      TempFieldBuffer."Field ID" := FieldNo;
+      TempFieldBuffer.INSERT;
+    END;
+
+    LOCAL PROCEDURE ProcessBillingPostalAddress@5();
+    VAR
+      GraphMgtSalesQuote@1000 : Codeunit "Graph Mgt - Sales Quote";
+    BEGIN
+      if not BillingPostalAddressSet then
+        exit;
+
+      GraphMgtSalesQuote.ProcessComplexTypes(Rec,BillingPostalAddressJSONText);
+
+      if xRec."Sell-to Address" <> "Sell-to Address" then
+        RegisterFieldSet(FIELDNO("Sell-to Address"));
+
+      if xRec."Sell-to Address 2" <> "Sell-to Address 2" then
+        RegisterFieldSet(FIELDNO("Sell-to Address 2"));
+
+      if xRec."Sell-to City" <> "Sell-to City" then
+        RegisterFieldSet(FIELDNO("Sell-to City"));
+
+      if xRec."Sell-to Country/Region Code" <> "Sell-to Country/Region Code" then
+        RegisterFieldSet(FIELDNO("Sell-to Country/Region Code"));
+
+      if xRec."Sell-to Post Code" <> "Sell-to Post Code" then
+        RegisterFieldSet(FIELDNO("Sell-to Post Code"));
+
+      if xRec."Sell-to County" <> "Sell-to County" then
+        RegisterFieldSet(FIELDNO("Sell-to County"));
+    END;
+
+    LOCAL PROCEDURE UpdateCustomerFromGraphContactId@2(VAR Customer@1001 : Record Customer);
+    VAR
+      O365SalesInvoiceMgmt@1002 : Codeunit "O365 Sales Invoice Mgmt";
+      UpdateCustomer@1000 : Boolean;
+    BEGIN
+      UpdateCustomer := "Sell-to Customer No." = '';
+      if not UpdateCustomer then begin
+        TempFieldBuffer.RESET;
+        TempFieldBuffer.SETRANGE("Field ID",FIELDNO("Customer Id"));
+        UpdateCustomer := not TempFieldBuffer.FINDFIRST;
+        TempFieldBuffer.RESET;
+      end;
+
+      if UpdateCustomer then begin
+        VALIDATE("Customer Id",Customer.Id);
+        VALIDATE("Sell-to Customer No.",Customer."No.");
+        RegisterFieldSet(FIELDNO("Customer Id"));
+        RegisterFieldSet(FIELDNO("Sell-to Customer No."));
+      end;
+
+      O365SalesInvoiceMgmt.EnforceCustomerTemplateIntegrity(Customer);
+    END;
+
+    LOCAL PROCEDURE LoadLines@1(VAR TempSalesInvoiceLineAggregate@1000 : TEMPORARY Record "Sales Invoice Line Aggregate";VAR SalesQuoteEntityBuffer@1001 : Record "Sales Quote Entity Buffer");
+    VAR
+      GraphMgtSalesQuoteBuffer@1002 : Codeunit "Graph Mgt - Sales Quote Buffer";
+    BEGIN
+      TempSalesInvoiceLineAggregate.SETRANGE("Document Id",SalesQuoteEntityBuffer.Id);
+      GraphMgtSalesQuoteBuffer.LoadLines(TempSalesInvoiceLineAggregate,TempSalesInvoiceLineAggregate.GETFILTER("Document Id"));
+    END;
+
+    LOCAL PROCEDURE UpdateLines@4();
+    VAR
+      TempSalesInvoiceLineAggregate@1002 : TEMPORARY Record "Sales Invoice Line Aggregate";
+      GraphMgtSalesQuoteBuffer@1000 : Codeunit "Graph Mgt - Sales Quote Buffer";
+      NativeEDMTypes@1001 : Codeunit "Native - EDM Types";
+    BEGIN
+      if not SalesLinesSet then
+        exit;
+
+      NativeEDMTypes.ParseSalesLinesJSON(
+        DummySalesLine."Document Type"::Quote,SalesQuoteLinesJSON,TempSalesInvoiceLineAggregate,Id);
+      TempSalesInvoiceLineAggregate.SETRANGE("Document Id",Id);
+      GraphMgtSalesQuoteBuffer.PropagateMultipleLinesUpdate(TempSalesInvoiceLineAggregate);
+      FIND;
+    END;
+
+    LOCAL PROCEDURE UpdateDiscount@13();
+    VAR
+      SalesHeader@1002 : Record "Sales Header";
+      SalesLine@1009 : Record "Sales Line";
+      TotalSalesLine@1008 : Record "Sales Line";
+      CustInvDisc@1007 : Record "Cust. Invoice Disc.";
+      SalesCalcDiscountByType@1006 : Codeunit "Sales - Calc Discount By Type";
+      O365Discounts@1005 : Codeunit "O365 Discounts";
+      DocumentTotals@1004 : Codeunit "Document Totals";
+      GraphMgtSalesQuoteBuffer@1000 : Codeunit "Graph Mgt - Sales Quote Buffer";
+      VatAmount@1003 : Decimal;
+      InvoiceDiscountPct@1001 : Decimal;
+    BEGIN
+      if SalesLinesSet and (not DiscountAmountSet) then begin
+        GraphMgtSalesQuoteBuffer.RedistributeInvoiceDiscounts(Rec);
+        exit;
+      end;
+
+      if not DiscountAmountSet then
+        exit;
+
+      case "Invoice Discount Calculation" of
+        "Invoice Discount Calculation"::"%":
+          begin
+            if "Invoice Discount Value" < 0 then
+              ERROR(InvoiceDiscountPctMustBePositiveErr);
+            if "Invoice Discount Value" > 100 then
+              ERROR(InvoiceDiscountPctMustBeBelowHundredErr);
+            InvoiceDiscountPct := "Invoice Discount Value";
+          end;
+        "Invoice Discount Calculation"::Amount:
+          begin
+            InvoiceDiscountAmount := "Invoice Discount Value";
+            if "Invoice Discount Value" < 0 then
+              ERROR(InvoiceDiscountAmtMustBePositiveErr);
+          end;
+      end;
+
+      SalesHeader.GET("Document Type"::Quote,"No.");
+      if InvoiceDiscountPct <> 0 then begin
+        O365Discounts.ApplyInvoiceDiscountPercentage(SalesHeader,InvoiceDiscountPct);
+        SalesLine.SETRANGE("Document Type",SalesHeader."Document Type");
+        SalesLine.SETRANGE("Document No.",SalesHeader."No.");
+        if SalesLine.FINDFIRST then begin
+          GraphMgtSalesQuoteBuffer.RedistributeInvoiceDiscounts(Rec);
+          DocumentTotals.CalculateSalesTotals(TotalSalesLine,VatAmount,SalesLine);
+          "Invoice Discount Amount" := TotalSalesLine."Inv. Discount Amount";
+        end;
+      end else begin
+        CustInvDisc.SETRANGE(Code,"No.");
+        CustInvDisc.DELETEALL;
+        SalesCalcDiscountByType.ApplyInvDiscBasedOnAmt(InvoiceDiscountAmount,SalesHeader);
+        GraphMgtSalesQuoteBuffer.RedistributeInvoiceDiscounts(Rec);
+      end;
+    END;
+
+    LOCAL PROCEDURE UpdateCoupons@14();
+    VAR
+      NativeEDMTypes@1000 : Codeunit "Native - EDM Types";
+    BEGIN
+      if not CouponsSet then
+        exit;
+
+      NativeEDMTypes.ParseCouponsJSON("Contact Graph Id",DummySalesLine."Document Type"::Quote,"No.",CouponsJSON);
+    END;
+
+    LOCAL PROCEDURE UpdateAttachments@7();
+    VAR
+      NativeAttachments@1001 : Codeunit "Native - Attachments";
+    BEGIN
+      if not IsAttachmentsSet then
+        exit;
+
+      // Here we now know that user has specified different attachments than before.
+      // We should patch the attachments. This means:
+      // Delete the ones not in use anymore.
+      // Add new ones.
+      // Keep old ones.
+
+      NativeAttachments.UpdateAttachments(Id,AttachmentsJSON,PreviousAttachmentsJSON);
+    END;
+
+    LOCAL PROCEDURE CheckCustomer@3();
+    VAR
+      BlankGUID@1000 : GUID;
+    BEGIN
+      if ("Sell-to Customer No." = '') and
+         ("Customer Id" = BlankGUID)
+      then
+        ERROR(CustomerNotProvidedErr);
+    END;
+
+    LOCAL PROCEDURE GetLastEmailSentFields@19(VAR SalesHeader@1000 : Record "Sales Header");
+    BEGIN
+      LastEmailSentTime := SalesHeader."Last Email Sent Time";
+      LastEmailSentStatus := SalesHeader."Last Email Sent Status";
+    END;
+
+    LOCAL PROCEDURE GetNoteForCustomer@9(VAR SalesHeader@1000 : Record "Sales Header");
+    BEGIN
+      CLEAR(WorkDescription);
+      WorkDescription := SalesHeader.GetWorkDescriptionWorkDescriptionCalculated;
+    END;
+
+    LOCAL PROCEDURE SetNoteForCustomer@22();
+    VAR
+      SalesHeader@1000 : Record "Sales Header";
+    BEGIN
+      if not NoteForCustomerSet then
+        exit;
+
+      SalesHeader.GET(SalesHeader."Document Type"::Quote,"No.");
+      SalesHeader.SetWorkDescription(WorkDescription);
+      SalesHeader.MODIFY(true);
+      FIND;
+    END;
+
+    LOCAL PROCEDURE SetDates@8();
+    VAR
+      GraphMgtSalesQuoteBuffer@1000 : Codeunit "Graph Mgt - Sales Quote Buffer";
+    BEGIN
+      if not (DueDateSet or DocumentDateSet) then
+        exit;
+
+      TempFieldBuffer.RESET;
+      TempFieldBuffer.DELETEALL;
+
+      if DocumentDateSet then begin
+        "Document Date" := DocumentDateVar;
+        "Posting Date" := DocumentDateVar;
+        RegisterFieldSet(FIELDNO("Document Date"));
+        RegisterFieldSet(FIELDNO("Posting Date"));
+      end;
+
+      if DueDateSet then begin
+        "Due Date" := DueDateVar;
+        RegisterFieldSet(FIELDNO("Due Date"));
+      end;
+
+      GraphMgtSalesQuoteBuffer.PropagateOnModify(Rec,TempFieldBuffer);
+      FIND;
+    END;
+
+    LOCAL PROCEDURE GetQuote@36(VAR SalesHeader@1000 : Record "Sales Header");
+    BEGIN
+      SalesHeader.SETRANGE(Id,Id);
+      if not SalesHeader.FINDFIRST then
+        ERROR(CannotFindQuoteErr);
+    END;
+
+    LOCAL PROCEDURE CheckSendToEmailAddress@21();
+    BEGIN
+      if GetSendToEmailAddress = '' then
+        ERROR(EmptyEmailErr);
+    END;
+
+    LOCAL PROCEDURE GetSendToEmailAddress@26() : Text[250];
+    VAR
+      EmailAddress@1000 : Text[250];
+    BEGIN
+      EmailAddress := GetDocumentEmailAddress;
+      if EmailAddress <> '' then
+        exit(EmailAddress);
+      EmailAddress := GetCustomerEmailAddress;
+      exit(EmailAddress);
+    END;
+
+    LOCAL PROCEDURE GetCustomerEmailAddress@24() : Text[250];
+    BEGIN
+      if not Customer.GET("Sell-to Customer No.") then
+        exit('');
+      exit(Customer."E-Mail");
+    END;
+
+    LOCAL PROCEDURE GetDocumentEmailAddress@58() : Text[250];
+    VAR
+      EmailParameter@1002 : Record "Email Parameter";
+    BEGIN
+      if not EmailParameter.GET("No.","Document Type",EmailParameter."Parameter Type"::Address) then
+        exit('');
+      exit(EmailParameter."Parameter Value");
+    END;
+
+    LOCAL PROCEDURE SendQuote@34(VAR SalesHeader@1000 : Record "Sales Header");
+    VAR
+      DummyO365SalesDocument@1003 : Record "O365 Sales Document";
+      LinesInstructionMgt@1002 : Codeunit "Lines Instruction Mgt.";
+      O365SendResendInvoice@1001 : Codeunit "O365 Send + Resend Invoice";
+      O365SetupEmail@1004 : Codeunit "O365 Setup Email";
+      O365SalesEmailManagement@1005 : Codeunit "O365 Sales Email Management";
+    BEGIN
+      O365SendResendInvoice.CheckDocumentIfNoItemsExists(SalesHeader,false,DummyO365SalesDocument);
+      LinesInstructionMgt.SalesCheckAllLinesHaveQuantityAssigned(SalesHeader);
+      O365SetupEmail.SilentSetup;
+      CheckSendToEmailAddress;
+
+      O365SalesEmailManagement.NativeAPISaveEmailBodyText(Id);
+      SalesHeader.SETRECFILTER;
+      SalesHeader.EmailRecords(false);
+    END;
+
+    LOCAL PROCEDURE SetActionResponse@47(VAR ActionContext@1004 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.WebServiceActionContext";VAR SalesHeader@1000 : Record "Sales Header");
+    VAR
+      ODataActionManagement@1003 : Codeunit "OData Action Management";
+    BEGIN
+      ODataActionManagement.AddKey(FIELDNO(Id),SalesHeader.Id);
+      if SalesHeader."Document Type" = SalesHeader."Document Type"::Invoice then
+        ODataActionManagement.SetDeleteResponseLocation(ActionContext,PAGE::"Native - Sales Inv. Entity")
+      else
+        ODataActionManagement.SetDeleteResponseLocation(ActionContext,PAGE::"Native - Sales Quotes");
+    END;
+
+    [ServiceEnabled]
+    [External]
+    PROCEDURE MakeInvoice@15(VAR ActionContext@1000 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.WebServiceActionContext");
+    VAR
+      SalesHeader@1001 : Record "Sales Header";
+      SalesQuoteToInvoice@1005 : Codeunit "Sales-Quote to Invoice";
+    BEGIN
+      GetQuote(SalesHeader);
+      SalesHeader.SETRECFILTER;
+      SalesQuoteToInvoice.RUN(SalesHeader);
+      SalesQuoteToInvoice.GetSalesInvoiceHeader(SalesHeader);
+      SetActionResponse(ActionContext,SalesHeader);
+    END;
+
+    [ServiceEnabled]
+    [External]
+    PROCEDURE Send@17(VAR ActionContext@1000 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.WebServiceActionContext");
+    VAR
+      SalesHeader@1005 : Record "Sales Header";
+    BEGIN
+      GetQuote(SalesHeader);
+      SendQuote(SalesHeader);
+      SetActionResponse(ActionContext,SalesHeader);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

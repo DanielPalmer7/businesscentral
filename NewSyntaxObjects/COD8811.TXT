@@ -1,0 +1,25 @@
+OBJECT Codeunit 8811 Custom Layout - Sales Quote
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=VAR
+            ReportSelections@1000 : Record "Report Selections";
+          BEGIN
+            ReportSelections.PrintForUsage(ReportSelections.Usage::"S.Quote");
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

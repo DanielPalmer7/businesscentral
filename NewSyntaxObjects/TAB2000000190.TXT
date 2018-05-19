@@ -1,0 +1,32 @@
+OBJECT Table 2000000190 Entitlement Set
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.927T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;ID                  ;Code20         }
+    { 2   ;   ;Name                ;Text250        }
+  }
+  KEYS
+  {
+    {    ;ID                                      ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

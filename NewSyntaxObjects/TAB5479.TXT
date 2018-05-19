@@ -1,0 +1,36 @@
+OBJECT Table 5479 Journal Lines Entity Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160148.703T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    ObsoleteState=Pending;
+    ObsoleteReason=Became obsolete after refactoring of the NAV APIs.;
+    CaptionML=ENU=Journal Lines Entity Setup;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=ENU=Primary Key }
+    { 2   ;   ;Default Journal Batch Name;Code10  ;TableRelation="Gen. Journal Batch".Name WHERE ("Journal Template Name"=CONST('GENERAL'));
+                                                   CaptionML=ENU=Default Journal Batch Name }
+  }
+  KEYS
+  {
+    {    ;"Primary Key"                           ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

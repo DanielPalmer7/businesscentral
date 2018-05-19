@@ -1,0 +1,67 @@
+OBJECT Table 2156 O365 Payment Instr. Transl.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160131.390T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=O365 Payment Instr. Transl.;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Id                  ;Integer       ;DataClassification=ToBeClassified;
+                                                   CaptionML=ENU=Id }
+    { 3   ;   ;Language Code       ;Code10        ;DataClassification=ToBeClassified;
+                                                   CaptionML=ENU=Language Code }
+    { 5   ;   ;Transl. Name        ;Text20        ;CaptionML=ENU=Transl. Name }
+    { 6   ;   ;Transl. Payment Instructions;Text250;
+                                                   CaptionML=ENU=Transl. Payment Instructions }
+    { 7   ;   ;Transl. Payment Instr. Blob;BLOB   ;CaptionML=ENU=Transl. Payment Instr. Blob }
+  }
+  KEYS
+  {
+    {    ;Id,"Language Code"                      ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    PROCEDURE GetTransPaymentInstructions@14() : Text;
+    VAR
+      TempBlob@1000 : Record TempBlob;
+      CR@1001 : Text[1];
+    BEGIN
+      CALCFIELDS("Transl. Payment Instr. Blob");
+      if not "Transl. Payment Instr. Blob".HASVALUE then
+        exit("Transl. Payment Instructions");
+      CR[1] := 10;
+      TempBlob.Blob := "Transl. Payment Instr. Blob";
+      exit(TempBlob.ReadAsText(CR,TEXTENCODING::Windows));
+    END;
+
+    PROCEDURE SetTranslPaymentInstructions@15(NewParameter@1001 : Text);
+    VAR
+      TempBlob@1000 : Record TempBlob;
+    BEGIN
+      CLEAR("Transl. Payment Instr. Blob");
+      "Transl. Payment Instructions" := COPYSTR(NewParameter,1,MAXSTRLEN("Transl. Payment Instructions"));
+      if STRLEN(NewParameter) <= MAXSTRLEN("Transl. Payment Instructions") then
+        exit; // No need to store anything in the blob
+      if NewParameter = '' then
+        exit;
+      TempBlob.WriteAsText(NewParameter,TEXTENCODING::Windows);
+      "Transl. Payment Instr. Blob" := TempBlob.Blob;
+      MODIFY;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

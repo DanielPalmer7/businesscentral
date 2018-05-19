@@ -1,0 +1,25 @@
+OBJECT Codeunit 8812 Custom Layout - Sales Order
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=VAR
+            ReportSelections@1000 : Record "Report Selections";
+          BEGIN
+            ReportSelections.PrintForUsage(ReportSelections.Usage::"S.Order");
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

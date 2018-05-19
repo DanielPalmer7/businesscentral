@@ -1,0 +1,34 @@
+OBJECT Table 52 Batch Processing Parameter
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160058.547T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Batch Processing Parameter;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Batch ID            ;GUID          ;CaptionML=ENU=Batch ID }
+    { 2   ;   ;Parameter Id        ;Integer       ;CaptionML=ENU=Parameter Id }
+    { 3   ;   ;Parameter Value     ;Text250       ;CaptionML=ENU=Parameter Value }
+  }
+  KEYS
+  {
+    {    ;"Batch ID","Parameter Id"               ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

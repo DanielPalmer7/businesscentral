@@ -1,0 +1,81 @@
+OBJECT Page 64 Printer Selections
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161201.850T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Printer Selections;
+    SourceTable="Printer Selection";
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name="User ID";
+                ToolTipML=ENU=Specifies the ID of the user for whom you want to define permissions.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="User ID";
+                ImplicitType=Code50 }
+
+    { 11  ;2   ;Field     ;
+                Name="Report ID";
+                ToolTipML=ENU=Specifies the object ID of the report.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Report ID";
+                LookupPageID=Objects;
+                ImplicitType=Integer }
+
+    { 4   ;2   ;Field     ;
+                Name="Report Caption";
+                DrillDown=false;
+                ToolTipML=ENU=Specifies the display name of the report.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Report Caption";
+                ImplicitType=Text250 }
+
+    { 6   ;2   ;Field     ;
+                Name="Printer Name";
+                ToolTipML=ENU=Specifies the printer that the user will be allowed to use or on which the report will be printed.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Printer Name";
+                LookupPageID=Printers;
+                ImplicitType=Text250 }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Name=Control1900383207;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

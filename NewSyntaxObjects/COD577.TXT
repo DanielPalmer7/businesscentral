@@ -1,0 +1,37 @@
+OBJECT Codeunit 577 Run Template Income Stmt.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160623.320T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=VAR
+            ODataUtility@1001 : Codeunit ODataUtility;
+            ObjectTypeParam@1000 : ',,,,,,,,Page,Query';
+            StatementType@1002 : 'BalanceSheet,SummaryTrialBalance,CashFlowStatement,StatementOfRetainedEarnings,AgedAccountsReceivable,AgedAccountsPayable,IncomeStatement';
+          BEGIN
+            if not (ClientTypeManagement.GetCurrentClientType in [CLIENTTYPE::Phone,CLIENTTYPE::Tablet]) then
+              ODataUtility.GenerateExcelTemplateWorkBook(ObjectTypeParam::Page,'ExcelTemplateIncomeStatement',true,
+                StatementType::IncomeStatement)
+            else begin
+              MESSAGE(OfficeMobileMsg);
+              exit;
+            end;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      OfficeMobileMsg@1000 : TextConst 'ENU=Excel Reports cannot be opened in this environment because this version of Office does not support the file format.';
+      ClientTypeManagement@1001 : Codeunit ClientTypeManagement;
+
+    BEGIN
+    END.
+  }
+}
+

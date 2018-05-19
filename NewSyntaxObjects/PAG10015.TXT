@@ -1,0 +1,126 @@
+OBJECT Page 10015 IRS 1099 Form-Box
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161713.420T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=IRS 1099 Form-Box;
+    SourceTable="IRS 1099 Form-Box";
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 1020000 ;1   ;Action    ;
+                      Name="Update Form Boxes";
+                      CaptionML=ENU=Update Form Boxes;
+                      ToolTipML=ENU=Update the form boxes in the report to map to changed codes in the related table.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      Image=1099Form;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 if not CONFIRM(DeleteLinesQst,true) then
+                                   ERROR('');
+                                 DELETEALL;
+                                 InitIRS1099FormBoxes;
+                               END;
+                                }
+      { 1900153904;1 ;Action    ;
+                      Name="Vendor 1099 Magnetic Media";
+                      CaptionML=ENU=Vendor 1099 Magnetic Media;
+                      ToolTipML=ENU=View the 1099 forms that can be exported. The form information exported by this report is the same as the reports that print 1099 forms. These reports include Vendor 1099 Div, Vendor 1099 Int, and Vendor 1099 Misc.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Report "Vendor 1099 Magnetic Media";
+                      Promoted=true;
+                      Image=Export1099;
+                      PromotedCategory=Process }
+      { 1900000006;0 ;ActionContainer;
+                      Name=ActionContainer1900000006;
+                      ActionContainerType=Reports }
+      { 1902858006;1 ;Action    ;
+                      Name="Vendor 1099 Div";
+                      CaptionML=ENU=Vendor 1099 Div;
+                      ToolTipML=ENU=View the federal form 1099-DIV for dividends and distribution.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Report "Vendor 1099 Div";
+                      Promoted=true;
+                      Image=Report;
+                      PromotedCategory=Report }
+      { 1902577106;1 ;Action    ;
+                      Name="Vendor 1099 Int";
+                      CaptionML=ENU=Vendor 1099 Int;
+                      ToolTipML=ENU=View the federal form 1099-INT for interest income.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Report "Vendor 1099 Int";
+                      Promoted=true;
+                      Image=Report;
+                      PromotedCategory=Report }
+      { 1907012606;1 ;Action    ;
+                      Name="Vendor 1099 Misc";
+                      CaptionML=ENU=Vendor 1099 Misc;
+                      ToolTipML=ENU=View the federal form 1099-MISC for miscellaneous income.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Report "Vendor 1099 Misc";
+                      Promoted=true;
+                      Image=Report;
+                      PromotedCategory=Report }
+      { 1902060306;1 ;Action    ;
+                      Name="Vendor 1099 Information";
+                      CaptionML=ENU=Vendor 1099 Information;
+                      ToolTipML=ENU=View the vendors' 1099 information. The report includes all 1099 information for the vendors that have been set up using the IRS 1099 Form-Box table. This includes only amounts that have been paid. It does not include amounts billed but not yet paid. You must enter a date filter before you can print this report.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Report "Vendor 1099 Information";
+                      Promoted=true;
+                      Image=Report;
+                      PromotedCategory=Report }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name=Code;
+                ToolTipML=ENU=Specifies the 1099 form and the 1099 box.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Code;
+                ImplicitType=Code10 }
+
+    { 4   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the 1099 code.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=Text100 }
+
+    { 6   ;2   ;Field     ;
+                Name="Minimum Reportable";
+                ToolTipML=ENU=Specifies the minimum value for this box that must be reported to the IRS on a 1099 form.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Minimum Reportable";
+                ImplicitType=Decimal }
+
+  }
+  CODE
+  {
+    VAR
+      DeleteLinesQst@1020000 : TextConst 'ENU=If you proceed, all existing entries will be deleted and recreated. Do you want to continue?';
+
+    BEGIN
+    END.
+  }
+}
+

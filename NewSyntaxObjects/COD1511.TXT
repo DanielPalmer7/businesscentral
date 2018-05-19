@@ -1,0 +1,213 @@
+OBJECT Codeunit 1511 Notification Lifecycle Mgt.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160700.607T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    SingleInstance=true;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      TempNotificationContext@1000 : TEMPORARY Record "Notification Context";
+      NotificationSentCategoryTxt@1003 : TextConst '@@@={LOCKED};ENU=AL Notification Sent';
+      NotificationSentTelemetryMsg@1001 : TextConst '@@@={LOCKED};ENU="A notification was sent with message: %1 "';
+
+    [Internal]
+    PROCEDURE SendNotification@10(NotificationToSend@1000 : Notification;RecId@1002 : RecordID);
+    BEGIN
+      if ISNULLGUID(NotificationToSend.ID) then
+        NotificationToSend.ID := CREATEGUID;
+
+      NotificationToSend.SEND;
+      OnAfterNotificationSent(NotificationToSend);
+      CreateNotificationContext(NotificationToSend.ID,RecId);
+    END;
+
+    [Internal]
+    PROCEDURE SendNotificationWithAdditionalContext@13(NotificationToSend@1000 : Notification;RecId@1001 : RecordID;AdditionalContextId@1002 : GUID);
+    BEGIN
+      if ISNULLGUID(NotificationToSend.ID) then
+        NotificationToSend.ID := CREATEGUID;
+
+      NotificationToSend.SEND;
+      OnAfterNotificationSent(NotificationToSend);
+      CreateNotificationContextWithAdditionalContext(NotificationToSend.ID,RecId,AdditionalContextId);
+    END;
+
+    [Internal]
+    PROCEDURE RecallNotificationsForRecord@4(RecId@1000 : RecordID;HandleDelayedInsert@1002 : Boolean);
+    VAR
+      TempNotificationContextToRecall@1001 : TEMPORARY Record "Notification Context";
+    BEGIN
+      if GetNotificationsForRecord(RecId,TempNotificationContextToRecall,HandleDelayedInsert) then
+        RecallNotifications(TempNotificationContextToRecall);
+    END;
+
+    [Internal]
+    PROCEDURE RecallNotificationsForRecordWithAdditionalContext@9(RecId@1000 : RecordID;AdditionalContextId@1003 : GUID;HandleDelayedInsert@1002 : Boolean);
+    VAR
+      TempNotificationContextToRecall@1001 : TEMPORARY Record "Notification Context";
+    BEGIN
+      if GetNotificationsForRecordWithAdditionalContext(RecId,AdditionalContextId,TempNotificationContextToRecall,HandleDelayedInsert) then
+        RecallNotifications(TempNotificationContextToRecall);
+    END;
+
+    [External]
+    PROCEDURE RecallAllNotifications@8();
+    BEGIN
+      TempNotificationContext.RESET;
+      if TempNotificationContext.FINDFIRST then
+        RecallNotifications(TempNotificationContext);
+    END;
+
+    [External]
+    PROCEDURE GetTmpNotificationContext@15(VAR TempNotificationContextOut@1000 : TEMPORARY Record "Notification Context");
+    BEGIN
+      TempNotificationContext.RESET;
+      TempNotificationContextOut.COPY(TempNotificationContext,true);
+    END;
+
+    [Internal]
+    PROCEDURE SetRecordID@11(RecId@1000 : RecordID);
+    VAR
+      RecRef@1001 : RecordRef;
+    BEGIN
+      RecRef.OPEN(RecId.TABLENO);
+      UpdateRecordIDHandleDelayedInsert(RecRef.RECORDID,RecId,false);
+    END;
+
+    [TryFunction]
+    LOCAL PROCEDURE TryFctThrowsErrorIfRecordExists@17(RecId@1000 : RecordID;VAR Exists@1002 : Boolean);
+    VAR
+      RecRef@1001 : RecordRef;
+    BEGIN
+      // If record exists, in some cases RecRef.GET(RecId) throws an error
+      Exists := RecRef.GET(RecId);
+    END;
+
+    LOCAL PROCEDURE UpdateRecordIDHandleDelayedInsert@16(CurrentRecId@1000 : RecordID;NewRecId@1001 : RecordID;HandleDelayedInsert@1003 : Boolean);
+    VAR
+      TempNotificationContextToUpdate@1002 : TEMPORARY Record "Notification Context";
+      Exists@1004 : Boolean;
+    BEGIN
+      if not TryFctThrowsErrorIfRecordExists(NewRecId,Exists) then
+        Exists := true;
+
+      if not Exists then
+        exit;
+
+      if GetNotificationsForRecord(CurrentRecId,TempNotificationContextToUpdate,HandleDelayedInsert) then
+        repeat
+          TempNotificationContextToUpdate."Record ID" := NewRecId;
+          TempNotificationContextToUpdate.MODIFY(true);
+        until TempNotificationContextToUpdate.NEXT = 0
+    END;
+
+    [Internal]
+    PROCEDURE UpdateRecordID@3(CurrentRecId@1000 : RecordID;NewRecId@1001 : RecordID);
+    BEGIN
+      UpdateRecordIDHandleDelayedInsert(CurrentRecId,NewRecId,true);
+    END;
+
+    [Internal]
+    PROCEDURE GetNotificationsForRecord@2(RecId@1000 : RecordID;VAR TempNotificationContextOut@1001 : TEMPORARY Record "Notification Context";HandleDelayedInsert@1003 : Boolean) : Boolean;
+    BEGIN
+      TempNotificationContext.RESET;
+      GetUsableRecordId(RecId,HandleDelayedInsert);
+      TempNotificationContext.SETRANGE("Record ID",RecId);
+      TempNotificationContextOut.COPY(TempNotificationContext,true);
+      exit(TempNotificationContextOut.FINDSET);
+    END;
+
+    [Internal]
+    PROCEDURE GetNotificationsForRecordWithAdditionalContext@5(RecId@1000 : RecordID;AdditionalContextId@1001 : GUID;VAR TempNotificationContextOut@1002 : TEMPORARY Record "Notification Context";HandleDelayedInsert@1004 : Boolean) : Boolean;
+    BEGIN
+      TempNotificationContext.RESET;
+      GetUsableRecordId(RecId,HandleDelayedInsert);
+      TempNotificationContext.SETRANGE("Record ID",RecId);
+      TempNotificationContext.SETRANGE("Additional Context ID",AdditionalContextId);
+      TempNotificationContextOut.COPY(TempNotificationContext,true);
+      exit(TempNotificationContextOut.FINDSET);
+    END;
+
+    LOCAL PROCEDURE CreateNotificationContext@7(NotificationId@1000 : GUID;RecId@1001 : RecordID);
+    BEGIN
+      DeleteAlreadyRegisteredNotificationBeforeInsert(NotificationId);
+      TempNotificationContext.INIT;
+      TempNotificationContext."Notification ID" := NotificationId;
+      GetUsableRecordId(RecId,true);
+      TempNotificationContext."Record ID" := RecId;
+      TempNotificationContext.INSERT(true);
+    END;
+
+    LOCAL PROCEDURE CreateNotificationContextWithAdditionalContext@1(NotificationId@1000 : GUID;RecId@1001 : RecordID;AdditionalContextId@1002 : GUID);
+    BEGIN
+      DeleteAlreadyRegisteredNotificationBeforeInsert(NotificationId);
+      TempNotificationContext.INIT;
+      TempNotificationContext."Notification ID" := NotificationId;
+      GetUsableRecordId(RecId,true);
+      TempNotificationContext."Record ID" := RecId;
+      TempNotificationContext."Additional Context ID" := AdditionalContextId;
+      TempNotificationContext.INSERT(true);
+    END;
+
+    LOCAL PROCEDURE DeleteAlreadyRegisteredNotificationBeforeInsert@26(NotificationId@1000 : GUID);
+    BEGIN
+      TempNotificationContext.RESET;
+      TempNotificationContext.SETRANGE("Notification ID",NotificationId);
+      if TempNotificationContext.FINDFIRST then
+        TempNotificationContext.DELETE(true);
+    END;
+
+    LOCAL PROCEDURE RecallNotifications@6(VAR TempNotificationContextToRecall@1000 : TEMPORARY Record "Notification Context");
+    VAR
+      NotificationToRecall@1001 : Notification;
+    BEGIN
+      repeat
+        NotificationToRecall.ID := TempNotificationContextToRecall."Notification ID";
+        NotificationToRecall.RECALL;
+
+        TempNotificationContextToRecall.DELETE(true);
+      until TempNotificationContextToRecall.NEXT = 0
+    END;
+
+    LOCAL PROCEDURE GetUsableRecordId@12(VAR RecId@1000 : RecordID;HandleDelayedInsert@1002 : Boolean);
+    VAR
+      RecRef@1001 : RecordRef;
+    BEGIN
+      if not HandleDelayedInsert then
+        exit;
+
+      // Handle delayed insert
+      if not RecRef.GET(RecId) then begin
+        RecRef.OPEN(RecId.TABLENO);
+        RecId := RecRef.RECORDID;
+      end;
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterNotificationSent@18(CurrentNotification@1001 : Notification);
+    BEGIN
+    END;
+
+    [EventSubscriber(Codeunit,1511,OnAfterNotificationSent,"",Skip,Skip)]
+    LOCAL PROCEDURE LogNotificationSentSubscriber@14(CurrentNotification@1000 : Notification);
+    BEGIN
+      SENDTRACETAG('00001KO',NotificationSentCategoryTxt,VERBOSITY::Normal,
+        STRSUBSTNO(NotificationSentTelemetryMsg,CurrentNotification.MESSAGE),DATACLASSIFICATION::CustomerContent);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

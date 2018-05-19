@@ -1,0 +1,37 @@
+OBJECT Table 264 Currency Amount
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160106.267T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Currency Amount;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Currency Code       ;Code10        ;TableRelation=Currency;
+                                                   CaptionML=ENU=Currency Code }
+    { 2   ;   ;Date                ;Date          ;CaptionML=ENU=Date }
+    { 3   ;   ;Amount              ;Decimal       ;CaptionML=ENU=Amount;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr="Currency Code" }
+  }
+  KEYS
+  {
+    {    ;"Currency Code",Date                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

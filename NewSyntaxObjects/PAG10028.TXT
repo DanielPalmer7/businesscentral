@@ -1,0 +1,490 @@
+OBJECT Page 10028 Sales Order Invoice
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161714.463T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Sales Order Invoice;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="Sales Header";
+    SourceTableView=WHERE("Document Type"=FILTER(Order));
+    PageType=Document;
+    RefreshOnActivate=true;
+    OnOpenPage=BEGIN
+                 if UserMgt.GetSalesFilter <> '' then begin
+                   FILTERGROUP(2);
+                   SETRANGE("Responsibility Center",UserMgt.GetSalesFilter);
+                   FILTERGROUP(0);
+                 end;
+
+                 SETRANGE("Date Filter",0D,WORKDATE - 1);
+               END;
+
+    OnNewRecord=BEGIN
+                  "Responsibility Center" := UserMgt.GetSalesFilter;
+                END;
+
+    OnDeleteRecord=BEGIN
+                     CurrPage.SAVERECORD;
+                     exit(ConfirmDeletion);
+                   END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      Name=ActionContainer1900000003;
+                      ActionContainerType=RelatedInformation }
+      { 59      ;1   ;ActionGroup;
+                      Name="O&rder";
+                      CaptionML=ENU=O&rder;
+                      Image=Order }
+      { 61      ;2   ;Action    ;
+                      Name=Statistics;
+                      ShortCutKey=F7;
+                      CaptionML=ENU=Statistics;
+                      ToolTipML=ENU=View statistical information, such as the value of posted entries, for the record.;
+                      Promoted=true;
+                      Image=Statistics;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 SalesSetup.GET;
+                                 if SalesSetup."Calc. Inv. Discount" then begin
+                                   CurrPage.SalesLines.PAGE.CalcInvDisc;
+                                   COMMIT
+                                 end;
+                                 OnBeforeCalculateSalesTaxStatistics(Rec,true);
+                                 if "Tax Area Code" = '' then
+                                   PAGE.RUNMODAL(PAGE::"Sales Order Statistics",Rec)
+                                 else
+                                   PAGE.RUNMODAL(PAGE::"Sales Order Stats.",Rec)
+                               END;
+                                }
+      { 62      ;2   ;Action    ;
+                      Name=Card;
+                      ShortCutKey=Shift+F7;
+                      CaptionML=ENU=Card;
+                      ToolTipML=ENU=Open the card for the customer.;
+                      RunObject=Page "Customer Card";
+                      RunPageLink="No."=FIELD("Sell-to Customer No.");
+                      Image=EditLines }
+      { 63      ;2   ;Action    ;
+                      Name="Co&mments";
+                      CaptionML=ENU=Co&mments;
+                      ToolTipML=ENU=View comments that apply.;
+                      RunObject=Page "Sales Comment Sheet";
+                      RunPageLink="Document Type"=FIELD("Document Type"),
+                                  "No."=FIELD("No.");
+                      Image=ViewComments }
+      { 64      ;2   ;Action    ;
+                      Name="S&hipments";
+                      CaptionML=ENU=S&hipments;
+                      ToolTipML=ENU=View posted sales shipments for the customer.;
+                      RunObject=Page "Posted Sales Shipments";
+                      RunPageView=SORTING("Order No.");
+                      RunPageLink="Order No."=FIELD("No.");
+                      Image=Shipment }
+      { 65      ;2   ;Action    ;
+                      Name=Invoices;
+                      CaptionML=ENU=Invoices;
+                      ToolTipML=ENU=View the history of posted sales invoices that have been posted for the document.;
+                      RunObject=Page "Posted Sales Invoices";
+                      RunPageView=SORTING("Order No.");
+                      RunPageLink="Order No."=FIELD("No.");
+                      Image=Invoice }
+      { 122     ;2   ;Action    ;
+                      Name=Dimensions;
+                      CaptionML=ENU=Dimensions;
+                      ToolTipML=ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                      Image=Dimensions;
+                      OnAction=BEGIN
+                                 ShowDocDim;
+                                 CurrPage.SAVERECORD;
+                               END;
+                                }
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 66      ;1   ;ActionGroup;
+                      Name="F&unctions";
+                      CaptionML=ENU=F&unctions;
+                      Image=Action }
+      { 67      ;2   ;Action    ;
+                      Name="Calculate &Invoice Discount";
+                      CaptionML=ENU=Calculate &Invoice Discount;
+                      ToolTipML=ENU=Calculate the invoice discount for the entire document.;
+                      Image=CalculateInvoiceDiscount;
+                      OnAction=BEGIN
+                                 ApproveCalcInvDisc;
+                               END;
+                                }
+      { 134     ;2   ;Action    ;
+                      Name="Re&open";
+                      CaptionML=ENU=Re&open;
+                      ToolTipML=ENU=Reopen the document to change it after it has been approved. Approved documents have the Released status and must be opened before they can be changed.;
+                      Image=ReOpen;
+                      OnAction=VAR
+                                 ReleaseSalesDoc@1001 : Codeunit "Release Sales Document";
+                               BEGIN
+                                 ReleaseSalesDoc.Reopen(Rec);
+                               END;
+                                }
+      { 73      ;1   ;ActionGroup;
+                      Name="P&osting";
+                      CaptionML=ENU=P&osting;
+                      Image=Post }
+      { 74      ;2   ;Action    ;
+                      Name="Test Report";
+                      Ellipsis=true;
+                      CaptionML=ENU=Test Report;
+                      ToolTipML=ENU=View a test report so that you can find and correct any errors before you perform the actual posting of the journal or document.;
+                      Image=TestReport;
+                      OnAction=BEGIN
+                                 OnBeforeCalculateSalesTaxStatistics(Rec,false);
+                                 ReportPrint.PrintSalesHeader(Rec);
+                               END;
+                                }
+      { 75      ;2   ;Action    ;
+                      Name="P&ost";
+                      ShortCutKey=F9;
+                      Ellipsis=true;
+                      CaptionML=ENU=P&ost;
+                      ToolTipML=ENU=Finalize the document or journal by posting the amounts and quantities to the related accounts in your company books.;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Post;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ApprovalsMgmt@1020001 : Codeunit "Approvals Mgmt.";
+                                 PrepaymentMgt@1020000 : Codeunit "Prepayment Mgt.";
+                               BEGIN
+                                 if ApprovalsMgmt.PrePostApprovalCheckSales(Rec) then begin
+                                   if PrepaymentMgt.TestSalesPrepayment(Rec) then
+                                     ERROR(STRSUBSTNO(Text001,"Document Type","No."));
+
+                                   if PrepaymentMgt.TestSalesPayment(Rec) then
+                                     ERROR(STRSUBSTNO(Text002,"Document Type","No."));
+
+                                   CODEUNIT.RUN(CODEUNIT::"Invoice-Post (Yes/No)",Rec);
+                                 end;
+                               END;
+                                }
+      { 76      ;2   ;Action    ;
+                      Name="Post and &Print";
+                      ShortCutKey=Shift+F9;
+                      Ellipsis=true;
+                      CaptionML=ENU=Post and &Print;
+                      ToolTipML=ENU=Finalize and prepare to print the document or journal. The values and quantities are posted to the related accounts. A report request window where you can specify what to include on the print-out.;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=PostPrint;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 ApprovalsMgmt@1020000 : Codeunit "Approvals Mgmt.";
+                                 PrepaymentMgt@1020001 : Codeunit "Prepayment Mgt.";
+                               BEGIN
+                                 if ApprovalsMgmt.PrePostApprovalCheckSales(Rec) then begin
+                                   if PrepaymentMgt.TestSalesPrepayment(Rec) then
+                                     ERROR(STRSUBSTNO(Text001,"Document Type","No."));
+
+                                   if PrepaymentMgt.TestSalesPayment(Rec) then
+                                     ERROR(STRSUBSTNO(Text002,"Document Type","No."));
+
+                                   CODEUNIT.RUN(CODEUNIT::"Invoice-Post + Print",Rec);
+                                 end;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=General;
+                CaptionML=ENU=General }
+
+    { 2   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the record.;
+                SourceExpr="No.";
+                Editable=FALSE;
+                OnAssistEdit=BEGIN
+                               if AssistEdit(xRec) then
+                                 CurrPage.UPDATE;
+                             END;
+
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name="Sell-to Customer No.";
+                ToolTipML=ENU=Specifies the number of the customer that you invoiced the items to.;
+                SourceExpr="Sell-to Customer No.";
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             SelltoCustomerNoOnAfterValidat;
+                           END;
+
+                ImplicitType=Code20 }
+
+    { 6   ;2   ;Field     ;
+                Name="Sell-to Customer Name";
+                ToolTipML=ENU=Specifies the name of the customer that you invoiced the items to.;
+                SourceExpr="Sell-to Customer Name";
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 12  ;2   ;Field     ;
+                Name="Posting Date";
+                ToolTipML=ENU=Specifies the date when the sales order was invoiced.;
+                SourceExpr="Posting Date";
+                ImplicitType=Date }
+
+    { 14  ;2   ;Field     ;
+                Name="Order Date";
+                ToolTipML=ENU=Specifies the date on which the related sales order was created.;
+                SourceExpr="Order Date";
+                ImplicitType=Date }
+
+    { 45  ;2   ;Field     ;
+                Name="Document Date";
+                ToolTipML=ENU=Specifies the date on which you created the sales document.;
+                SourceExpr="Document Date";
+                ImplicitType=Date }
+
+    { 155 ;2   ;Field     ;
+                Name="External Document No.";
+                ToolTipML=ENU=Specifies the number that the customer uses in their own system to refer to this sales document. You can fill this field to use it later to search for sales lines using the customer's order number.;
+                SourceExpr="External Document No.";
+                ImplicitType=Code35 }
+
+    { 10  ;2   ;Field     ;
+                Name="Salesperson Code";
+                ToolTipML=ENU=Specifies the salesperson that is assigned to the order.;
+                SourceExpr="Salesperson Code";
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 111 ;2   ;Field     ;
+                Name="Currency Code";
+                ToolTipML=ENU=Specifies the currency of amounts on the sales document. By default, the field is filled with the value in the Currency Code field on the customer card.;
+                SourceExpr="Currency Code";
+                OnAssistEdit=BEGIN
+                               ChangeExchangeRate.SetParameter("Currency Code","Currency Factor","Posting Date");
+                               if ChangeExchangeRate.RUNMODAL = ACTION::OK then begin
+                                 VALIDATE("Currency Factor",ChangeExchangeRate.GetParameter);
+                                 CurrPage.UPDATE;
+                               end;
+                               CLEAR(ChangeExchangeRate);
+                             END;
+
+                ImplicitType=Code10 }
+
+    { 129 ;2   ;Field     ;
+                Name=Status;
+                ToolTipML=ENU=Specifies the status of the document.;
+                SourceExpr=Status;
+                ImplicitType=Option }
+
+    { 58  ;1   ;Part      ;
+                Name=SalesLines;
+                SubPageLink="Document No."=FIELD("No.");
+                PagePartID="Sales Order Invoice Subform";
+                PartType=Page }
+
+    { 1905885101;1;Group  ;
+                Name=Invoicing;
+                CaptionML=ENU=Invoicing }
+
+    { 16  ;2   ;Field     ;
+                Name="Bill-to Customer No.";
+                ToolTipML=ENU=Specifies the number of the customer that the invoice is sent to.;
+                SourceExpr="Bill-to Customer No.";
+                OnValidate=BEGIN
+                             BilltoCustomerNoOnAfterValidat;
+                           END;
+
+                ImplicitType=Code20 }
+
+    { 18  ;2   ;Field     ;
+                Name="Bill-to Name";
+                ToolTipML=ENU=Specifies the name of the customer that the items are shipped to.;
+                SourceExpr="Bill-to Name";
+                ImplicitType=Text50 }
+
+    { 20  ;2   ;Field     ;
+                Name="Bill-to Address";
+                ToolTipML=ENU=Specifies the address of the customer that the invoice is sent to.;
+                SourceExpr="Bill-to Address";
+                ImplicitType=Text50 }
+
+    { 22  ;2   ;Field     ;
+                Name="Bill-to Address 2";
+                ToolTipML=ENU=Specifies an additional part of the address of the customer that the invoice is sent to.;
+                SourceExpr="Bill-to Address 2";
+                ImplicitType=Text50 }
+
+    { 24  ;2   ;Field     ;
+                Name="Bill-to City";
+                ToolTipML=ENU=Specifies the city of the customer that the invoice is sent to.;
+                SourceExpr="Bill-to City";
+                ImplicitType=Text30 }
+
+    { 1020004;2;Field     ;
+                Name="Bill-to County";
+                CaptionML=[ENU=State / ZIP Code;
+                           ENC=Prov./State /Postal/ZIP Code];
+                ToolTipML=ENU=Specifies the state or province code, and ZIP code, as a part of the address.;
+                SourceExpr="Bill-to County";
+                ImplicitType=Text30 }
+
+    { 89  ;2   ;Field     ;
+                Name="Bill-to Post Code";
+                ToolTipML=ENU=Specifies the ZIP Code of the of the customer that the invoice is sent to.;
+                SourceExpr="Bill-to Post Code";
+                ImplicitType=Code20 }
+
+    { 26  ;2   ;Field     ;
+                Name="Bill-to Contact";
+                ToolTipML=ENU=Specifies the name of the contact at the customer that the invoice is sent to.;
+                SourceExpr="Bill-to Contact";
+                ImplicitType=Text50 }
+
+    { 84  ;2   ;Field     ;
+                Name="Shortcut Dimension 1 Code";
+                ToolTipML=ENU=Specifies the dimension value code that the sales line is associated with.;
+                SourceExpr="Shortcut Dimension 1 Code";
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             ShortcutDimension1CodeOnAfterV;
+                           END;
+
+                ImplicitType=Code20 }
+
+    { 92  ;2   ;Field     ;
+                Name="Shortcut Dimension 2 Code";
+                ToolTipML=ENU=Specifies the dimension value code that the sales line is associated with.;
+                SourceExpr="Shortcut Dimension 2 Code";
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             ShortcutDimension2CodeOnAfterV;
+                           END;
+
+                ImplicitType=Code20 }
+
+    { 28  ;2   ;Field     ;
+                Name="Payment Terms Code";
+                ToolTipML=ENU=Specifies a formula that calculates the payment due date, payment discount date, and payment discount amount on sales documents. By default, the payment term from the customer card is entered.;
+                SourceExpr="Payment Terms Code";
+                ImplicitType=Code10 }
+
+    { 30  ;2   ;Field     ;
+                Name="Due Date";
+                ToolTipML=ENU=Specifies when the sales invoice must be paid;
+                SourceExpr="Due Date";
+                ImplicitType=Date }
+
+    { 32  ;2   ;Field     ;
+                Name="Payment Discount %";
+                ToolTipML=ENU=Specifies the payment discount percent that is granted if the customer pays on or before the date entered in the Pmt. Discount Date field. The percentage is calculated from the Payment Terms Code field.;
+                SourceExpr="Payment Discount %";
+                ImplicitType=Decimal }
+
+    { 34  ;2   ;Field     ;
+                Name="Pmt. Discount Date";
+                ToolTipML=ENU=Specifies the last date the customer can pay the invoice and still receive a payment discount.;
+                SourceExpr="Pmt. Discount Date";
+                ImplicitType=Date }
+
+    { 105 ;2   ;Field     ;
+                Name="Payment Method Code";
+                ToolTipML=ENU=Specifies how the customer must pay for products on the sales document. By default, the payment method is copied from the customer card.;
+                SourceExpr="Payment Method Code";
+                ImplicitType=Code10 }
+
+    { 1020006;2;Field     ;
+                Name="Tax Liable";
+                ToolTipML=ENU=Specifies if the customer or vendor is liable for sales tax.;
+                SourceExpr="Tax Liable";
+                ImplicitType=Boolean }
+
+    { 1020008;2;Field     ;
+                Name="Tax Area Code";
+                ToolTipML=ENU=Specifies the tax area that is used to calculate and post sales tax.;
+                SourceExpr="Tax Area Code";
+                ImplicitType=Code20 }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                Editable=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'ENU=Unable to run this function while in View mode.';
+      ReportPrint@1002 : Codeunit "Test Report-Print";
+      SalesSetup@1004 : Record "Sales & Receivables Setup";
+      ChangeExchangeRate@1005 : Page "Change Exchange Rate";
+      UserMgt@1006 : Codeunit "User Setup Management";
+      Text001@1020000 : TextConst 'ENU=There are non posted Prepayment Amounts on %1 %2.';
+      Text002@1020001 : TextConst 'ENU=There are unpaid Prepayment Invoices related to %1 %2.';
+
+    [External]
+    PROCEDURE UpdateAllowed@1() : Boolean;
+    BEGIN
+      if CurrPage.EDITABLE = false then
+        ERROR(Text000);
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE ApproveCalcInvDisc@3();
+    BEGIN
+      CurrPage.SalesLines.PAGE.ApproveCalcInvDisc;
+    END;
+
+    LOCAL PROCEDURE SelltoCustomerNoOnAfterValidat@19034782();
+    BEGIN
+      CurrPage.UPDATE;
+    END;
+
+    LOCAL PROCEDURE BilltoCustomerNoOnAfterValidat@19044114();
+    BEGIN
+      CurrPage.UPDATE;
+    END;
+
+    LOCAL PROCEDURE ShortcutDimension1CodeOnAfterV@19029405();
+    BEGIN
+      CurrPage.SalesLines.PAGE.UpdateForm(true);
+    END;
+
+    LOCAL PROCEDURE ShortcutDimension2CodeOnAfterV@19008725();
+    BEGIN
+      CurrPage.SalesLines.PAGE.UpdateForm(true);
+    END;
+
+    [Integration]
+    [External]
+    LOCAL PROCEDURE OnBeforeCalculateSalesTaxStatistics@1020000(VAR SalesHeader@1020000 : Record "Sales Header";ShowDialog@1020001 : Boolean);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,43 @@
+OBJECT Codeunit 1240 Read Data Exch. from File
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160647.860T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Data Exch.";
+    OnRun=VAR
+            TempBlob@1000 : Record TempBlob;
+            FileMgt@1001 : Codeunit "File Management";
+          BEGIN
+            OnBeforeFileImport(TempBlob,"File Name");
+
+            if not TempBlob.Blob.HASVALUE then
+              "File Name" := COPYSTR(FileMgt.BLOBImportWithFilter(TempBlob,ImportBankStmtTxt,'',FileFilterTxt,FileFilterExtensionTxt),1,250);
+
+            if "File Name" <> '' then
+              "File Content" := TempBlob.Blob;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      ImportBankStmtTxt@1007 : TextConst 'ENU=Select a file to import';
+      FileFilterTxt@1006 : TextConst 'ENU="All Files(*.*)|*.*|XML Files(*.xml)|*.xml|Text Files(*.txt;*.csv;*.asc)|*.txt;*.csv;*.asc,*.nda"';
+      FileFilterExtensionTxt@1005 : TextConst '@@@={Locked};ENU=txt,csv,asc,xml,nda';
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeFileImport@1(VAR TempBlob@1000 : Record TempBlob;VAR FileName@1001 : Text);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

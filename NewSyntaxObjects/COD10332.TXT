@@ -1,0 +1,46 @@
+OBJECT Codeunit 10332 Exp. Mapping Head EFT CA
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Data Exch.";
+    OnRun=VAR
+            ACHRBHeader@1007 : Record "ACH RB Header";
+            DataExch@1006 : Record "Data Exch.";
+            DataExchLineDef@1002 : Record "Data Exch. Line Def";
+            EFTExportMgt@1005 : Codeunit "EFT Export Mgt";
+            RecordRef@1001 : RecordRef;
+            LineNo@1003 : Integer;
+          BEGIN
+            // Range through the Header record
+            LineNo := 1;
+            DataExchLineDef.INIT;
+            DataExchLineDef.SETRANGE("Data Exch. Def Code","Data Exch. Def Code");
+            DataExchLineDef.SETRANGE("Line Type",DataExchLineDef."Line Type"::Header);
+            if DataExchLineDef.FINDFIRST then begin
+              DataExch.SETRANGE("Entry No.","Entry No.");
+              if DataExch.FINDFIRST then
+                if ACHRBHeader.GET("Entry No.") then begin
+                  RecordRef.GETTABLE(ACHRBHeader);
+                  EFTExportMgt.InsertDataExchLineForFlatFile(
+                    DataExch,
+                    LineNo,
+                    RecordRef);
+                end;
+            end;
+          END;
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,32 @@
+OBJECT Table 2000000162 NAV App Capabilities
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.823T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Package ID          ;GUID           }
+    { 2   ;   ;Capability ID       ;Integer        }
+  }
+  KEYS
+  {
+    {    ;"Package ID","Capability ID"            ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,56 @@
+OBJECT Codeunit 2851 Native API - Resize Image
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    EventSubscriberInstance=Manual;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      ImageSize@1000 : Integer;
+      ImageQuality@1001 : Integer;
+
+    [EventSubscriber(Codeunit,2114,OnResizeCompanyLogo)]
+    LOCAL PROCEDURE ResizeCompanyImage@1(VAR TempBlob@1000 : TEMPORARY Record TempBlob);
+    VAR
+      ImageHandler@1003 : DotNet "'Microsoft.Dynamics.Nav.ImageProcessing, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.ImageProcessing.ImageHandler";
+      ImageInStream@1001 : InStream;
+      ImageOutStream@1002 : OutStream;
+    BEGIN
+      if not TempBlob.Blob.HASVALUE then
+        exit;
+
+      TempBlob.Blob.CREATEINSTREAM(ImageInStream);
+      ImageHandler := ImageHandler.ImageHandler(ImageInStream);
+
+      if (ImageHandler.Height <= ImageSize) and (ImageHandler.Width <= ImageSize) then
+        exit;
+
+      TempBlob.Blob.CREATEOUTSTREAM(ImageOutStream);
+      COPYSTREAM(ImageOutStream,ImageHandler.ResizeImage(ImageSize,ImageSize,ImageQuality));
+    END;
+
+    PROCEDURE SetImageSize@8(NewImageSize@1000 : Integer);
+    BEGIN
+      ImageSize := NewImageSize;
+    END;
+
+    PROCEDURE SetImageQuality@10(NewImageQuality@1000 : Integer);
+    BEGIN
+      ImageQuality := NewImageQuality;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

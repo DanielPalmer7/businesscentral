@@ -1,0 +1,216 @@
+OBJECT Page 388 Bank Acc. Reconciliation List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161238.107T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Bank Acc. Reconciliation List;
+    SourceTable="Bank Acc. Reconciliation";
+    PageType=List;
+    SourceTableTemporary=true;
+    OnInit=BEGIN
+             UseSharedTable := true;
+           END;
+
+    OnOpenPage=BEGIN
+                 Refresh;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 1020000 ;1   ;ActionGroup;
+                      Name="&Document";
+                      CaptionML=ENU=&Document }
+      { 1020002 ;2   ;Action    ;
+                      Name=NewRec;
+                      CaptionML=ENU=New;
+                      ToolTipML=ENU=Create a new bank account reconciliation.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=NewDocument;
+                      PromotedCategory=New;
+                      OnAction=VAR
+                                 BankReconciliationMgt@1020000 : Codeunit "Bank Reconciliation Mgt.";
+                               BEGIN
+                                 BankReconciliationMgt.New(Rec,UseSharedTable);
+                               END;
+                                }
+      { 1020001 ;2   ;Action    ;
+                      Name=EditRec;
+                      ShortCutKey=Return;
+                      CaptionML=ENU=Edit;
+                      ToolTipML=ENU=Edit the bank account reconciliation list.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=EditLines;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 BankReconciliationMgt@1020000 : Codeunit "Bank Reconciliation Mgt.";
+                               BEGIN
+                                 BankReconciliationMgt.Edit(Rec,UseSharedTable);
+                               END;
+                                }
+      { 1020005 ;2   ;Action    ;
+                      Name=RefreshList;
+                      CaptionML=ENU=Refresh;
+                      ToolTipML=ENU=Update the data with any changes made by other users since you opened the window.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=RefreshLines;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 Refresh;
+                               END;
+                                }
+      { 1020004 ;2   ;Action    ;
+                      Name=DeleteRec;
+                      CaptionML=ENU=Delete;
+                      ToolTipML=ENU=Delete the bank account reconciliation.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Delete;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 BankReconciliationMgt@1020000 : Codeunit "Bank Reconciliation Mgt.";
+                               BEGIN
+                                 if not CONFIRM(DeleteConfirmQst) then
+                                   exit;
+
+                                 BankReconciliationMgt.Delete(Rec);
+                                 Refresh;
+                               END;
+                                }
+      { 1102601000;1 ;ActionGroup;
+                      Name="P&osting";
+                      CaptionML=ENU=P&osting;
+                      Image=Post }
+      { 1102601002;2 ;Action    ;
+                      Name=Post;
+                      ShortCutKey=F9;
+                      CaptionML=ENU=P&ost;
+                      ToolTipML=ENU=Finalize the document or journal by posting the amounts and quantities to the related accounts in your company books.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=PostOrder;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 BankReconciliationMgt@1020000 : Codeunit "Bank Reconciliation Mgt.";
+                               BEGIN
+                                 BankReconciliationMgt.Post(Rec,CODEUNIT::"Bank Acc. Recon. Post (Yes/No)",CODEUNIT::"Bank Rec.-Post (Yes/No)");
+                                 Refresh;
+                               END;
+                                }
+      { 1102601003;2 ;Action    ;
+                      Name=PostAndPrint;
+                      ShortCutKey=Shift+F9;
+                      CaptionML=ENU=Post and &Print;
+                      ToolTipML=ENU=Finalize and prepare to print the document or journal. The values and quantities are posted to the related accounts. A report request window where you can specify what to include on the print-out.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=PostPrint;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 BankReconciliationMgt@1020000 : Codeunit "Bank Reconciliation Mgt.";
+                               BEGIN
+                                 BankReconciliationMgt.Post(Rec,CODEUNIT::"Bank Acc. Recon. Post+Print",CODEUNIT::"Bank Rec.-Post + Print");
+                                 Refresh;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name=BankAccountNo;
+                ToolTipML=ENU=Specifies the number of the bank account that you want to reconcile with the bank's statement.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Bank Account No.";
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=StatementNo;
+                ToolTipML=ENU=Specifies the number of the bank account statement.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Statement No.";
+                ImplicitType=Code20 }
+
+    { 6   ;2   ;Field     ;
+                Name=StatementDate;
+                ToolTipML=ENU=Specifies the date on the bank account statement.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Statement Date";
+                ImplicitType=Date }
+
+    { 8   ;2   ;Field     ;
+                Name=BalanceLastStatement;
+                ToolTipML=ENU=Specifies the ending balance shown on the last bank statement, which was used in the last posted bank reconciliation for this bank account.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Balance Last Statement";
+                ImplicitType=Decimal }
+
+    { 10  ;2   ;Field     ;
+                Name=StatementEndingBalance;
+                ToolTipML=ENU=Specifies the ending balance shown on the bank's statement that you want to reconcile with the bank account.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Statement Ending Balance";
+                ImplicitType=Decimal }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Name=Control1900383207;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      UseSharedTable@1020000 : Boolean;
+      DeleteConfirmQst@1020001 : TextConst 'ENU=Do you want to delete the Reconciliation?';
+
+    LOCAL PROCEDURE Refresh@1020000();
+    VAR
+      BankReconciliationMgt@1020000 : Codeunit "Bank Reconciliation Mgt.";
+    BEGIN
+      DELETEALL;
+      BankReconciliationMgt.Refresh(Rec);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

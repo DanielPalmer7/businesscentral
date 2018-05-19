@@ -1,0 +1,40 @@
+OBJECT Table 5053 Business Relation
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160133.440T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Code,Description;
+    CaptionML=ENU=Business Relation;
+    LookupPageID="Business Relations";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+    { 3   ;   ;No. of Contacts     ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Contact Business Relation" WHERE ("Business Relation Code"=FIELD(Code)));
+                                                   CaptionML=ENU=No. of Contacts;
+                                                   Editable=false }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

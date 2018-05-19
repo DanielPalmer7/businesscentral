@@ -1,0 +1,35 @@
+OBJECT Table 7703 Miniform Function
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160230.497T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Miniform Function;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Miniform Code       ;Code20        ;TableRelation="Miniform Header".Code;
+                                                   CaptionML=ENU=Miniform Code }
+    { 2   ;   ;Function Code       ;Code20        ;TableRelation="Miniform Function Group".Code;
+                                                   CaptionML=ENU=Function Code }
+  }
+  KEYS
+  {
+    {    ;"Miniform Code","Function Code"         ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

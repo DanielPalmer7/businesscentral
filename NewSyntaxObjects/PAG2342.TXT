@@ -1,0 +1,112 @@
+OBJECT Page 2342 BC O365 Payment Instr. List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161410.30T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Payment Instructions;
+    SourceTable="O365 Payment Instructions";
+    PageType=List;
+    ShowFilter=false;
+    OnAfterGetRecord=BEGIN
+                       if Default then
+                         NameText := STRSUBSTNO(DefaultTxt,GetNameInCurrentLanguage)
+                       else
+                         NameText := GetNameInCurrentLanguage;
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 5       ;    ;ActionContainer;
+                      Name=ActionContainer5;
+                      ActionContainerType=ActionItems }
+      { 6       ;1   ;Action    ;
+                      Name=New;
+                      CaptionML=ENU=New;
+                      ToolTipML=ENU=Create new payment instructions for your customers.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Invoicing-MDL-New;
+                      PromotedOnly=true;
+                      OnAction=BEGIN
+                                 O365SalesInvoiceMgmt.OpenNewPaymentInstructionsCard;
+                               END;
+                                }
+      { 8       ;1   ;Action    ;
+                      Name=Edit;
+                      CaptionML=ENU=Edit;
+                      ToolTipML=ENU=Open these payment instructions in an editable way.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      Image=DocumentEdit;
+                      Scope=Repeater;
+                      OnAction=VAR
+                                 BCO365PaymentInstrCard@1000 : Page "BC O365 Payment Instr. Card";
+                               BEGIN
+                                 BCO365PaymentInstrCard.SetPaymentInstructionsOnPage(Rec);
+                                 BCO365PaymentInstrCard.LOOKUPMODE(true);
+                                 if BCO365PaymentInstrCard.RUNMODAL = ACTION::OK then;
+                               END;
+                                }
+      { 7       ;1   ;Action    ;
+                      Name=Delete;
+                      CaptionML=ENU=Delete;
+                      ToolTipML=ENU=Delete these payment instructions.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Delete;
+                      PromotedOnly=true;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 if FIND then
+                                   DELETE(true);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=NameText;
+                Width=2;
+                CaptionML=ENU=Short name;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=NameText;
+                ImplicitType=Text }
+
+    { 4   ;2   ;Field     ;
+                Name=GetPaymentInstructionsInCurrentLanguage;
+                CaptionML=ENU=Payment instructions;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=GetPaymentInstructionsInCurrentLanguage;
+                ImplicitType=Text }
+
+  }
+  CODE
+  {
+    VAR
+      O365SalesInvoiceMgmt@1002 : Codeunit "O365 Sales Invoice Mgmt";
+      NameText@1000 : Text;
+      DefaultTxt@1001 : TextConst '@@@=%1: the description of the payment instructions;ENU=%1 (default)';
+
+    BEGIN
+    END.
+  }
+}
+

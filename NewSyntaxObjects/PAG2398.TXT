@@ -1,0 +1,80 @@
+OBJECT Page 2398 BC O365 Graph Mail Settings
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161410.893T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Email Account;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="Graph Mail Setup";
+    PageType=CardPart;
+    OnOpenPage=BEGIN
+                 if not GET then
+                   INSERT(true);
+               END;
+
+    OnAfterGetCurrRecord=VAR
+                           GraphMail@1000 : Codeunit "Graph Mail";
+                           O365SetupEmail@1001 : Codeunit "O365 Setup Email";
+                         BEGIN
+                           if not IsEnabled then
+                             if not O365SetupEmail.SMTPEmailIsSetUp then
+                               if GraphMail.HasConfiguration then
+                                 Initialize;
+                         END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 5   ;1   ;Group     ;
+                Name=Control5;
+                GroupType=Group;
+                InstructionalTextML=ENU=Your invoices will be sent from the following email account. }
+
+    { 2   ;2   ;Field     ;
+                Name="Sender Name";
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Sender Name";
+                ImplicitType=Text250 }
+
+    { 3   ;2   ;Field     ;
+                Name="Sender Email";
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr="Sender Email";
+                ImplicitType=Text250 }
+
+    { 7   ;2   ;Field     ;
+                Name=ModifyMailLbl;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=ModifyMailLbl;
+                Editable=FALSE;
+                OnDrillDown=BEGIN
+                              PAGE.RUNMODAL(PAGE::"Graph Mail Setup");
+                              CurrPage.UPDATE(false);
+                            END;
+
+                ImplicitType=TextConst;
+                ShowCaption=false }
+
+  }
+  CODE
+  {
+    VAR
+      ModifyMailLbl@1002 : TextConst 'ENU=Change account settings';
+
+    BEGIN
+    END.
+  }
+}
+

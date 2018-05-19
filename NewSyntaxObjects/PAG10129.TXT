@@ -1,0 +1,93 @@
+OBJECT Page 10129 Posted Bank Rec. List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161721.950T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Posted Bank Rec. List;
+    SourceTable="Posted Bank Rec. Header";
+    PageType=List;
+    CardPageID="Posted Bank Rec. Worksheet";
+    ActionList=ACTIONS
+    {
+      { 1900000006;0 ;ActionContainer;
+                      Name=ActionContainer1900000006;
+                      ActionContainerType=Reports }
+      { 1907013006;1 ;Action    ;
+                      Name="Bank Reconciliation";
+                      CaptionML=ENU=Bank Reconciliation;
+                      ToolTipML=ENU="View the details of the posted bank reconciliation. ";
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Report "Bank Reconciliation";
+                      Promoted=false;
+                      Image=Worksheet;
+                      PromotedCategory=Report }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 1020000;2;Field     ;
+                Name="Bank Account No.";
+                ToolTipML=ENU=Specifies the code for the bank account the reconciliation applies to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Bank Account No.";
+                ImplicitType=Code20 }
+
+    { 1020002;2;Field     ;
+                Name="Statement No.";
+                ToolTipML=ENU=Specifies the statement number to be reconciled.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Statement No.";
+                ImplicitType=Code20 }
+
+    { 1020004;2;Field     ;
+                Name="Statement Date";
+                ToolTipML=ENU=Specifies the as-of date of the statement. All G/L balances will be calculated based upon this date.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Statement Date";
+                ImplicitType=Date }
+
+    { 1020006;2;Field     ;
+                Name="Statement Balance";
+                ToolTipML=ENU=Specifies the amount entered by the operator from the balance found on the bank statement.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Statement Balance";
+                ImplicitType=Decimal }
+
+    { 1020008;2;Field     ;
+                Name="Date Created";
+                ToolTipML=ENU=Specifies a date automatically populated when the record is created.;
+                SourceExpr="Date Created";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 1020010;2;Field     ;
+                Name="Time Created";
+                ToolTipML=ENU=Specifies the  time created, which is automatically populated when the record is created.;
+                SourceExpr="Time Created";
+                Visible=FALSE;
+                ImplicitType=Time }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

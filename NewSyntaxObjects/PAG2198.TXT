@@ -1,0 +1,107 @@
+OBJECT Page 2198 O365 Unit Of Measure Card
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161406.533T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Unit;
+    SourceTable="Unit of Measure";
+    OnQueryClosePage=VAR
+                       UnitOfMeasure@1001 : Record "Unit of Measure";
+                     BEGIN
+                       if not (CloseAction in [ACTION::OK,ACTION::LookupOK]) then
+                         exit(true);
+
+                       if DescriptionInCurrentLanguage = GetDescriptionInCurrentLanguage then
+                         exit(true);
+
+                       // Do not insert a new empty record
+                       if (Code = '') and (DescriptionInCurrentLanguage = '') then
+                         exit(true);
+
+                       if UnitOfMeasure.GET(UPPERCASE(DescriptionInCurrentLanguage)) then
+                         ERROR(UnitOfMeasureAlredyExistsErr,DescriptionInCurrentLanguage);
+
+                       if Code = '' then
+                         InsertNewUnitOfMeasure
+                       else
+                         RenameUnitOfMeasureRemoveTranslations;
+                     END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           DescriptionInCurrentLanguage := GetDescriptionInCurrentLanguage;
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 4       ;    ;ActionContainer;
+                      Name=ActionContainer4;
+                      ActionContainerType=NewDocumentItems }
+    }
+  }
+  CONTROLS
+  {
+    { 3   ;0   ;Container ;
+                Name=Control3;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Field     ;
+                Name=Code;
+                ToolTipML=ENU=Specifies a code for the unit of measure that is shown on the item and resource cards where it is used.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Code;
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 1   ;1   ;Field     ;
+                Name=DescriptionInCurrentLanguage;
+                CaptionML=ENU=Description;
+                ToolTipML=ENU=Specifies a description of the unit of measure.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=DescriptionInCurrentLanguage;
+                OnValidate=BEGIN
+                             if DescriptionInCurrentLanguage = '' then
+                               DescriptionInCurrentLanguage := GetDescriptionInCurrentLanguage;
+                           END;
+
+                ImplicitType=Text10 }
+
+  }
+  CODE
+  {
+    VAR
+      UnitOfMeasureAlredyExistsErr@1000 : TextConst '@@@="%1=The unit of measure description";ENU=You already have a measure with the name %1.';
+      DescriptionInCurrentLanguage@1001 : Text[10];
+
+    LOCAL PROCEDURE RenameUnitOfMeasureRemoveTranslations@1();
+    VAR
+      UnitOfMeasureTranslation@1000 : Record "Unit of Measure Translation";
+    BEGIN
+      if Code <> '' then begin
+        UnitOfMeasureTranslation.SETRANGE(Code,Code);
+        UnitOfMeasureTranslation.DELETEALL(true);
+      end;
+
+      VALIDATE(Description,DescriptionInCurrentLanguage);
+      MODIFY(true);
+      RENAME(DescriptionInCurrentLanguage);
+    END;
+
+    LOCAL PROCEDURE InsertNewUnitOfMeasure@2();
+    BEGIN
+      VALIDATE(Code,DescriptionInCurrentLanguage);
+      VALIDATE(Description,DescriptionInCurrentLanguage);
+
+      INSERT(true);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,172 @@
+OBJECT Page 1881 Sandbox Environment
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161358.963T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Sandbox Environment (Preview);
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    LinksAllowed=false;
+    PageType=NavigatePage;
+    ShowFilter=false;
+    OnInit=BEGIN
+             LoadTopBanners;
+           END;
+
+    OnOpenPage=VAR
+                 PermissionManager@1000 : Codeunit "Permission Manager";
+               BEGIN
+                 if not PermissionManager.SoftwareAsAService or PermissionManager.IsSandboxConfiguration then
+                   ERROR(EnvironmentErr);
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 2       ;    ;ActionContainer;
+                      Name=ActionContainer2;
+                      ActionContainerType=ActionItems }
+      { 3       ;1   ;Action    ;
+                      Name=Create;
+                      CaptionML=ENU=Create;
+                      ToolTipML=ENU=Create a sandbox environment.;
+                      ApplicationArea=#Basic,#Suite;
+                      InFooterBar=true;
+                      OnAction=BEGIN
+                                 HYPERLINK(GetFunctionUrl(CreateSandboxUrlTxt));
+                               END;
+                                }
+      { 4       ;1   ;Action    ;
+                      Name=Reset;
+                      CaptionML=ENU=Reset;
+                      ToolTipML=ENU=Reset the sandbox environment.;
+                      ApplicationArea=#Basic,#Suite;
+                      InFooterBar=true;
+                      OnAction=BEGIN
+                                 HYPERLINK(GetFunctionUrl(ResetSandboxUrlTxt));
+                               END;
+                                }
+      { 11      ;1   ;Action    ;
+                      Name=Open;
+                      CaptionML=ENU=Open;
+                      ToolTipML=ENU=Open the sandbox environment.;
+                      ApplicationArea=#Basic,#Suite;
+                      InFooterBar=true;
+                      OnAction=BEGIN
+                                 HYPERLINK(GetFunctionUrl(CreateSandboxUrlTxt));
+                               END;
+                                }
+      { 13      ;1   ;Action    ;
+                      Name=UseContainer;
+                      CaptionML=ENU=Use container;
+                      ToolTipML=ENU=Use container-based sandbox environment;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "Container Sandbox Environment";
+                      InFooterBar=true }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Control1;
+                CaptionML=ENU="";
+                ContainerType=ContentArea }
+
+    { 6   ;1   ;Group     ;
+                Name=Control6;
+                Visible=TopBannerVisible;
+                Editable=FALSE;
+                GroupType=Group }
+
+    { 5   ;2   ;Field     ;
+                Name=MediaResourcesStandard;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=MediaResourcesStandard."Media Reference";
+                Editable=FALSE;
+                ShowCaption=false }
+
+    { 7   ;1   ;Group     ;
+                Name=Control7;
+                CaptionML=ENU="";
+                GroupType=Group;
+                InstructionalTextML=ENU=In addition to your production environment, you can create an environment for sandbox activities, such as test, demonstration, or development. }
+
+    { 8   ;1   ;Group     ;
+                Name=Control8;
+                CaptionML=ENU="";
+                GroupType=Group;
+                InstructionalTextML=ENU=A new sandbox environment (preview) only contains the CRONUS demonstration company. Actions that you perform in the sandbox environment (preview) do not affect data or settings in your production environment. }
+
+    { 12  ;1   ;Group     ;
+                Name=Control12;
+                CaptionML=ENU="";
+                GroupType=Group;
+                InstructionalTextML=ENU=This Sandbox environment feature is provided as a free preview solely for testing, development and evaluation. You will not use the Sandbox in a live operating environment. Microsoft may, in its sole discretion, change the Sandbox environment or subject it to a fee for a final, commercial version, if any, or may elect not to release one. }
+
+    { 9   ;1   ;Group     ;
+                Name=Control9;
+                CaptionML=ENU="";
+                GroupType=Group;
+                InstructionalTextML=ENU=Choose Create to start a new sandbox environment (preview). }
+
+    { 10  ;1   ;Group     ;
+                Name=Control10;
+                CaptionML=ENU="";
+                GroupType=Group;
+                InstructionalTextML=ENU=Choose Reset to clean and restart the sandbox environment (preview). }
+
+  }
+  CODE
+  {
+    VAR
+      MediaRepositoryStandard@1009 : Record "Media Repository";
+      MediaRepositoryDone@1008 : Record "Media Repository";
+      MediaResourcesStandard@1007 : Record "Media Resources";
+      MediaResourcesDone@1006 : Record "Media Resources";
+      ClientTypeManagement@1012 : Codeunit ClientTypeManagement;
+      TopBannerVisible@1010 : Boolean;
+      EnvironmentErr@1011 : TextConst 'ENU=This feature is only available in the online production version of the product.';
+      CreateSandboxUrlTxt@1013 : TextConst '@@@={Locked};ENU="/sandbox?redirectedFromSignup=false"';
+      ResetSandboxUrlTxt@1014 : TextConst '@@@={Locked};ENU="/sandbox/reset?redirectedFromSignup=false"';
+      FixedClientEndpointBaseProdUrlTxt@1015 : TextConst '@@@={Locked};ENU=https://businesscentral.dynamics.com/';
+      FixedClientEndpointBaseTieUrlTxt@1016 : TextConst '@@@={Locked};ENU=https://businesscentral.dynamics-tie.com/';
+      FixedClientEndpointBaseServiceTieUrlTxt@1017 : TextConst '@@@={Locked};ENU=https://businesscentral.dynamics-servicestie.com/';
+
+    LOCAL PROCEDURE LoadTopBanners@40();
+    BEGIN
+      if MediaRepositoryStandard.GET('AssistedSetup-NoText-400px.png',FORMAT(ClientTypeManagement.GetCurrentClientType)) and
+         MediaRepositoryDone.GET('AssistedSetupDone-NoText-400px.png',FORMAT(ClientTypeManagement.GetCurrentClientType))
+      then
+        if MediaResourcesStandard.GET(MediaRepositoryStandard."Media Resources Ref") and
+           MediaResourcesDone.GET(MediaRepositoryDone."Media Resources Ref")
+        then
+          TopBannerVisible := MediaResourcesDone."Media Reference".HASVALUE;
+    END;
+
+    LOCAL PROCEDURE GetFunctionUrl@9(SandboxFunctionUrl@1000 : Text) : Text;
+    VAR
+      EnvironmentMgt@1001 : Codeunit "Environment Mgt.";
+      TenantManagement@1002 : Codeunit "Tenant Management";
+    BEGIN
+      if EnvironmentMgt.IsPROD then
+        exit(FixedClientEndpointBaseProdUrlTxt + TenantManagement.GetAadTenantId + SandboxFunctionUrl);
+      if EnvironmentMgt.IsTIE then
+        exit(FixedClientEndpointBaseServiceTieUrlTxt + TenantManagement.GetAadTenantId + SandboxFunctionUrl);
+      if EnvironmentMgt.IsPPE then
+        exit(FixedClientEndpointBaseTieUrlTxt + TenantManagement.GetAadTenantId + SandboxFunctionUrl);
+      if EnvironmentMgt.IsPartnerPROD or EnvironmentMgt.IsPartnerTIE or EnvironmentMgt.IsPartnerPPE then
+        exit(LOWERCASE(GETURL(CLIENTTYPE::Web)) + SandboxFunctionUrl);
+
+      exit('');
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,61 @@
+OBJECT Page 410 SMTP User-Specified Address
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161241.837T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Enter Email Address;
+    PageType=StandardDialog;
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 4   ;1   ;Group     ;
+                Name=Control4;
+                GroupType=Group }
+
+    { 3   ;2   ;Field     ;
+                Name=EmailAddressField;
+                ExtendedDatatype=E-Mail;
+                CaptionML=ENU=Email Address;
+                ToolTipML=ENU=Specifies the email address.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=EmailAddress;
+                OnValidate=VAR
+                             SMTPMail@1000 : Codeunit "SMTP Mail";
+                           BEGIN
+                             SMTPMail.CheckValidEmailAddresses(EmailAddress);
+                           END;
+                            }
+
+  }
+  CODE
+  {
+    VAR
+      EmailAddress@1000 : Text;
+
+    [External]
+    PROCEDURE GetEmailAddress@1() : Text;
+    BEGIN
+      exit(EmailAddress);
+    END;
+
+    [External]
+    PROCEDURE SetEmailAddress@2(Address@1000 : Text);
+    BEGIN
+      EmailAddress := Address;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

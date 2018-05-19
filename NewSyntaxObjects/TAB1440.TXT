@@ -1,0 +1,35 @@
+OBJECT Table 1440 Headline RC Business Manager
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160127.30T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Headline RC Business Manager;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Key                 ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Key }
+    { 2   ;   ;Workdate for computations;Date     ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Workdate for computations }
+  }
+  KEYS
+  {
+    {    ;Key                                     ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,182 @@
+OBJECT Page 2510 Marketplace Extn. Deployment
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161411.413T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Extension Installation;
+    PageType=NavigatePage;
+    OnInit=VAR
+             WinLanguagesTable@1000 : Record "Windows Language";
+           BEGIN
+             LanguageID := GLOBALLANGUAGE;
+             WinLanguagesTable.SETRANGE("Language ID",LanguageID);
+             if WinLanguagesTable.FINDFIRST then
+               LanguageName := WinLanguagesTable.Name;
+           END;
+
+    ActionList=ACTIONS
+    {
+      { 4       ;    ;ActionContainer;
+                      Name=ActionContainer4;
+                      ActionContainerType=ActionItems }
+      { 5       ;1   ;Action    ;
+                      Name=Install;
+                      CaptionML=ENU=Install;
+                      ApplicationArea=#Basic,#Suite;
+                      InFooterBar=true;
+                      OnAction=VAR
+                                 NavAppTable@1002 : Record "NAV App";
+                                 NavExtensionInstallationMgmt@1001 : Codeunit NavExtensionInstallationMgmt;
+                                 NavExtensionOperationMgmt@1000 : Codeunit NavExtensionOperationMgmt;
+                                 ExtensionNotFound@1004 : Boolean;
+                               BEGIN
+                                 NavAppTable.SETFILTER(ID,'%1',ExtensionAppId);
+                                 ExtensionNotFound := not NavAppTable.FINDFIRST;
+
+                                 if ExtensionNotFound then begin
+                                   // If extension not found sent the request to regional service
+                                   NavExtensionOperationMgmt.DeployNavExtension(ExtensionAppId,LanguageID);
+                                   MESSAGE(OperationProgressMsg);
+                                   CurrPage.CLOSE;
+                                   exit;
+                                 end;
+
+                                 // If extension found then check whether it is third party or first party extension
+                                 if NavExtensionInstallationMgmt.IsInstalledByAppId(ExtensionAppId) then begin
+                                   CurrPage.CLOSE;
+                                   MESSAGE(STRSUBSTNO(AlreadyInstalledMsg,NavAppTable.Name));
+                                   exit;
+                                 end;
+
+                                 // If first party extension install it locally
+                                 if NavAppTable.Publisher = 'Microsoft' then
+                                   InstallApp(ExtensionAppId)
+                                 else begin
+                                   // If extension found but is third party then send the request to regional service
+                                   NavExtensionOperationMgmt.DeployNavExtension(ExtensionAppId,LanguageID);
+                                   MESSAGE(OperationProgressMsg);
+                                 end;
+
+                                 CurrPage.CLOSE;
+                                 exit;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=General;
+                GroupType=Group }
+
+    { 6   ;1   ;Field     ;
+                Name=Choose Language;
+                CaptionML=ENU=Choose Language;
+                ApplicationArea=#Basic,#Suite;
+                Style=StandardAccent;
+                StyleExpr=TRUE }
+
+    { 3   ;1   ;Field     ;
+                Name=Language;
+                CaptionML=ENU=Language;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=LanguageName;
+                OnValidate=VAR
+                             WinLanguagesTable@1000 : Record "Windows Language";
+                           BEGIN
+                             WinLanguagesTable.SETRANGE(Name,LanguageName);
+                             WinLanguagesTable.SETRANGE("Globally Enabled",true);
+                             WinLanguagesTable.SETRANGE("Localization Exist",true);
+                             if WinLanguagesTable.FINDFIRST then
+                               LanguageID := WinLanguagesTable."Language ID"
+                             else
+                               ERROR(LanguageNotFoundErr,LanguageName);
+                           END;
+
+                OnLookup=VAR
+                           WinLanguagesTable@1001 : Record "Windows Language";
+                         BEGIN
+                           WinLanguagesTable.SETRANGE("Globally Enabled",true);
+                           WinLanguagesTable.SETRANGE("Localization Exist",true);
+                           if PAGE.RUNMODAL(PAGE::"Windows Languages",WinLanguagesTable) = ACTION::LookupOK then begin
+                             LanguageID := WinLanguagesTable."Language ID";
+                             LanguageName := WinLanguagesTable.Name;
+                           end;
+                         END;
+                          }
+
+  }
+  CODE
+  {
+    VAR
+      LanguageName@1001 : Text;
+      LanguageID@1000 : Integer;
+      LanguageNotFoundErr@1002 : TextConst '@@@="Error message to notify user that the entered language was not found. This could mean that the language doesn''t exist or that the language is not valid within the filter set for the lookup. %1=Entered value.";ENU=Cannot find the specified language, %1. Choose the lookup button to select a language.';
+      ExtensionAppId@1003 : GUID;
+      OperationProgressMsg@1004 : TextConst 'ENU=Extension installation is in progress. Please check the status page for updates.';
+      TelemetryUrl@1007 : Text;
+      AlreadyInstalledMsg@1008 : TextConst '@@@="%1=name of app";ENU=The extension %1 is already installed.';
+      DependenciesFoundQst@1009 : TextConst '@@@="%1=name of app, %2=semicolon separated list of uninstalled dependencies";ENU=The extension %1 has a dependency on one or more extensions: %2.\\Do you wish to install %1 and all of its dependencies?';
+      OperationResult@1010 : 'UserNotAuthorized,DeploymentFailedDueToPackage,DeploymentFailed,Successful,UserCancel,UserTimeOut';
+      RestartActivityInstallMsg@1005 : TextConst '@@@="Indicates that users need to restart their activity to pick up new menusuite items. %1=Name of Extension";ENU=The extension %1 was successfully installed. All active users must log out and log in again to see the navigation changes.';
+
+    PROCEDURE SetAppIDAndTelemetryUrl@1(AppID@1000 : GUID;Url@1001 : Text);
+    BEGIN
+      ExtensionAppId := AppID;
+      TelemetryUrl := Url;
+    END;
+
+    LOCAL PROCEDURE MakeTelemetryCallback@4(Result@1000 : 'UserNotAuthorized,DeploymentFailedDueToPackage,DeploymentFailed,Successful,UserCancel,UserTimeOut';PackageId@1002 : GUID);
+    VAR
+      ExtensionMarketplaceMgmt@1001 : Codeunit ExtensionMarketplaceMgmt;
+    BEGIN
+      if TelemetryUrl <> '' then
+        ExtensionMarketplaceMgmt.MakeMarketplaceTelemetryCallback(TelemetryUrl,Result,PackageId);
+    END;
+
+    LOCAL PROCEDURE InstallApp@2(AppId@1003 : GUID);
+    VAR
+      NAVAppTable@1005 : Record "NAV App";
+      NavExtensionInstallationMgmt@1004 : Codeunit NavExtensionInstallationMgmt;
+      Dependencies@1002 : Text;
+      CanChange@1001 : Boolean;
+      Result@1000 : Option;
+    BEGIN
+      NAVAppTable.SETRANGE("Package ID",NavExtensionInstallationMgmt.GetLatestVersionPackageId(AppId));
+      NAVAppTable.FINDFIRST;
+
+      Dependencies := NavExtensionInstallationMgmt.GetDependenciesForExtensionToInstall(NAVAppTable."Package ID");
+      CanChange := (STRLEN(Dependencies) = 0);
+
+      if not CanChange then
+        CanChange := CONFIRM(STRSUBSTNO(DependenciesFoundQst,NAVAppTable.Name,Dependencies),false);
+
+      Result := OperationResult::Successful;
+      if CanChange then begin
+        NavExtensionInstallationMgmt.InstallNavExtension(NAVAppTable."Package ID",LanguageID);
+
+        // If successfully installed, message users to restart activity for menusuites
+        if NavExtensionInstallationMgmt.IsInstalled(NAVAppTable."Package ID") then
+          MESSAGE(STRSUBSTNO(RestartActivityInstallMsg,NAVAppTable.Name))
+        else
+          Result := OperationResult::DeploymentFailedDueToPackage;
+      end;
+
+      MakeTelemetryCallback(Result,NAVAppTable."Package ID");
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

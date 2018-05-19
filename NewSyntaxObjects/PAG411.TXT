@@ -1,0 +1,215 @@
+OBJECT Page 411 Graph Mail Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161241.873T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Email Setup;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="Graph Mail Setup";
+    SourceTableTemporary=true;
+    OnOpenPage=VAR
+                 GraphMailSetup@1000 : Record "Graph Mail Setup";
+               BEGIN
+                 if not GraphMailSetup.GET then
+                   GraphMailSetup.INSERT;
+
+                 if GraphMailSetup.IsEnabled then begin
+                   GraphMailSetup.RenewRefreshCode; // validates values
+                   GraphMailSetup.MODIFY(true);
+                   GraphMailSetup.CALCFIELDS("Refresh Code");
+                 end;
+
+                 TRANSFERFIELDS(GraphMailSetup);
+                 INSERT;
+
+                 LookupMode := CurrPage.LOOKUPMODE;
+               END;
+
+    OnQueryClosePage=VAR
+                       GraphMailSetup@1001 : Record "Graph Mail Setup";
+                     BEGIN
+                       if (not CurrPage.LOOKUPMODE) or (CloseAction = ACTION::LookupOK) then begin
+                         if "Refresh Code".HASVALUE then
+                           CALCFIELDS("Refresh Code");
+
+                         if not GraphMailSetup.GET then
+                           GraphMailSetup.INSERT;
+
+                         GraphMailSetup.TRANSFERFIELDS(Rec);
+                         GraphMailSetup.VALIDATE(Enabled,true);
+                         GraphMailSetup.MODIFY(true);
+                       end;
+                     END;
+
+    OnAfterGetCurrRecord=VAR
+                           User@1000 : Record User;
+                         BEGIN
+                           TokenAcquired := "Refresh Code".HASVALUE and ("Expires On" > CURRENTDATETIME);
+
+                           if IsEnabled then
+                             if User.GET(USERSECURITYID) then
+                               OtherAccountConfigured := User."Authentication Email" <> "Sender Email";
+
+                           if not TokenAcquired then
+                             InitAuthFlow;
+                         END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 8   ;1   ;Group     ;
+                Name=Control8;
+                Visible=TokenAcquired;
+                GroupType=Group;
+                InstructionalTextML=ENU=Invoices will be sent from this account. }
+
+    { 3   ;2   ;Field     ;
+                Name="Sender Name";
+                ToolTipML=ENU=Specifies the name of the account that sends email on behalf of your business.;
+                ApplicationArea=#All;
+                SourceExpr="Sender Name";
+                Editable=FALSE;
+                ImplicitType=Text250;
+                ShowCaption=false }
+
+    { 4   ;2   ;Field     ;
+                Name="Sender Email";
+                ToolTipML=ENU=Specifies the email account that sends email on behalf of your business.;
+                ApplicationArea=#All;
+                SourceExpr="Sender Email";
+                Editable=FALSE;
+                ImplicitType=Text250;
+                ShowCaption=false }
+
+    { 12  ;2   ;Field     ;
+                Name=SendTestMail;
+                ApplicationArea=#All;
+                SourceExpr=SendTestMailLbl;
+                Visible=FALSE;
+                Editable=FALSE;
+                OnDrillDown=VAR
+                              SMTPUserSpecifiedAddress@1000 : Page "SMTP User-Specified Address";
+                              Recipient@1001 : Text;
+                            BEGIN
+                              CurrPage.SAVERECORD;
+                              COMMIT;
+
+                              SMTPUserSpecifiedAddress.SetEmailAddress("Sender Email");
+                              if SMTPUserSpecifiedAddress.RUNMODAL = ACTION::OK then begin
+                                Recipient := SMTPUserSpecifiedAddress.GetEmailAddress;
+                                SendTestMail(Recipient);
+                                MESSAGE(STRSUBSTNO(TestSuccessMsg,Recipient));
+                              end;
+                            END;
+
+                ImplicitType=TextConst;
+                ShowCaption=false }
+
+    { 13  ;2   ;Group     ;
+                Name=Control13;
+                Visible=OtherAccountConfigured;
+                GroupType=Group }
+
+    { 14  ;3   ;Field     ;
+                Name=SetupMyAccountLbl;
+                ApplicationArea=#All;
+                SourceExpr=SetupMyAccountLbl;
+                Editable=FALSE;
+                OnDrillDown=BEGIN
+                              CLEAR("Refresh Code");
+                              TokenAcquired := false;
+                              InitAuthFlow;
+                            END;
+
+                ImplicitType=TextConst;
+                ShowCaption=false }
+
+    { 2   ;2   ;Field     ;
+                Name=ShowSmtp;
+                ApplicationArea=#All;
+                SourceExpr=AdvancedSetupLbl;
+                Editable=FALSE;
+                OnDrillDown=VAR
+                              GraphMailSetup@1001 : Record "Graph Mail Setup";
+                              O365SetupEmail@1000 : Codeunit "O365 Setup Email";
+                            BEGIN
+                              if CURRENTCLIENTTYPE = CLIENTTYPE::Tablet then begin
+                                if PAGE.RUNMODAL(PAGE::"BC O365 Email Setup Wizard") <> ACTION::LookupOK then
+                                  exit;
+                              end else
+                                PAGE.RUNMODAL(PAGE::"O365 Email Setup Wizard");
+
+                              if O365SetupEmail.SMTPEmailIsSetUp then begin
+                                CLEAR("Refresh Code");
+                                if LookupMode then
+                                  if GraphMailSetup.GET then
+                                    GraphMailSetup.DELETE;
+
+                                CurrPage.CLOSE;
+                              end;
+                            END;
+
+                ImplicitType=TextConst;
+                ShowCaption=false }
+
+    { 7   ;2   ;Group     ;
+                Name=Control7;
+                Visible=NOT LookupMode;
+                GroupType=Group }
+
+    { 6   ;3   ;Field     ;
+                Name=ClearSetupLbl;
+                ApplicationArea=#All;
+                SourceExpr=ClearSetupLbl;
+                Visible=FALSE;
+                Editable=FALSE;
+                OnDrillDown=BEGIN
+                              CLEAR("Refresh Code");
+                              CurrPage.CLOSE;
+                            END;
+
+                ImplicitType=TextConst;
+                ShowCaption=false }
+
+    { 5   ;1   ;Group     ;
+                Name=Control5;
+                Visible=NOT TokenAcquired;
+                GroupType=Group;
+                InstructionalTextML=ENU=Gathering information... }
+
+  }
+  CODE
+  {
+    VAR
+      TokenAcquired@1003 : Boolean;
+      SendTestMailLbl@1012 : TextConst 'ENU=Send a test email';
+      SetupMyAccountLbl@1013 : TextConst 'ENU=Send from my email account';
+      AdvancedSetupLbl@1007 : TextConst 'ENU=Send from another email account';
+      TestSuccessMsg@1009 : TextConst '@@@="%1 = an email address";ENU=A test email was sent to %1.';
+      ClearSetupLbl@1008 : TextConst 'ENU=Do not send from this account';
+      LookupMode@1010 : Boolean;
+      OtherAccountConfigured@1014 : Boolean;
+
+    LOCAL PROCEDURE InitAuthFlow@3();
+    BEGIN
+      Initialize;
+      TokenAcquired := true;
+      MODIFY;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,83 @@
+OBJECT Page 2508 Extension Deployment Status
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161411.337T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Extension Deployment Status;
+    SourceTable="NAV App Tenant Operation";
+    PageType=List;
+    RefreshOnActivate=true;
+    ActionList=ACTIONS
+    {
+      { 6       ;    ;ActionContainer;
+                      Name=ActionContainer6;
+                      ActionContainerType=ActionItems }
+      { 7       ;1   ;Action    ;
+                      Name=View;
+                      ShortCutKey=Return;
+                      ApplicationArea=#Basic,#Suite;
+                      Visible=FALSE;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 RunDetails;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=Description;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                LookupPageID="Extn. Deployment Status Detail";
+                ImplicitType=Text250 }
+
+    { 4   ;2   ;Field     ;
+                Name="Started On";
+                CaptionML=ENU=Started Date;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Started On";
+                ImplicitType=DateTime }
+
+    { 5   ;2   ;Field     ;
+                Name=Status;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Status;
+                ImplicitType=Option }
+
+  }
+  CODE
+  {
+
+    LOCAL PROCEDURE RunDetails@1();
+    VAR
+      ExtnDeploymentStatusDetail@1000 : Page "Extn. Deployment Status Detail";
+    BEGIN
+      ExtnDeploymentStatusDetail.SETRECORD(Rec);
+      ExtnDeploymentStatusDetail.RUN;
+      if ExtnDeploymentStatusDetail.EDITABLE = false then
+        CurrPage.UPDATE;
+      CurrPage.UPDATE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,35 @@
+OBJECT Table 9190 Terms And Conditions
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160234.837T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+    CaptionML=ENU=Terms And Conditions;
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;CaptionML=ENU=No. }
+    { 2   ;   ;Description         ;Text250       ;CaptionML=ENU=Description }
+    { 3   ;   ;Valid From          ;Date          ;CaptionML=ENU=Valid From }
+  }
+  KEYS
+  {
+    {    ;"No."                                   ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

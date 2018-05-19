@@ -1,0 +1,40 @@
+OBJECT Table 9177 Experience Tier Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160234.507T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Experience Tier Buffer;
+    LookupPageID="Experience Tiers";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Field No.           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Field No.;
+                                                   Editable=false }
+    { 2   ;   ;Experience Tier     ;Text30        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Experience Tier;
+                                                   Editable=false }
+    { 3   ;   ;Selected            ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Selected }
+  }
+  KEYS
+  {
+    {    ;"Field No."                             ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,44 @@
+OBJECT Table 6080 Service Price Group
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160213.957T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnDelete=VAR
+               ServPriceGrpSetup@1000 : Record "Serv. Price Group Setup";
+             BEGIN
+               ServPriceGrpSetup.SETRANGE("Service Price Group Code",Code);
+               if ServPriceGrpSetup.FINDFIRST then
+                 ServPriceGrpSetup.DELETEALL;
+             END;
+
+    CaptionML=ENU=Service Price Group;
+    LookupPageID="Service Price Groups";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+    {    ;Description                              }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

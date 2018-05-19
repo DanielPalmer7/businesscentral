@@ -1,0 +1,27 @@
+OBJECT Codeunit 245 Item Reg.-Show Ledger
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Item Register";
+    OnRun=BEGIN
+            ItemLedgEntry.SETRANGE("Entry No.","From Entry No.","To Entry No.");
+            PAGE.RUN(PAGE::"Item Ledger Entries",ItemLedgEntry);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      ItemLedgEntry@1000 : Record "Item Ledger Entry";
+
+    BEGIN
+    END.
+  }
+}
+

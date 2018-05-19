@@ -1,0 +1,35 @@
+OBJECT Table 1015 Job Entry No.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160121.450T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Job Entry No.;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=ENU=Primary Key;
+                                                   Editable=false }
+    { 2   ;   ;Entry No.           ;Integer       ;CaptionML=ENU=Entry No.;
+                                                   Editable=false }
+  }
+  KEYS
+  {
+    {    ;"Primary Key"                           ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

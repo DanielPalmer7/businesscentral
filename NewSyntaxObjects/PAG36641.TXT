@@ -1,0 +1,349 @@
+OBJECT Page 36641 Order Lines Status Factbox
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161727.307T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Sales Lines Status;
+    SourceTable="Sales Line";
+    SourceTableView=SORTING("Document Type",Type,"No.","Variant Code","Drop Shipment","Location Code","Shipment Date")
+                    WHERE("Document Type"=FILTER(Order|"Return Order"));
+    PageType=ListPart;
+    OnAfterGetRecord=BEGIN
+                       GetLastShipmentInvoice;
+                       DefaultFromSalesHeader;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 1020002;2;Field     ;
+                Name="Document Type";
+                ToolTipML=ENU=Specifies the type of the document.;
+                SourceExpr="Document Type";
+                Visible=FALSE;
+                ImplicitType=Option }
+
+    { 2   ;2   ;Field     ;
+                Name=Type;
+                ToolTipML=ENU="Specifies the type of the record on the document line. ";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Type;
+                ImplicitType=Option }
+
+    { 4   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the record.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                ImplicitType=Code20 }
+
+    { 20  ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description relating to the order line.;
+                SourceExpr=Description;
+                Visible=FALSE;
+                ImplicitType=Text50 }
+
+    { 6   ;2   ;Field     ;
+                Name="Document No.";
+                Lookup=false;
+                CaptionML=ENU=Order No.;
+                ToolTipML=ENU=Specifies the number of the order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document No.";
+                OnDrillDown=BEGIN
+                              GetOrder;
+                              case "Document Type" of
+                                "Document Type"::Order:
+                                  if PAGE.RUNMODAL(PAGE::"Sales Order",SalesHeader) = ACTION::LookupOK then;
+                                "Document Type"::"Return Order":
+                                  if PAGE.RUNMODAL(PAGE::"Sales Return Order",SalesHeader) = ACTION::LookupOK then;
+                              end;
+                            END;
+
+                ImplicitType=Code20 }
+
+    { 22  ;2   ;Field     ;
+                Name="SalesHeader.""Order Date""";
+                CaptionML=ENU=Order Date;
+                ToolTipML=ENU=Specifies the date of the order.;
+                SourceExpr=SalesHeader."Order Date";
+                Visible=FALSE }
+
+    { 1020006;2;Field     ;
+                Name="Requested Delivery Date";
+                ToolTipML=ENU=Specifies the requested delivery date.;
+                SourceExpr="Requested Delivery Date";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 1020008;2;Field     ;
+                Name="Promised Delivery Date";
+                ToolTipML=ENU=Specifies the promised delivery date for the order.;
+                SourceExpr="Promised Delivery Date";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 1020012;2;Field     ;
+                Name="Planned Delivery Date";
+                ToolTipML=ENU=Specifies the planned date that the shipment will be delivered at the customer's address.;
+                SourceExpr="Planned Delivery Date";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 1020014;2;Field     ;
+                Name="Planned Shipment Date";
+                ToolTipML=ENU=Specifies the date that the shipment should ship from the warehouse.;
+                SourceExpr="Planned Shipment Date";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 24  ;2   ;Field     ;
+                Name="Shipment Date";
+                CaptionML=ENU=Next Shipment Date;
+                ToolTipML=ENU=Specifies the next data a shipment is planned for the order.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Shipment Date";
+                ImplicitType=Date }
+
+    { 1020010;2;Field     ;
+                Name="Shipping Time";
+                ToolTipML=ENU="Specifies the shipping time for the order. ";
+                SourceExpr="Shipping Time";
+                Visible=FALSE;
+                ImplicitType=DateFormula }
+
+    { 8   ;2   ;Field     ;
+                Name="Unit of Measure";
+                ToolTipML=ENU="Specifies the item's unit of measure. ";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Unit of Measure";
+                ImplicitType=Text10 }
+
+    { 10  ;2   ;Field     ;
+                Name=Quantity;
+                ToolTipML=ENU=Specifies the quantity associated with the order.;
+                SourceExpr=Quantity;
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 12  ;2   ;Field     ;
+                Name="Outstanding Quantity";
+                ToolTipML=ENU=Specifies how many units on the order line have not yet been shipped.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Outstanding Quantity";
+                ImplicitType=Decimal }
+
+    { 14  ;2   ;Field     ;
+                Name="Reserved Quantity";
+                ToolTipML=ENU=Specifies the reserved quantity associated with the order.;
+                SourceExpr="Reserved Quantity";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 16  ;2   ;Field     ;
+                Name="Quantity Shipped";
+                ToolTipML=ENU=Specifies how many of the units in the Quantity field have been posted as shipped.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Quantity Shipped";
+                ImplicitType=Decimal }
+
+    { 1020000;2;Field     ;
+                Name="Completely Shipped";
+                ToolTipML=ENU=Specifies whether all the items on the order have been shipped or, in the case of inbound items, completely received.;
+                SourceExpr="Completely Shipped";
+                Visible=FALSE;
+                ImplicitType=Boolean }
+
+    { 26  ;2   ;Field     ;
+                Name=LastShipmentDate;
+                CaptionML=ENU=Last Shipment Date;
+                ToolTipML=ENU=Specifies the date of the last shipment.;
+                SourceExpr=LastShipmentDate;
+                Visible=FALSE;
+                OnDrillDown=BEGIN
+                              case "Document Type" of
+                                "Document Type"::Order:
+                                  begin
+                                    GetLastShipment;
+                                    if PAGE.RUNMODAL(PAGE::"Posted Sales Shipments",SalesShipmentHeader) = ACTION::LookupOK then;
+                                  end;
+                                "Document Type"::"Return Order":
+                                  begin
+                                    GetLastRetReceipt;
+                                    if PAGE.RUNMODAL(PAGE::"Posted Return Receipts",RetReceiptHeader) = ACTION::LookupOK then;
+                                  end;
+                              end;
+                            END;
+
+                ImplicitType=Date }
+
+    { 18  ;2   ;Field     ;
+                Name="Quantity Invoiced";
+                ToolTipML=ENU=Specifies how many of the units in the Quantity field have been posted as invoiced.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Quantity Invoiced";
+                ImplicitType=Decimal }
+
+    { 28  ;2   ;Field     ;
+                Name=LastInvoiceDate;
+                CaptionML=ENU=Last Invoice Date;
+                ToolTipML=ENU=Specifies the date of the last invoice.;
+                SourceExpr=LastInvoiceDate;
+                Visible=FALSE;
+                OnDrillDown=BEGIN
+                              case "Document Type" of
+                                "Document Type"::Order:
+                                  begin
+                                    GetLastInvoice;
+                                    if PAGE.RUNMODAL(PAGE::"Posted Sales Invoices",SalesInvoiceHeader) = ACTION::LookupOK then;
+                                  end;
+                                "Document Type"::"Return Order":
+                                  begin
+                                    GetLastCrMemo;
+                                    if PAGE.RUNMODAL(PAGE::"Posted Sales Credit Memos",RetCreditMemoHeader) = ACTION::LookupOK then;
+                                  end;
+                              end;
+                            END;
+
+                ImplicitType=Date }
+
+    { 1020004;2;Field     ;
+                Name="SalesHeader.Status";
+                CaptionML=ENU=Status;
+                ToolTipML=ENU=Specifies the status of the order: Open or Released.;
+                SourceExpr=SalesHeader.Status;
+                Visible=FALSE }
+
+    { 30  ;2   ;Field     ;
+                Name="SalesHeader.""On Hold""";
+                CaptionML=ENU=On Hold;
+                ToolTipML=ENU=Specifies lines on orders that are on hold.;
+                SourceExpr=SalesHeader."On Hold";
+                Visible=FALSE }
+
+  }
+  CODE
+  {
+    VAR
+      SalesHeader@1020000 : Record "Sales Header";
+      SalesShipmentHeader@1020001 : Record "Sales Shipment Header";
+      SalesInvoiceHeader@1020002 : Record "Sales Invoice Header";
+      RetReceiptHeader@1020006 : Record "Return Receipt Header";
+      RetCreditMemoHeader@1020005 : Record "Sales Cr.Memo Header";
+      LastShipmentDate@1020003 : Date;
+      LastInvoiceDate@1020004 : Date;
+      Text000@1020007 : TextConst 'ENU=Warning:  There are orphan sales line records for %1 %2.';
+
+    [External]
+    PROCEDURE DefaultFromSalesHeader@1();
+    BEGIN
+      GetOrder;
+      if "Shipment Date" = 0D then
+        "Shipment Date" := SalesHeader."Shipment Date";
+      if "Requested Delivery Date" = 0D then
+        "Requested Delivery Date" := SalesHeader."Requested Delivery Date";
+      if "Promised Delivery Date" = 0D then
+        "Promised Delivery Date" := SalesHeader."Promised Delivery Date";
+      if CALCDATE("Shipping Time",WORKDATE) = WORKDATE then
+        "Shipping Time" := SalesHeader."Shipping Time";
+    END;
+
+    [External]
+    PROCEDURE GetLastShipmentInvoice@3();
+    BEGIN
+      // Calculate values for this row
+      // Get order first
+      GetOrder;
+      // Get shipment and Invoice if they exist
+      case "Document Type" of
+        "Document Type"::Order:
+          begin
+            if GetLastShipment then
+              LastShipmentDate := SalesShipmentHeader."Shipment Date"
+            else
+              LastShipmentDate := 0D;
+            if GetLastInvoice then
+              LastInvoiceDate := SalesInvoiceHeader."Posting Date"
+            else
+              LastInvoiceDate := 0D;
+          end;
+        "Document Type"::"Return Order":
+          begin
+            if GetLastRetReceipt then
+              LastShipmentDate := RetReceiptHeader."Posting Date"
+            else
+              LastShipmentDate := 0D;
+            if GetLastCrMemo then
+              LastInvoiceDate := RetCreditMemoHeader."Posting Date"
+            else
+              LastInvoiceDate := 0D;
+          end;
+        else
+          begin
+          LastShipmentDate := 0D;
+          LastInvoiceDate := 0D;
+        end;
+      end;
+    END;
+
+    [External]
+    PROCEDURE GetOrder@8();
+    BEGIN
+      if (SalesHeader."Document Type" <> "Document Type") or (SalesHeader."No." <> "Document No.") then
+        if not SalesHeader.GET("Document Type","Document No.") then
+          MESSAGE(Text000,"Document Type","Document No.");
+    END;
+
+    [External]
+    PROCEDURE GetLastShipment@4() : Boolean;
+    BEGIN
+      SalesShipmentHeader.SETCURRENTKEY("Order No."{, "Shipment Date"}); // may want to create this key
+      SalesShipmentHeader.SETRANGE("Order No.","Document No.");
+      exit(SalesShipmentHeader.FINDLAST);
+    END;
+
+    [External]
+    PROCEDURE GetLastInvoice@5() : Boolean;
+    BEGIN
+      SalesInvoiceHeader.SETCURRENTKEY("Order No."{, "Shipment Date"}); // may want to create this key
+      SalesInvoiceHeader.SETRANGE("Order No.","Document No.");
+      exit(SalesInvoiceHeader.FINDLAST);
+    END;
+
+    [External]
+    PROCEDURE GetLastRetReceipt@6() : Boolean;
+    BEGIN
+      RetReceiptHeader.SETCURRENTKEY("Return Order No."{, "Shipment Date"}); // may want to create this key
+      RetReceiptHeader.SETRANGE("Return Order No.","Document No.");
+      exit(RetReceiptHeader.FINDLAST);
+    END;
+
+    [External]
+    PROCEDURE GetLastCrMemo@7() : Boolean;
+    BEGIN
+      RetCreditMemoHeader.SETCURRENTKEY("Return Order No."{, "Shipment Date"}); // may want to create this key
+      RetCreditMemoHeader.SETRANGE("Return Order No.","Document No.");
+      exit(RetCreditMemoHeader.FINDLAST);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

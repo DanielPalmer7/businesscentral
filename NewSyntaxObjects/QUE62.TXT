@@ -1,0 +1,48 @@
+OBJECT Query 62 Power BI Cust. Ledger Entries
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161751.767T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Power BI Cust. Ledger Entries;
+  }
+  ELEMENTS
+  {
+    { 1   ;    ;DataItem;Cust_Ledger_Entry   ;
+               DataItemTable="Cust. Ledger Entry" }
+
+    { 2   ;1   ;Column  ;Entry_No            ;
+               DataSource=Entry No. }
+
+    { 3   ;1   ;Column  ;Due_Date            ;
+               DataSource=Due Date }
+
+    { 4   ;1   ;Column  ;Remaining_Amt_LCY   ;
+               DataSource=Remaining Amt. (LCY) }
+
+    { 5   ;1   ;Column  ;Open                ;
+               DataSource=Open }
+
+    { 6   ;1   ;Column  ;Customer_Posting_Group;
+               DataSource=Customer Posting Group }
+
+    { 7   ;1   ;Column  ;Sales_LCY           ;
+               DataSource=Sales (LCY) }
+
+    { 8   ;1   ;Column  ;Posting_Date        ;
+               DataSource=Posting Date }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

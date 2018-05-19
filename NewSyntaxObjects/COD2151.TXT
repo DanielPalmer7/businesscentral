@@ -1,0 +1,320 @@
+OBJECT Codeunit 2151 O365 Sales Email Management
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160716.70T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      CannotOpenFileErr@1008 : TextConst '@@@=%1 - Error Message;ENU=Opening the file failed because of the following error: \%1.';
+      CannotFindDocumentErr@1000 : TextConst '@@@=%1 - Error Message;ENU=The Document %1 cannot be found.';
+      MetaViewportStartTxt@1003 : TextConst '@@@={Locked};ENU="<meta name=""viewport"""';
+      MetaViewportFullTxt@1002 : TextConst '@@@={Locked};ENU="<meta name=""viewport"" content=""initial-scale=1.0"" />"';
+      HtmlTagTxt@1007 : TextConst '@@@={Locked};ENU=html';
+      HeadTagTxt@1006 : TextConst '@@@={Locked};ENU=head';
+      StartTagTxt@1005 : TextConst '@@@={Locked};ENU=<';
+      EndTagTxt@1004 : TextConst '@@@={Locked};ENU=>';
+      TestInvoiceTxt@1001 : TextConst 'ENU=Test Invoice';
+
+    [Internal]
+    PROCEDURE ShowEmailDialog@2(DocumentNo@1000 : Code[20]) : Boolean;
+    VAR
+      EmailParameter@1003 : Record "Email Parameter";
+      TempEmailItem@1004 : TEMPORARY Record "Email Item";
+      ReportSelections@1010 : Record "Report Selections";
+      TempReportSelections@1005 : TEMPORARY Record "Report Selections";
+      DocumentMailing@1008 : Codeunit "Document-Mailing";
+      O365HTMLTemplMgt@1006 : Codeunit "O365 HTML Templ. Mgt.";
+      MailManagement@1017 : Codeunit "Mail Management";
+      O365SalesEmailDialog@1002 : Page "O365 Sales Email Dialog";
+      DocumentRecordVariant@1013 : Variant;
+      CustomerNo@1014 : Code[20];
+      EmailAddress@1007 : Text[250];
+      EmailSubject@1011 : Text[250];
+      EmailBody@1016 : Text;
+      ReportUsage@1009 : Integer;
+      HasBeenSent@1012 : Boolean;
+      IsTestInvoice@1015 : Boolean;
+      DocumentName@1001 : Text[250];
+      BodyText@1019 : Text;
+    BEGIN
+      if not InitializeDocumentSpecificVariables(DocumentRecordVariant,ReportUsage,CustomerNo,DocumentNo,IsTestInvoice) then
+        exit;
+
+      DocumentName := GetDocumentName(IsTestInvoice);
+
+      if IsTestInvoice then begin
+        EmailSubject := DocumentMailing.GetTestInvoiceEmailSubject;
+        EmailBody := DocumentMailing.GetTestInvoiceEmailBody(CustomerNo);
+
+        if not ReportSelections.GetEmailBodyCustomText(
+             TempEmailItem."Body File Path",ReportUsage,DocumentRecordVariant,CustomerNo,EmailAddress,EmailBody)
+        then;
+        EmailAddress := MailManagement.GetSenderEmailAddress;
+        EmailParameter.SaveParameterValueWithReportUsage(
+          DocumentNo,ReportUsage,EmailParameter."Parameter Type"::Address,EmailAddress);
+      end else begin
+        EmailSubject := DocumentMailing.GetEmailSubject(DocumentNo,DocumentName,ReportUsage);
+        EmailBody := DocumentMailing.GetEmailBody(DocumentNo,ReportUsage,CustomerNo);
+
+        if not ReportSelections.GetEmailBody(TempEmailItem."Body File Path",ReportUsage,DocumentRecordVariant,CustomerNo,EmailAddress) then;
+      end;
+
+      if ReportSelections.FindEmailAttachmentUsage(ReportUsage,CustomerNo,TempReportSelections) then begin
+        // Create attachment
+        TempReportSelections.GetPdfReport(
+          TempEmailItem."Attachment File Path",ReportUsage,
+          DocumentRecordVariant,CustomerNo);
+
+        DocumentMailing.GetAttachmentFileName(
+          TempEmailItem."Attachment Name",
+          DocumentNo,
+          DocumentName,
+          ReportUsage);
+      end;
+
+      TempEmailItem.Subject := EmailSubject;
+      TempEmailItem.SetBodyText(EmailBody);
+      TempEmailItem."Send to" := EmailAddress;
+      TempEmailItem.AddCcBcc;
+      TempEmailItem.AttachIncomingDocuments(DocumentNo);
+      TempEmailItem.INSERT(true);
+      COMMIT;
+
+      O365SalesEmailDialog.SetValues(DocumentRecordVariant,TempEmailItem);
+      HasBeenSent := O365SalesEmailDialog.RUNMODAL = ACTION::OK;
+
+      O365SalesEmailDialog.GETRECORD(TempEmailItem);
+      if EmailAddress <> TempEmailItem."Send to" then
+        O365HTMLTemplMgt.ReplaceBodyFileSendTo(
+          TempEmailItem."Body File Path",EmailAddress,TempEmailItem."Send to");
+      SaveEmailParametersIfChanged(
+        DocumentNo,ReportUsage,EmailAddress,TempEmailItem."Send to",TempEmailItem.Subject);
+
+      BodyText := TempEmailItem.GetBodyText;
+      if not HasBeenSent then
+        BodyText := DocumentMailing.ReplaceCustomerNameWithPlaceholder(CustomerNo,BodyText);
+
+      EmailParameter.SaveParameterValueWithReportUsage(DocumentNo,ReportUsage,EmailParameter."Parameter Type"::Body,BodyText);
+
+      exit(HasBeenSent);
+    END;
+
+    LOCAL PROCEDURE InitializeDocumentSpecificVariables@12(VAR DocumentRecordVariant@1001 : Variant;VAR ReportUsage@1005 : Integer;VAR CustomerNo@1000 : Code[20];DocumentNo@1002 : Code[20];VAR IsTestInvoice@1007 : Boolean) : Boolean;
+    VAR
+      SalesInvoiceHeader@1003 : Record "Sales Invoice Header";
+      SalesHeader@1004 : Record "Sales Header";
+      ReportSelections@1006 : Record "Report Selections";
+    BEGIN
+      IsTestInvoice := false;
+
+      if SalesInvoiceHeader.GET(DocumentNo) then begin
+        SalesInvoiceHeader.SETRECFILTER;
+        DocumentRecordVariant := SalesInvoiceHeader;
+        CustomerNo := SalesInvoiceHeader."Bill-to Customer No.";
+        ReportUsage := ReportSelections.Usage::"S.Invoice";
+        exit(true);
+      end;
+
+      SalesHeader.SETFILTER("Document Type",'%1|%2',SalesHeader."Document Type"::Quote,SalesHeader."Document Type"::Invoice);
+      SalesHeader.SETRANGE("No.",DocumentNo);
+      if SalesHeader.FINDFIRST then begin
+        SalesHeader.SETRECFILTER;
+        DocumentRecordVariant := SalesHeader;
+        CustomerNo := SalesHeader."Bill-to Customer No.";
+
+        if SalesHeader."Document Type" = SalesHeader."Document Type"::Invoice then
+          ReportUsage := ReportSelections.Usage::"S.Invoice Draft"
+        else
+          ReportUsage := ReportSelections.Usage::"S.Quote";
+
+        if SalesHeader.IsTest then
+          IsTestInvoice := true;
+
+        exit(true);
+      end;
+
+      exit(false);
+    END;
+
+    PROCEDURE SaveEmailParametersIfChanged@9(DocumentNo@1001 : Code[20];ReportUsage@1002 : Integer;OldEmailAddress@1004 : Text[250];NewEmailAddress@1005 : Text[250];NewEmailSubject@1006 : Text[250]);
+    VAR
+      EmailParameter@1003 : Record "Email Parameter";
+    BEGIN
+      if OldEmailAddress <> NewEmailAddress then
+        EmailParameter.SaveParameterValueWithReportUsage(
+          DocumentNo,ReportUsage,EmailParameter."Parameter Type"::Address,NewEmailAddress);
+      EmailParameter.SaveParameterValueWithReportUsage(
+        DocumentNo,ReportUsage,EmailParameter."Parameter Type"::Subject,NewEmailSubject);
+    END;
+
+    LOCAL PROCEDURE GetDocumentName@6(IsTestInvoice@1000 : Boolean) : Text[250];
+    VAR
+      SalesInvoiceHeader@1001 : Record "Sales Invoice Header";
+    BEGIN
+      if IsTestInvoice then
+        exit(TestInvoiceTxt);
+      exit(SalesInvoiceHeader.GetDefaultEmailDocumentName);
+    END;
+
+    PROCEDURE NativeAPISaveEmailBodyText@1(DocumentId@1000 : GUID);
+    VAR
+      EmailParameter@1006 : Record "Email Parameter";
+      DocumentNo@1008 : Code[20];
+      CustomerNo@1007 : Code[20];
+      EmailAddress@1005 : Text[250];
+      EmailSubject@1004 : Text[250];
+      EmailBody@1003 : Text;
+      ReportUsage@1002 : Integer;
+      BodyText@1001 : Text;
+    BEGIN
+      NativeAPIGetEmailParametersFromId(DocumentId,DocumentNo,CustomerNo,EmailAddress,EmailSubject,EmailBody,ReportUsage,BodyText);
+      EmailParameter.SaveParameterValueWithReportUsage(DocumentNo,ReportUsage,EmailParameter."Parameter Type"::Body,BodyText);
+    END;
+
+    PROCEDURE NativeAPIGetEmailParametersFromId@10(DocumentId@1009 : GUID;VAR DocumentNo@1019 : Code[20];VAR CustomerNo@1003 : Code[20];VAR EmailAddress@1011 : Text[250];VAR EmailSubject@1004 : Text[250];VAR EmailBody@1010 : Text;VAR ReportUsage@1012 : Integer;VAR BodyText@1017 : Text);
+    VAR
+      SalesInvoiceHeader@1002 : Record "Sales Invoice Header";
+      SalesHeader@1006 : Record "Sales Header";
+      ReportSelections@1005 : Record "Report Selections";
+      NativeAPIResizeImage@1014 : Codeunit "Native API - Resize Image";
+      DocumentMailing@1015 : Codeunit "Document-Mailing";
+      NativeReports@1013 : Codeunit "Native - Reports";
+      O365SalesCancelInvoice@1008 : Codeunit "O365 Sales Cancel Invoice";
+      RecordVariant@1000 : Variant;
+      FilePath@1001 : Text[250];
+      DocumentName@1016 : Text[250];
+      Cancelled@1007 : Boolean;
+    BEGIN
+      SalesHeader.SETRANGE(Id,DocumentId);
+      if SalesHeader.FINDFIRST then
+        case SalesHeader."Document Type" of
+          SalesHeader."Document Type"::Invoice:
+            begin
+              RecordVariant := SalesHeader;
+              DocumentName := SalesHeader.GetDocTypeTxt;
+              DocumentNo := SalesHeader."No.";
+              CustomerNo := SalesHeader."Sell-to Customer No.";
+              ReportUsage := NativeReports.DraftSalesInvoiceReportId;
+            end;
+          SalesHeader."Document Type"::Quote:
+            begin
+              RecordVariant := SalesHeader;
+              DocumentName := SalesHeader.GetDocTypeTxt;
+              DocumentNo := SalesHeader."No.";
+              CustomerNo := SalesHeader."Sell-to Customer No.";
+              ReportUsage := NativeReports.SalesQuoteReportId;
+            end;
+          else
+            ERROR(CannotFindDocumentErr,DocumentId);
+        end
+      else begin
+        SalesInvoiceHeader.SETRANGE(Id,DocumentId);
+        if not SalesInvoiceHeader.FINDFIRST then
+          ERROR(CannotFindDocumentErr,DocumentId);
+        SalesInvoiceHeader.CALCFIELDS(Cancelled);
+        Cancelled := SalesInvoiceHeader.Cancelled;
+        if not Cancelled then begin
+          DocumentName := SalesInvoiceHeader.GetDefaultEmailDocumentName;
+          RecordVariant := SalesInvoiceHeader;
+          DocumentNo := SalesInvoiceHeader."No.";
+          CustomerNo := SalesInvoiceHeader."Sell-to Customer No.";
+          ReportUsage := NativeReports.PostedSalesInvoiceReportId;
+        end;
+      end;
+
+      NativeAPIResizeImage.SetImageSize(512);
+      NativeAPIResizeImage.SetImageQuality(90);
+
+      BINDSUBSCRIPTION(NativeAPIResizeImage);
+      BodyText := DocumentMailing.GetEmailBody(DocumentNo,ReportUsage,CustomerNo);
+
+      if not Cancelled then begin
+        if ReportSelections.GetEmailBodyCustomText(FilePath,ReportUsage,RecordVariant,CustomerNo,EmailAddress,BodyText) then
+          EmailBody := NativeAPIGetEmailBody(FilePath);
+
+        EmailSubject := DocumentMailing.GetEmailSubject(DocumentNo,DocumentName,ReportUsage);
+      end else begin
+        EmailAddress := O365SalesCancelInvoice.GetEmailAddress(SalesInvoiceHeader);
+        EmailSubject := O365SalesCancelInvoice.GetEmailSubject(SalesInvoiceHeader);
+      end;
+
+      UNBINDSUBSCRIPTION(NativeAPIResizeImage);
+    END;
+
+    LOCAL PROCEDURE NativeAPIGetEmailBody@4(FilePath@1000 : Text[250]) : Text;
+    VAR
+      File@1001 : File;
+      InStream@1002 : InStream;
+      EmailBody@1005 : Text;
+      Buffer@1003 : Text;
+    BEGIN
+      if not File.OPEN(FilePath,GetBodyTextEncoding) then
+        ERROR(CannotOpenFileErr,GETLASTERRORTEXT);
+      File.CREATEINSTREAM(InStream);
+      while not InStream.EOS do begin
+        InStream.READ(Buffer);
+        EmailBody += Buffer;
+      end;
+      File.CLOSE;
+      if ERASE(FilePath) then;
+
+      NativeAPIInjectMetaViewport(EmailBody);
+
+      exit(EmailBody);
+    END;
+
+    LOCAL PROCEDURE NativeAPIInjectMetaViewport@11(VAR EmailBody@1000 : Text);
+    VAR
+      BodyStart@1004 : Text[1000];
+      PosHtml@1005 : Integer;
+      PosHead@1006 : Integer;
+      PosMeta@1003 : Integer;
+      PosTagBeforeMeta@1001 : Integer;
+      BodyStartLength@1002 : Integer;
+      MaxBodyStartLength@1007 : Integer;
+    BEGIN
+      // Used for Native App HTML preview
+      BodyStartLength := STRLEN(EmailBody);
+      MaxBodyStartLength := MAXSTRLEN(BodyStart);
+      if BodyStartLength > MaxBodyStartLength then
+        BodyStartLength := MaxBodyStartLength;
+      BodyStart := LOWERCASE(COPYSTR(EmailBody,1,BodyStartLength));
+      if STRPOS(BodyStart,MetaViewportStartTxt) > 0 then
+        exit;
+
+      PosHtml := STRPOS(BodyStart,StartTagTxt + HtmlTagTxt);
+      if PosHtml = 0 then
+        exit;
+
+      PosHead := STRPOS(BodyStart,StartTagTxt + HeadTagTxt);
+      if PosHead > 0 then
+        PosTagBeforeMeta := PosHead
+      else
+        PosTagBeforeMeta := PosHtml;
+
+      PosMeta := PosTagBeforeMeta + STRPOS(COPYSTR(BodyStart,PosTagBeforeMeta + 1),EndTagTxt);
+      if PosMeta > 0 then
+        EmailBody := COPYSTR(EmailBody,PosHtml,PosMeta - PosHtml + 1) + MetaViewportFullTxt + COPYSTR(EmailBody,PosMeta + 1);
+    END;
+
+    PROCEDURE GetBodyTextEncoding@3() : TextEncoding;
+    BEGIN
+      exit(TEXTENCODING::UTF8);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

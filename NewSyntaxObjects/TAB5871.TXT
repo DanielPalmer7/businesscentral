@@ -1,0 +1,33 @@
+OBJECT Table 5871 Memoized Result
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160200.147T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Memoized Result;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Input               ;Decimal       ;CaptionML=ENU=Input }
+    { 2   ;   ;Output              ;Boolean       ;CaptionML=ENU=Output }
+  }
+  KEYS
+  {
+    {    ;Input                                   ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

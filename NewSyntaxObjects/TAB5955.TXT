@@ -1,0 +1,36 @@
+OBJECT Table 5955 Skill Code
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160208.843T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Code,Description;
+    CaptionML=ENU=Skill Code;
+    LookupPageID="Skill Codes";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

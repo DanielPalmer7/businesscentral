@@ -1,0 +1,66 @@
+OBJECT Page 2338 BC O365 Payments Settings
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161409.363T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Payments;
+    PageType=CardPart;
+    OnInit=BEGIN
+             UpdateFields;
+           END;
+
+  }
+  CONTROLS
+  {
+    { 3   ;    ;Container ;
+                Name=Control3;
+                ContainerType=ContentArea }
+
+    { 5   ;1   ;Group     ;
+                Name=Control5;
+                GroupType=Group;
+                InstructionalTextML=ENU=You can change the default payment terms for each invoice. }
+
+    { 4   ;1   ;Field     ;
+                Name=PaymentTermsCode;
+                CaptionML=ENU=Payment terms;
+                ToolTipML=ENU=Specifies the default payment terms used, such as within 14 days.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=PaymentTermsCode;
+                Editable=FALSE;
+                OnAssistEdit=VAR
+                               TempO365PaymentTerms@1000 : TEMPORARY Record "O365 Payment Terms";
+                             BEGIN
+                               TempO365PaymentTerms.RefreshRecords;
+                               if TempO365PaymentTerms.GET(PaymentTermsCode) then;
+                               if PAGE.RUNMODAL(PAGE::"O365 Payment Terms List",TempO365PaymentTerms) = ACTION::LookupOK then
+                                 O365SalesInitialSetup.UpdateDefaultPaymentTerms(TempO365PaymentTerms.Code);
+                               UpdateFields;
+                             END;
+                              }
+
+  }
+  CODE
+  {
+    VAR
+      O365SalesInitialSetup@1001 : Record "O365 Sales Initial Setup";
+      PaymentTermsCode@1000 : Code[10];
+
+    LOCAL PROCEDURE UpdateFields@2();
+    BEGIN
+      O365SalesInitialSetup.GET;
+      PaymentTermsCode := O365SalesInitialSetup."Default Payment Terms Code";
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

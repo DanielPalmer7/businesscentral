@@ -1,0 +1,100 @@
+OBJECT Query 268 Job Ledger Entries
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161802.460T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Job Ledger Entries;
+  }
+  ELEMENTS
+  {
+    { 1   ;    ;DataItem;Job_Ledger_Entry    ;
+               DataItemTable="Job Ledger Entry" }
+
+    { 2   ;1   ;Column  ;Entry_No            ;
+               DataSource=Entry No. }
+
+    { 3   ;1   ;Column  ;Job_No              ;
+               DataSource=Job No. }
+
+    { 21  ;1   ;Column  ;Job_Task_No         ;
+               DataSource=Job Task No. }
+
+    { 4   ;1   ;Column  ;Posting_Date        ;
+               DataSource=Posting Date }
+
+    { 19  ;1   ;Column  ;Document_Date       ;
+               DataSource=Document Date }
+
+    { 5   ;1   ;Column  ;Document_No         ;
+               DataSource=Document No. }
+
+    { 15  ;1   ;Column  ;Job_Posting_Group   ;
+               DataSource=Job Posting Group }
+
+    { 14  ;1   ;Column  ;Resource_Group_No   ;
+               DataSource=Resource Group No. }
+
+    { 23  ;1   ;Column  ;Work_Type_Code      ;
+               DataSource=Work Type Code }
+
+    { 24  ;1   ;Column  ;Gen_Bus_Posting_Group;
+               DataSource=Gen. Bus. Posting Group }
+
+    { 25  ;1   ;Column  ;Gen_Prod_Posting_Group;
+               DataSource=Gen. Prod. Posting Group }
+
+    { 16  ;1   ;Column  ;Location_Code       ;
+               DataSource=Location Code }
+
+    { 17  ;1   ;Column  ;Source_Code         ;
+               DataSource=Source Code }
+
+    { 18  ;1   ;Column  ;Reason_Code         ;
+               DataSource=Reason Code }
+
+    { 6   ;1   ;Column  ;Quantity_Base       ;
+               DataSource=Quantity (Base) }
+
+    { 9   ;1   ;Column  ;Direct_Unit_Cost_LCY;
+               DataSource=Direct Unit Cost (LCY) }
+
+    { 10  ;1   ;Column  ;Unit_Cost_LCY       ;
+               DataSource=Unit Cost (LCY) }
+
+    { 11  ;1   ;Column  ;Total_Cost_LCY      ;
+               DataSource=Total Cost (LCY) }
+
+    { 12  ;1   ;Column  ;Unit_Price_LCY      ;
+               DataSource=Unit Price (LCY) }
+
+    { 13  ;1   ;Column  ;Total_Price_LCY     ;
+               DataSource=Total Price (LCY) }
+
+    { 22  ;1   ;Column  ;Line_Amount_LCY     ;
+               DataSource=Line Amount (LCY) }
+
+    { 20  ;1   ;Column  ;Dimension_Set_ID    ;
+               DataSource=Dimension Set ID }
+
+    { 7   ;1   ;DataItem;Job                 ;
+               DataItemTable=Job;
+               DataItemLink="No."=Job_Ledger_Entry."Job No." }
+
+    { 8   ;2   ;Column  ;Job_Description     ;
+               DataSource=Description }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

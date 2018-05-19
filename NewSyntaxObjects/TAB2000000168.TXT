@@ -1,0 +1,35 @@
+OBJECT Table 2000000168 Tenant Web Service
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.860T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 3   ;   ;Object Type         ;Option        ;OptionString=,,,,,Codeunit,,,Page,Query }
+    { 6   ;   ;Object ID           ;Integer       ;TableRelation=AllObj."Object ID" WHERE ("Object Type"=FIELD("Object Type")) }
+    { 9   ;   ;Service Name        ;Text240        }
+    { 12  ;   ;Published           ;Boolean        }
+  }
+  KEYS
+  {
+    {    ;"Object Type","Service Name"            ;Clustered=true }
+    {    ;"Object Type","Object ID"                }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

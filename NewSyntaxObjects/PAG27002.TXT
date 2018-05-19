@@ -1,0 +1,46 @@
+OBJECT Page 27002 SAT Payment Method Codes
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161725.463T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=SAT Payment Method Codes;
+    SourceTable="SAT Payment Method Code";
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=Code;
+                ToolTipML=ENU=Specifies the SAT payment method.;
+                SourceExpr=Code;
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description the SAT payment method.;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

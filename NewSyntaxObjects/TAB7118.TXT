@@ -1,0 +1,332 @@
+OBJECT Table 7118 Analysis Column
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160217.597T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Analysis Column;
+    LookupPageID="Analysis Columns";
+    DrillDownPageID="Analysis Columns";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Analysis Area       ;Option        ;CaptionML=ENU=Analysis Area;
+                                                   OptionCaptionML=ENU=Sales,Purchase,Inventory;
+                                                   OptionString=Sales,Purchase,Inventory }
+    { 2   ;   ;Analysis Column Template;Code10    ;TableRelation="Analysis Column Template".Name WHERE ("Analysis Area"=FIELD("Analysis Area"));
+                                                   CaptionML=ENU=Analysis Column Template }
+    { 3   ;   ;Line No.            ;Integer       ;CaptionML=ENU=Line No. }
+    { 4   ;   ;Column No.          ;Code10        ;CaptionML=ENU=Column No. }
+    { 5   ;   ;Column Header       ;Text50        ;CaptionML=ENU=Column Header }
+    { 6   ;   ;Column Type         ;Option        ;InitValue="Net Change";
+                                                   CaptionML=ENU=Column Type;
+                                                   OptionCaptionML=ENU=Formula,Net Change,Balance at Date,Beginning Balance,Year to Date,Rest of Fiscal Year,Entire Fiscal Year;
+                                                   OptionString=Formula,"Net Change","Balance at Date","Beginning Balance","Year to Date","Rest of Fiscal Year","Entire Fiscal Year" }
+    { 7   ;   ;Ledger Entry Type   ;Option        ;CaptionML=ENU=Ledger Entry Type;
+                                                   OptionCaptionML=ENU=Item Entries,Item Budget Entries;
+                                                   OptionString="Item Entries","Item Budget Entries" }
+    { 8   ;   ;Formula             ;Code80        ;OnValidate=BEGIN
+                                                                ItemSchedLine.CheckFormula(Formula);
+                                                              END;
+
+                                                   CaptionML=ENU=Formula }
+    { 9   ;   ;Comparison Date Formula;DateFormula;OnValidate=BEGIN
+                                                                if FORMAT("Comparison Date Formula") <> '' then
+                                                                  VALIDATE("Comparison Period Formula",'');
+                                                              END;
+
+                                                   CaptionML=ENU=Comparison Date Formula }
+    { 10  ;   ;Show Opposite Sign  ;Boolean       ;CaptionML=ENU=Show Opposite Sign }
+    { 11  ;   ;Show                ;Option        ;InitValue=Always;
+                                                   CaptionML=ENU=Show;
+                                                   OptionCaptionML=ENU=Always,Never,When Positive,When Negative;
+                                                   OptionString=Always,Never,"When Positive","When Negative";
+                                                   NotBlank=true }
+    { 12  ;   ;Rounding Factor     ;Option        ;CaptionML=ENU=Rounding Factor;
+                                                   OptionCaptionML=ENU=None,1,1000,1000000;
+                                                   OptionString=None,"1","1000","1000000" }
+    { 13  ;   ;Comparison Period Formula;Code20   ;OnValidate=VAR
+                                                                Steps@1001 : Integer;
+                                                                Type@1000 : '" ",Period,"Fiscal year","Fiscal Halfyear","Fiscal Quarter"';
+                                                                RangeFromType@1007 : 'Int,CP,LP';
+                                                                RangeToType@1006 : 'Int,CP,LP';
+                                                                RangeFromInt@1005 : Integer;
+                                                                RangeToInt@1004 : Integer;
+                                                              BEGIN
+                                                                "Comparison Period Formula LCID" := GLOBALLANGUAGE;
+                                                                ParsePeriodFormula(
+                                                                  "Comparison Period Formula",
+                                                                  Steps,Type,RangeFromType,RangeToType,RangeFromInt,RangeToInt);
+                                                                if "Comparison Period Formula" <> '' then
+                                                                  CLEAR("Comparison Date Formula");
+                                                              END;
+
+                                                   CaptionML=ENU=Comparison Period Formula }
+    { 14  ;   ;Analysis Type Code  ;Code10        ;TableRelation="Analysis Type";
+                                                   OnValidate=VAR
+                                                                ItemAnalysisType@1000 : Record "Analysis Type";
+                                                              BEGIN
+                                                                if "Analysis Type Code" <> '' then begin
+                                                                  ItemAnalysisType.GET("Analysis Type Code");
+                                                                  if "Column Header" = '' then
+                                                                    "Column Header" := ItemAnalysisType.Name;
+                                                                  "Item Ledger Entry Type Filter" := ItemAnalysisType."Item Ledger Entry Type Filter";
+                                                                  "Value Entry Type Filter" := ItemAnalysisType."Value Entry Type Filter";
+                                                                  "Value Type" := ItemAnalysisType."Value Type";
+                                                                end;
+                                                              END;
+
+                                                   CaptionML=ENU=Analysis Type Code }
+    { 15  ;   ;Item Ledger Entry Type Filter;Text250;
+                                                   OnValidate=BEGIN
+                                                                AnalysisRepMgmt.ValidateFilter(
+                                                                  "Item Ledger Entry Type Filter",DATABASE::"Analysis Column",
+                                                                  FIELDNO("Item Ledger Entry Type Filter"),true);
+                                                              END;
+
+                                                   CaptionML=ENU=Item Ledger Entry Type Filter }
+    { 16  ;   ;Value Entry Type Filter;Text250    ;OnValidate=BEGIN
+                                                                AnalysisRepMgmt.ValidateFilter(
+                                                                  "Value Entry Type Filter",DATABASE::"Analysis Column",
+                                                                  FIELDNO("Value Entry Type Filter"),true);
+                                                              END;
+
+                                                   CaptionML=ENU=Value Entry Type Filter }
+    { 17  ;   ;Value Type          ;Option        ;CaptionML=ENU=Value Type;
+                                                   OptionCaptionML=ENU=" ,Quantity,Sales Amount,Cost Amount,Non-Invntble Amount,Unit Price,Standard Cost,Indirect Cost,Unit Cost";
+                                                   OptionString=" ",Quantity,"Sales Amount","Cost Amount","Non-Invntble Amount","Unit Price","Standard Cost","Indirect Cost","Unit Cost" }
+    { 18  ;   ;Invoiced            ;Boolean       ;CaptionML=ENU=Invoiced }
+    { 30  ;   ;Comparison Period Formula LCID;Integer;
+                                                   CaptionML=ENU=Comparison Period Formula LCID }
+  }
+  KEYS
+  {
+    {    ;"Analysis Area","Analysis Column Template","Line No.";
+                                                   Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      ItemSchedLine@1000 : TEMPORARY Record "Analysis Line";
+      PeriodFormulaErr@1003 : TextConst '@@@=%1 - value of Comparison Period Formula field;ENU=%1 is not a valid Period Formula.';
+      Text002@1002 : TextConst '@@@=Period;ENU=P';
+      Text003@1001 : TextConst '@@@=Fiscal year;ENU=FY';
+      Text004@1005 : TextConst '@@@=Current Period;ENU=CP';
+      Text005@1004 : TextConst '@@@=Last period;ENU=LP';
+      AnalysisRepMgmt@1006 : Codeunit "Analysis Report Management";
+
+    [External]
+    PROCEDURE ParsePeriodFormula@26(FormulaExpression@1002 : Code[20];VAR Steps@1001 : Integer;VAR Type@1006 : '" ",Period,"Fiscal Year"';VAR RangeFromType@1009 : 'Int,CP,LP';VAR RangeToType@1008 : 'Int,CP,LP';VAR RangeFromInt@1003 : Integer;VAR RangeToInt@1000 : Integer);
+    VAR
+      OldLanguageID@1005 : Integer;
+      FormulaParsed@1004 : Boolean;
+    BEGIN
+      if "Comparison Period Formula LCID" = 0 then
+        "Comparison Period Formula LCID" := GLOBALLANGUAGE;
+
+      OldLanguageID := GLOBALLANGUAGE;
+      GLOBALLANGUAGE("Comparison Period Formula LCID");
+      FormulaParsed := TryParsePeriodFormula(FormulaExpression,Steps,Type,RangeFromType,RangeToType,RangeFromInt,RangeToInt);
+      GLOBALLANGUAGE(OldLanguageID);
+
+      if not FormulaParsed then
+        ERROR(GETLASTERRORTEXT);
+    END;
+
+    [TryFunction]
+    LOCAL PROCEDURE TryParsePeriodFormula@10(FormulaExpression@1002 : Code[20];VAR Steps@1001 : Integer;VAR Type@1006 : '" ",Period,"Fiscal Year"';VAR RangeFromType@1009 : 'Int,CP,LP';VAR RangeToType@1008 : 'Int,CP,LP';VAR RangeFromInt@1003 : Integer;VAR RangeToInt@1000 : Integer);
+    VAR
+      OriginalFormula@1004 : Code[20];
+    BEGIN
+      // <PeriodFormula> ::= <signed integer> <formula> | blank
+      // <signed integer> ::= <sign> <positive integer> | blank
+      // <sign> ::= + | - | blank
+      // <positive integer> ::= <digit 1-9> <digits>
+      // <digit 1-9> ::= 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+      // <digits> ::= 0 <digits> | <digit 1-9> <digits> | blank
+      // <formula> ::= P | FY <range> | FH <range> | FQ <range>
+      // <range> ::= blank | [<range2>]
+      // <range2> ::= <index> .. <index> | <index>
+      // <index> ::= <positive integer> | CP | LP
+
+      OriginalFormula := FormulaExpression;
+      FormulaExpression := DELCHR(FormulaExpression);
+
+      if not ParseFormula(FormulaExpression,Steps,Type) then
+        ERROR(PeriodFormulaErr,OriginalFormula);
+
+      if Type = Type::"Fiscal Year" then
+        if not ParseRange(FormulaExpression,RangeFromType,RangeFromInt,RangeToType,RangeToInt) then
+          ERROR(PeriodFormulaErr,OriginalFormula);
+
+      if FormulaExpression <> '' then
+        ERROR(PeriodFormulaErr,OriginalFormula);
+    END;
+
+    LOCAL PROCEDURE ParseFormula@5(VAR FormulaExpression@1002 : Code[20];VAR Steps@1001 : Integer;VAR Type@1006 : '" ",Period,"Fiscal Year"') : Boolean;
+    BEGIN
+      Steps := 0;
+      Type := Type::" ";
+
+      if FormulaExpression = '' then
+        exit(true);
+
+      if not ParseSignedInteger(FormulaExpression,Steps) then
+        exit(false);
+
+      if FormulaExpression = '' then
+        exit(false);
+
+      if not ParseType(FormulaExpression,Type) then
+        exit(false);
+
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE ParseSignedInteger@1(VAR FormulaExpression@1000 : Code[20];VAR Int@1001 : Integer) : Boolean;
+    BEGIN
+      Int := 0;
+
+      case COPYSTR(FormulaExpression,1,1) of
+        '-':
+          begin
+            FormulaExpression := COPYSTR(FormulaExpression,2);
+            if not ParseInt(FormulaExpression,Int,false) then
+              exit(false);
+            Int := -Int;
+          end;
+        '+':
+          begin
+            FormulaExpression := COPYSTR(FormulaExpression,2);
+            if not ParseInt(FormulaExpression,Int,false) then
+              exit(false);
+          end;
+        else
+          begin
+          if not ParseInt(FormulaExpression,Int,true) then
+            exit(false);
+        end;
+      end;
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE ParseInt@2(VAR FormulaExpression@1001 : Code[20];VAR Int@1000 : Integer;AllowNotInt@1003 : Boolean) : Boolean;
+    VAR
+      IntegerStr@1002 : Code[20];
+    BEGIN
+      if COPYSTR(FormulaExpression,1,1) in ['1'..'9'] then
+        repeat
+          IntegerStr := IntegerStr + COPYSTR(FormulaExpression,1,1);
+          FormulaExpression := COPYSTR(FormulaExpression,2);
+          if FormulaExpression = '' then
+            exit(false);
+        until not (COPYSTR(FormulaExpression,1,1) in ['0'..'9'])
+      else
+        exit(AllowNotInt);
+      EVALUATE(Int,IntegerStr);
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE ParseType@3(VAR FormulaExpression@1001 : Code[20];VAR Type@1000 : '" ",Period,"Fiscal Year"') : Boolean;
+    BEGIN
+      case ReadToken(FormulaExpression) of
+        Text002:
+          Type := Type::Period;
+        Text003:
+          Type := Type::"Fiscal Year";
+        else
+          exit(false);
+      end;
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE ParseRange@6(VAR FormulaExpression@1002 : Code[20];VAR FromType@1001 : 'Int,CP,LP';VAR FromInt@1004 : Integer;VAR ToType@1006 : 'Int,CP,LP';VAR ToInt@1005 : Integer) : Boolean;
+    BEGIN
+      FromType := FromType::CP;
+      ToType := ToType::CP;
+
+      if FormulaExpression = '' then
+        exit(true);
+
+      if not ParseToken(FormulaExpression,'[') then
+        exit(false);
+
+      if not ParseIndex(FormulaExpression,FromType,FromInt) then
+        exit(false);
+      if FormulaExpression = '' then
+        exit(false);
+
+      if COPYSTR(FormulaExpression,1,1) = '.' then begin
+        if not ParseToken(FormulaExpression,'..') then
+          exit(false);
+        if not ParseIndex(FormulaExpression,ToType,ToInt) then
+          exit(false);
+      end else begin
+        ToType := FromType;
+        ToInt := FromInt;
+      end;
+
+      if not ParseToken(FormulaExpression,']') then
+        exit(false);
+
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE ParseIndex@11(VAR FormulaExpression@1002 : Code[20];VAR IndexType@1001 : 'Int,CP,LP';VAR Index@1004 : Integer) : Boolean;
+    BEGIN
+      if FormulaExpression = '' then
+        exit(false);
+
+      if ParseInt(FormulaExpression,Index,false) then
+        IndexType := IndexType::Int
+      else
+        case ReadToken(FormulaExpression) of
+          Text004:
+            IndexType := IndexType::CP;
+          Text005:
+            IndexType := IndexType::LP;
+          else
+            exit(false);
+        end;
+
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE ParseToken@13(VAR FormulaExpression@1000 : Code[20];Token@1001 : Code[20]) : Boolean;
+    BEGIN
+      if COPYSTR(FormulaExpression,1,STRLEN(Token)) <> Token then
+        exit(false);
+      FormulaExpression := COPYSTR(FormulaExpression,STRLEN(Token) + 1);
+      exit(true)
+    END;
+
+    LOCAL PROCEDURE ReadToken@7(VAR FormulaExpression@1000 : Code[20]) : Code[20];
+    VAR
+      Token@1001 : Code[20];
+      p@1002 : Integer;
+    BEGIN
+      for p := 1 to STRLEN(FormulaExpression) do begin
+        if COPYSTR(FormulaExpression,p,1) in ['[',']','.'] then begin
+          FormulaExpression := COPYSTR(FormulaExpression,STRLEN(Token) + 1);
+          exit(Token);
+        end;
+        Token := Token + COPYSTR(FormulaExpression,p,1);
+      end;
+
+      FormulaExpression := '';
+      exit(Token);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

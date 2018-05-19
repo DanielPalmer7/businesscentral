@@ -1,0 +1,144 @@
+OBJECT Page 1174 Document Attachment Factbox
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161336.757T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Documents Attached;
+    SourceTable="Document Attachment";
+    PageType=CardPart;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Control2;
+                GroupType=Group }
+
+    { 1   ;2   ;Field     ;
+                Name=Documents;
+                CaptionML=ENU=Documents;
+                ToolTipML=ENU=Specifies the number of attachments.;
+                ApplicationArea=#All;
+                SourceExpr=COUNT;
+                StyleExpr=TRUE;
+                OnDrillDown=VAR
+                              Customer@1002 : Record Customer;
+                              Vendor@1003 : Record Vendor;
+                              Item@1004 : Record Item;
+                              Employee@1005 : Record Employee;
+                              FixedAsset@1006 : Record "Fixed Asset";
+                              Resource@1007 : Record Resource;
+                              SalesHeader@1009 : Record "Sales Header";
+                              PurchaseHeader@1012 : Record "Purchase Header";
+                              Job@1008 : Record Job;
+                              SalesCrMemoHeader@1010 : Record "Sales Cr.Memo Header";
+                              SalesInvoiceHeader@1011 : Record "Sales Invoice Header";
+                              PurchInvHeader@1013 : Record "Purch. Inv. Header";
+                              PurchCrMemoHdr@1014 : Record "Purch. Cr. Memo Hdr.";
+                              DocumentAttachmentDetails@1000 : Page "Document Attachment Details";
+                              RecRef@1001 : RecordRef;
+                            BEGIN
+                              case "Table ID" of
+                                DATABASE::Customer:
+                                  begin
+                                    RecRef.OPEN(DATABASE::Customer);
+                                    if Customer.GET("No.") then
+                                      RecRef.GETTABLE(Customer);
+                                  end;
+                                DATABASE::Vendor:
+                                  begin
+                                    RecRef.OPEN(DATABASE::Vendor);
+                                    if Vendor.GET("No.") then
+                                      RecRef.GETTABLE(Vendor);
+                                  end;
+                                DATABASE::Item:
+                                  begin
+                                    RecRef.OPEN(DATABASE::Item);
+                                    if Item.GET("No.") then
+                                      RecRef.GETTABLE(Item);
+                                  end;
+                                DATABASE::Employee:
+                                  begin
+                                    RecRef.OPEN(DATABASE::Employee);
+                                    if Employee.GET("No.") then
+                                      RecRef.GETTABLE(Employee);
+                                  end;
+                                DATABASE::"Fixed Asset":
+                                  begin
+                                    RecRef.OPEN(DATABASE::"Fixed Asset");
+                                    if FixedAsset.GET("No.") then
+                                      RecRef.GETTABLE(FixedAsset);
+                                  end;
+                                DATABASE::Resource:
+                                  begin
+                                    RecRef.OPEN(DATABASE::Resource);
+                                    if Resource.GET("No.") then
+                                      RecRef.GETTABLE(Resource);
+                                  end;
+                                DATABASE::Job:
+                                  begin
+                                    RecRef.OPEN(DATABASE::Job);
+                                    if Job.GET("No.") then
+                                      RecRef.GETTABLE(Job);
+                                  end;
+                                DATABASE::"Sales Header":
+                                  begin
+                                    RecRef.OPEN(DATABASE::"Sales Header");
+                                    if SalesHeader.GET("Document Type","No.") then
+                                      RecRef.GETTABLE(SalesHeader);
+                                  end;
+                                DATABASE::"Sales Invoice Header":
+                                  begin
+                                    RecRef.OPEN(DATABASE::"Sales Invoice Header");
+                                    if SalesInvoiceHeader.GET("No.") then
+                                      RecRef.GETTABLE(SalesInvoiceHeader);
+                                  end;
+                                DATABASE::"Sales Cr.Memo Header":
+                                  begin
+                                    RecRef.OPEN(DATABASE::"Sales Cr.Memo Header");
+                                    if SalesCrMemoHeader.GET("No.") then
+                                      RecRef.GETTABLE(SalesCrMemoHeader);
+                                  end;
+                                DATABASE::"Purchase Header":
+                                  begin
+                                    RecRef.OPEN(DATABASE::"Purchase Header");
+                                    if PurchaseHeader.GET("Document Type","No.") then
+                                      RecRef.GETTABLE(PurchaseHeader);
+                                  end;
+                                DATABASE::"Purch. Inv. Header":
+                                  begin
+                                    RecRef.OPEN(DATABASE::"Purch. Inv. Header");
+                                    if PurchInvHeader.GET("No.") then
+                                      RecRef.GETTABLE(PurchInvHeader);
+                                  end;
+                                DATABASE::"Purch. Cr. Memo Hdr.":
+                                  begin
+                                    RecRef.OPEN(DATABASE::"Purch. Cr. Memo Hdr.");
+                                    if PurchCrMemoHdr.GET("No.") then
+                                      RecRef.GETTABLE(PurchCrMemoHdr);
+                                  end;
+                              end;
+
+                              DocumentAttachmentDetails.OpenForRecRef(RecRef);
+                              DocumentAttachmentDetails.RUNMODAL;
+                            END;
+                             }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

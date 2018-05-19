@@ -1,0 +1,40 @@
+OBJECT Table 5057 Industry Group
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160133.613T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Code,Description;
+    CaptionML=ENU=Industry Group;
+    LookupPageID="Industry Groups";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+    { 3   ;   ;No. of Contacts     ;Integer       ;FieldClass=FlowField;
+                                                   CalcFormula=Count("Contact Industry Group" WHERE ("Industry Group Code"=FIELD(Code)));
+                                                   CaptionML=ENU=No. of Contacts;
+                                                   Editable=false }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,36 @@
+OBJECT Table 7800 MS-Event Emitter Event Codes
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160230.633T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+    ObsoleteState=Pending;
+    ObsoleteReason=Deprecated;
+    CaptionML=ENU=MS-Event Emitter Event Codes;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Event Name          ;Text250       ;CaptionML=ENU=Event Name }
+    { 2   ;   ;No of Required Triggers;Integer    ;CaptionML=ENU=No of Required Triggers }
+  }
+  KEYS
+  {
+    {    ;"Event Name"                            ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

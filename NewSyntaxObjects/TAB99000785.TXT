@@ -1,0 +1,52 @@
+OBJECT Table 99000785 Quality Measure
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160241.837T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnDelete=VAR
+               RoutingQualityMeasure@1000 : Record "Routing Quality Measure";
+               ProdOrderRtngQltyMeas@1001 : Record "Prod. Order Rtng Qlty Meas.";
+             BEGIN
+               ProdOrderRtngQltyMeas.SETRANGE("Qlty Measure Code",Code);
+               if not ProdOrderRtngQltyMeas.ISEMPTY then
+                 ERROR(CannotDeleteRecProdOrderErr);
+
+               RoutingQualityMeasure.SETRANGE("Qlty Measure Code",Code);
+               if not RoutingQualityMeasure.ISEMPTY then
+                 ERROR(CannotDeleteRecActRoutingErr);
+             END;
+
+    CaptionML=ENU=Quality Measure;
+    LookupPageID="Quality Measures";
+    DrillDownPageID="Quality Measures";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      CannotDeleteRecProdOrderErr@1000 : TextConst 'ENU=You cannot delete the Quality Measure because it is being used on one or more active Production Orders.';
+      CannotDeleteRecActRoutingErr@1001 : TextConst 'ENU=You cannot delete the Quality Measure because it is being used on one or more active Routings.';
+
+    BEGIN
+    END.
+  }
+}
+

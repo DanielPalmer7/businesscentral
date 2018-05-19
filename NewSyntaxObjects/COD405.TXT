@@ -1,0 +1,423 @@
+OBJECT Codeunit 405 Graph Mail
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160604.487T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=VAR
+            GraphMailSetup@1000 : Record "Graph Mail Setup";
+          BEGIN
+            SENDTRACETAG('00001QJ',GraphMailCategoryTxt,VERBOSITY::Normal,RefreshRefreshTokenMsg,DATACLASSIFICATION::SystemMetadata);
+            GraphMailSetup.GET;
+            GraphMailSetup.RenewRefreshCode;
+            GraphMailSetup.MODIFY(true);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      GraphMailFailedSendErr@1006 : TextConst '@@@={Locked};ENU=Failed to send mail (retry %1): %2';
+      GraphMailCategoryTxt@1004 : TextConst '@@@={Locked};ENU=AL GraphMail';
+      RefreshRefreshTokenMsg@1005 : TextConst '@@@={Locked};ENU=Renewing refresh code';
+      RefreshTokenMsg@1001 : TextConst 'ENU=Renew refresh code';
+      RetryExceededMsg@1008 : TextConst '@@@={Locked};ENU=Exceeded maximum number of retries';
+      TestMessageTxt@1000 : TextConst '@@@="%1 = the name of the user (e.g. Joe)";ENU=Hello %1, this is a test message from Invoicing to show you what an email from you will look like to your customers.';
+      LastErrorMsg@1002 : Text;
+      ClientResourceNameTxt@1003 : TextConst '@@@={Locked};ENU=MailerResourceId';
+      Err503Msg@1009 : TextConst '@@@={Locked};ENU=(503) Server Unavailable';
+      Err401Msg@1007 : TextConst '@@@={Locked};ENU=(401) Unauthorized';
+
+    PROCEDURE PrepareMessage@1(TempEmailItem@1000 : TEMPORARY Record "Email Item") : Text;
+    VAR
+      JSONManagement@1004 : Codeunit "JSON Management";
+      EmailAddressCollectionJsonArray@1006 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JArray";
+      AttachmentCollectionJsonArray@1003 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JArray";
+      PayloadJsonObject@1005 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JObject";
+      MessageJsonObject@1009 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JObject";
+      MessageContentJsonObject@1008 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JObject";
+      EmailAddressJsonObject@1007 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JObject";
+      ContentType@1001 : Text;
+      MessageContent@1002 : Text;
+    BEGIN
+      MessageContent := TempEmailItem.GetBodyText;
+
+      if TempEmailItem."Plaintext Formatted" then
+        ContentType := 'text'
+      else
+        ContentType := 'html';
+
+      MessageJsonObject := MessageJsonObject.JObject;
+
+      AttachmentCollectionJsonArray := AttachmentCollectionJsonArray.JArray;
+
+      if not TempEmailItem."Plaintext Formatted" then
+        AddInlineImagesToAttachments(AttachmentCollectionJsonArray,MessageContent);
+
+      MessageContentJsonObject := MessageContentJsonObject.JObject;
+      JSONManagement.AddJPropertyToJObject(MessageContentJsonObject,'content',MessageContent);
+      JSONManagement.AddJPropertyToJObject(MessageContentJsonObject,'contentType',ContentType);
+
+      JSONManagement.AddJObjectToJObject(MessageJsonObject,'body',MessageContentJsonObject);
+
+      GetEmailAsJsonObject(EmailAddressJsonObject,TempEmailItem."From Name",TempEmailItem."From Address");
+      JSONManagement.AddJObjectToJObject(MessageJsonObject,'from',EmailAddressJsonObject);
+
+      EmailAddressCollectionJsonArray := EmailAddressCollectionJsonArray.JArray;
+      AddRecipients(EmailAddressCollectionJsonArray,TempEmailItem."Send to");
+      JSONManagement.AddJArrayToJObject(MessageJsonObject,'toRecipients',EmailAddressCollectionJsonArray);
+
+      if TempEmailItem."Send CC" <> '' then begin
+        EmailAddressCollectionJsonArray := EmailAddressCollectionJsonArray.JArray;
+        AddRecipients(EmailAddressCollectionJsonArray,TempEmailItem."Send CC");
+        JSONManagement.AddJArrayToJObject(MessageJsonObject,'ccRecipients',EmailAddressCollectionJsonArray);
+      end;
+
+      if TempEmailItem."Send BCC" <> '' then begin
+        EmailAddressCollectionJsonArray := EmailAddressCollectionJsonArray.JArray;
+        AddRecipients(EmailAddressCollectionJsonArray,TempEmailItem."Send BCC");
+        JSONManagement.AddJArrayToJObject(MessageJsonObject,'bccRecipients',EmailAddressCollectionJsonArray);
+      end;
+
+      AddAttachmentToMessage(AttachmentCollectionJsonArray,TempEmailItem."Attachment Name",TempEmailItem."Attachment File Path");
+      AddAttachmentToMessage(
+        AttachmentCollectionJsonArray,TempEmailItem."Attachment Name 2",TempEmailItem."Attachment File Path 2");
+      AddAttachmentToMessage(
+        AttachmentCollectionJsonArray,TempEmailItem."Attachment Name 3",TempEmailItem."Attachment File Path 3");
+      AddAttachmentToMessage(
+        AttachmentCollectionJsonArray,TempEmailItem."Attachment Name 4",TempEmailItem."Attachment File Path 4");
+      AddAttachmentToMessage(
+        AttachmentCollectionJsonArray,TempEmailItem."Attachment Name 5",TempEmailItem."Attachment File Path 5");
+      AddAttachmentToMessage(
+        AttachmentCollectionJsonArray,TempEmailItem."Attachment Name 6",TempEmailItem."Attachment File Path 6");
+      AddAttachmentToMessage(
+        AttachmentCollectionJsonArray,TempEmailItem."Attachment Name 7",TempEmailItem."Attachment File Path 7");
+
+      JSONManagement.AddJArrayToJObject(MessageJsonObject,'attachments',AttachmentCollectionJsonArray);
+
+      JSONManagement.AddJPropertyToJObject(MessageJsonObject,'importance','normal');
+      JSONManagement.AddJPropertyToJObject(MessageJsonObject,'subject',TempEmailItem.Subject);
+
+      JSONManagement.InitializeEmptyObject;
+      JSONManagement.GetJSONObject(PayloadJsonObject);
+      JSONManagement.AddJObjectToJObject(PayloadJsonObject,'message',MessageJsonObject);
+      JSONManagement.AddJPropertyToJObject(PayloadJsonObject,'saveToSentItems','true');
+
+      exit(JSONManagement.WriteObjectToString);
+    END;
+
+    PROCEDURE SetupGraph@4(ShowSetup@1000 : Boolean) : Boolean;
+    VAR
+      GraphMailSetup@1001 : Record "Graph Mail Setup";
+    BEGIN
+      if ShowSetup then begin
+        if PAGE.RUNMODAL(PAGE::"Graph Mail Setup") = ACTION::LookupOK then;
+      end else begin
+        if not GraphMailSetup.GET then
+          GraphMailSetup.INSERT;
+
+        GraphMailSetup.Initialize;
+        GraphMailSetup.VALIDATE(Enabled,true);
+        GraphMailSetup.MODIFY(true);
+      end;
+
+      exit(IsEnabled);
+    END;
+
+    PROCEDURE SendMail@13(TempEmailItem@1000 : TEMPORARY Record "Email Item") : Boolean;
+    BEGIN
+      exit(SendMailWithRetry(TempEmailItem,0));
+    END;
+
+    LOCAL PROCEDURE SendMailWithRetry@20(TempEmailItem@1000 : TEMPORARY Record "Email Item";RetryCount@1003 : Integer) MailSent : Boolean;
+    VAR
+      GraphMailSetup@1002 : Record "Graph Mail Setup";
+      RefreshCode@1001 : Text;
+    BEGIN
+      if RetryCount > 2 then begin
+        SENDTRACETAG('00001TY',GraphMailCategoryTxt,VERBOSITY::Error,RetryExceededMsg,DATACLASSIFICATION::SystemMetadata);
+        exit;
+      end;
+
+      MailSent := TrySendMail(TempEmailItem,RefreshCode);
+
+      if not MailSent then begin
+        LastErrorMsg := GETLASTERRORTEXT;
+        SENDTRACETAG(
+          '00001QK',GraphMailCategoryTxt,VERBOSITY::Error,STRSUBSTNO(GraphMailFailedSendErr,RetryCount,LastErrorMsg),
+          DATACLASSIFICATION::CustomerContent);
+
+        if HandleError(LastErrorMsg) then
+          SendMailWithRetry(TempEmailItem,RetryCount + 1);
+        exit;
+      end;
+
+      if GraphMailSetup.GET then begin
+        GraphMailSetup.SetRefreshCode(RefreshCode);
+        if GraphMailSetup.MODIFY then;
+      end;
+    END;
+
+    [TryFunction]
+    PROCEDURE TrySendMail@2(TempEmailItem@1000 : TEMPORARY Record "Email Item";VAR RefreshCode@1002 : Text);
+    VAR
+      GraphMailSetup@1001 : Record "Graph Mail Setup";
+    BEGIN
+      GraphMailSetup.GET;
+      GraphMailSetup.SendMail(TempEmailItem,RefreshCode);
+    END;
+
+    PROCEDURE GetGraphError@10() : Text;
+    BEGIN
+      exit(LastErrorMsg);
+    END;
+
+    PROCEDURE GetGraphDomain@14() : Text;
+    VAR
+      EnvironmentMgt@1000 : Codeunit "Environment Mgt.";
+      Domain@1001 : Text;
+    BEGIN
+      if EnvironmentMgt.IsTIE or EnvironmentMgt.IsPPE then
+        exit('https://graph.microsoft-ppe.com/');
+
+      if EnvironmentMgt.IsPROD then
+        exit('https://graph.microsoft.com/');
+
+      OnGetGraphDomain(Domain);
+      if Domain = '' then
+        Domain := 'https://graph.microsoft.com/';
+
+      exit(Domain);
+    END;
+
+    PROCEDURE GetTestMessageBody@6() : Text;
+    VAR
+      User@1000 : Record User;
+    BEGIN
+      if User.GET(USERSECURITYID) then;
+
+      exit(STRSUBSTNO(TestMessageTxt,User."Full Name"));
+    END;
+
+    PROCEDURE IsEnabled@5() : Boolean;
+    VAR
+      GraphMailSetup@1000 : Record "Graph Mail Setup";
+    BEGIN
+      if not GraphMailSetup.READPERMISSION then
+        exit(false);
+
+      if not GraphMailSetup.GET then
+        exit(false);
+
+      if not GraphMailSetup.Enabled then
+        exit(false);
+
+      if GraphMailSetup."Sender Email" = '' then
+        exit(false);
+
+      if not GraphMailSetup."Refresh Code".HASVALUE then
+        exit(false);
+
+      if GraphMailSetup."Expires On" < CURRENTDATETIME then
+        exit(false);
+
+      exit(true);
+    END;
+
+    PROCEDURE HasConfiguration@15() : Boolean;
+    VAR
+      AzureKeyVaultManagement@1000 : Codeunit "Azure Key Vault Management";
+      Resource@1001 : Text;
+    BEGIN
+      if AzureKeyVaultManagement.GetAzureKeyVaultSecret(Resource,ClientResourceNameTxt) then
+        exit(Resource <> '');
+
+      exit(false);
+    END;
+
+    LOCAL PROCEDURE GetEmailAsJsonObject@9(VAR EmailJsonObject@1000 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JObject";Name@1001 : Text;Address@1002 : Text);
+    VAR
+      JSONManagement@1003 : Codeunit "JSON Management";
+      EmailAddressJsonObject@1004 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JObject";
+    BEGIN
+      EmailJsonObject := EmailJsonObject.JObject;
+      EmailAddressJsonObject := EmailAddressJsonObject.JObject;
+
+      JSONManagement.AddJPropertyToJObject(EmailAddressJsonObject,'address',Address);
+      if Name <> '' then
+        JSONManagement.AddJPropertyToJObject(EmailAddressJsonObject,'name',Name);
+
+      JSONManagement.AddJObjectToJObject(EmailJsonObject,'emailaddress',EmailAddressJsonObject);
+    END;
+
+    LOCAL PROCEDURE AddRecipients@8(VAR RecipientCollectionJsonArray@1002 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JArray";RecipientList@1001 : Text);
+    VAR
+      TypeHelper@1006 : Codeunit "Type Helper";
+      JSONManagement@1000 : Codeunit "JSON Management";
+      EmailJsonObject@1003 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JObject";
+      Recipient@1004 : Text;
+      I@1005 : Integer;
+    BEGIN
+      if RecipientList = '' then
+        exit;
+
+      RecipientList := CONVERTSTR(RecipientList,';',',');
+
+      for I := 1 to TypeHelper.GetNumberOfOptions(RecipientList) + 1 do begin
+        Recipient := SELECTSTR(I,RecipientList);
+        GetEmailAsJsonObject(EmailJsonObject,'',Recipient);
+        JSONManagement.AddJObjectToJArray(RecipientCollectionJsonArray,EmailJsonObject);
+      end;
+    END;
+
+    LOCAL PROCEDURE AddAttachmentToMessage@3(VAR AttachmentCollectionJsonArray@1000 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JArray";AttachmentName@1001 : Text;AttachmentPath@1002 : Text);
+    VAR
+      JSONManagement@1006 : Codeunit "JSON Management";
+      Convert@1005 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Convert";
+      FileObj@1004 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.File";
+      AttachmentJsonObject@1003 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JObject";
+    BEGIN
+      if AttachmentName = '' then
+        exit;
+
+      if AttachmentPath = '' then
+        exit;
+
+      if not FILE.EXISTS(AttachmentPath) then
+        exit;
+
+      AttachmentJsonObject := AttachmentJsonObject.JObject;
+      JSONManagement.AddJPropertyToJObject(AttachmentJsonObject,'@odata.type','#microsoft.graph.fileAttachment');
+      JSONManagement.AddJPropertyToJObject(AttachmentJsonObject,'name',AttachmentName);
+      JSONManagement.AddJPropertyToJObject(
+        AttachmentJsonObject,'contentBytes',Convert.ToBase64String(FileObj.ReadAllBytes(AttachmentPath)));
+
+      JSONManagement.AddJObjectToJArray(AttachmentCollectionJsonArray,AttachmentJsonObject);
+    END;
+
+    LOCAL PROCEDURE AddInlineAttachmentToMessage@12(VAR AttachmentCollectionJsonArray@1000 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JArray";ContentId@1001 : Text;AttachmentType@1004 : Text;AttachmentContent@1002 : Text);
+    VAR
+      JSONManagement@1006 : Codeunit "JSON Management";
+      AttachmentJsonObject@1003 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JObject";
+    BEGIN
+      if AttachmentContent = '' then
+        exit;
+
+      AttachmentJsonObject := AttachmentJsonObject.JObject;
+      JSONManagement.AddJPropertyToJObject(AttachmentJsonObject,'@odata.type','#microsoft.graph.fileAttachment');
+      JSONManagement.AddJPropertyToJObject(AttachmentJsonObject,'contentBytes',AttachmentContent);
+      JSONManagement.AddJPropertyToJObject(AttachmentJsonObject,'contentType',AttachmentType);
+      JSONManagement.AddJPropertyToJObject(AttachmentJsonObject,'contentId',ContentId);
+      JSONManagement.AddJPropertyToJObject(AttachmentJsonObject,'name',ContentId);
+      JSONManagement.AddJPropertyToJObject(AttachmentJsonObject,'isInline','true');
+
+      JSONManagement.AddJObjectToJArray(AttachmentCollectionJsonArray,AttachmentJsonObject);
+    END;
+
+    LOCAL PROCEDURE AddInlineImagesToAttachments@11(VAR AttachmentCollectionJsonArray@1000 : DotNet "'Newtonsoft.Json'.Newtonsoft.Json.Linq.JArray";VAR MessageContent@1001 : Text);
+    VAR
+      XMLDOMManagement@1002 : Codeunit "XML DOM Management";
+      XmlDocument@1003 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlDocument";
+      XmlNodeList@1004 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlNodeList";
+      XmlElement@1007 : DotNet "'System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Xml.XmlElement";
+      Regex@1008 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.RegularExpressions.Regex";
+      Match@1009 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.RegularExpressions.Match";
+      String@1010 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.String";
+      ItemSource@1006 : Text;
+      ItemType@1011 : Text;
+      ContentId@1013 : Text;
+      ItemData@1012 : Text;
+      I@1005 : Integer;
+      DocumentModified@1014 : Boolean;
+    BEGIN
+      if not XMLDOMManagement.LoadXMLDocumentFromText(MessageContent,XmlDocument) then
+        exit; // document is not XML compliant
+
+      if not XMLDOMManagement.FindNodes(XmlDocument,'//img[@src]',XmlNodeList) then
+        exit;
+
+      Regex := Regex.Regex('data:(.*);base64,(.*)');
+
+      for I := 0 to XmlNodeList.Count - 1 do begin
+        XmlElement := XmlNodeList.Item(I);
+        ItemSource := XmlElement.GetAttribute('src');
+
+        Match := Regex.Match(ItemSource);
+        if not String.IsNullOrEmpty(Match.Value) then begin
+          ItemType := Match.Groups.Item(1).Value;
+          ItemData := Match.Groups.Item(2).Value;
+          ContentId := FORMAT(I);
+
+          AddInlineAttachmentToMessage(AttachmentCollectionJsonArray,ContentId,ItemType,ItemData);
+
+          XmlElement.SetAttribute('src',STRSUBSTNO('cid:%1',ContentId));
+          DocumentModified := true;
+        end;
+      end;
+
+      if DocumentModified then
+        MessageContent := XmlDocument.OuterXml;
+    END;
+
+    LOCAL PROCEDURE HandleError@16(ErrorMessage@1000 : Text) : Boolean;
+    VAR
+      GraphMailSetup@1001 : Record "Graph Mail Setup";
+      User@1002 : Record User;
+    BEGIN
+      if STRPOS(ErrorMessage,Err503Msg) > 0 then
+        exit(true); // Problem with graph, retry
+
+      if STRPOS(ErrorMessage,Err401Msg) = 0 then
+        exit(false);
+
+      // If the current email setup matches the current user
+      // try resetting the setup with a new refresh token
+      if GraphMailSetup.GET then
+        if User.GET(USERSECURITYID) then
+          if GraphMailSetup."Sender Email" = User."Contact Email" then
+            if GraphMailSetup.DELETE(true) then
+              exit(SetupGraph(false));
+
+      exit(false);
+    END;
+
+    [EventSubscriber(Codeunit,1,OnAfterCompanyOpen)]
+    LOCAL PROCEDURE OnAfterOpenCompany@7();
+    VAR
+      GraphMailSetup@1000 : Record "Graph Mail Setup";
+      CalendarEvent@1002 : Record "Calendar Event";
+      CalendarEventMangement@1001 : Codeunit "Calendar Event Mangement";
+    BEGIN
+      if CURRENTCLIENTTYPE = CLIENTTYPE::Background then
+        exit;
+
+      if not CalendarEvent.WRITEPERMISSION then
+        exit;
+
+      if not IsEnabled then
+        exit;
+
+      if not GraphMailSetup.GET then
+        exit;
+
+      if DT2DATE(GraphMailSetup."Expires On") - 14 = TODAY then
+        exit; // token was already refreshed today
+
+      CalendarEventMangement.CreateCalendarEventForCodeunit(TODAY,RefreshTokenMsg,CODEUNIT::"Graph Mail");
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnGetGraphDomain@17(VAR GraphDomain@1000 : Text);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

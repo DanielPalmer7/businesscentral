@@ -1,0 +1,43 @@
+OBJECT Report 741 VAT Report Suggest Lines
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160327.980T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Tax Report Suggest Lines;
+    ProcessingOnly=true;
+  }
+  DATASET
+  {
+    { 5644;    ;DataItem;VAT Report Header   ;
+               DataItemTable="VAT Report Header" }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

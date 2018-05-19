@@ -1,0 +1,121 @@
+OBJECT Page 1181 Data Privacy ListPage
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161337.367T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Data Privacy ListPage;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable="Data Privacy Records";
+    PageType=ListPart;
+    SourceTableTemporary=true;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                Editable=FALSE;
+                GroupType=Repeater }
+
+    { 5   ;2   ;Field     ;
+                Name="Table Name";
+                DrillDown=false;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Table Name";
+                Enabled=FALSE;
+                Editable=FALSE;
+                ImplicitType=Text30 }
+
+    { 7   ;2   ;Field     ;
+                Name="Field Name";
+                DrillDown=false;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Field Name";
+                Enabled=FALSE;
+                Editable=FALSE;
+                ImplicitType=Text30 }
+
+    { 3   ;2   ;Field     ;
+                Name="Field Value";
+                DrillDown=false;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Field Value";
+                Enabled=FALSE;
+                Editable=FALSE;
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+    VAR
+      ConfigProgressBar@1001 : Codeunit "Config. Progress Bar";
+      CreatingPreviewDataTxt@1002 : TextConst 'ENU=Creating preview data...';
+
+    PROCEDURE GeneratePreviewData@2(PackageCode@1001 : Code[20]);
+    VAR
+      ConfigPackage@1003 : Record "Config. Package";
+      ConfigPackageTable@1006 : Record "Config. Package Table";
+      ConfigPackageField@1000 : Record "Config. Package Field";
+      ConfigXMLExchange@1004 : Codeunit "Config. XML Exchange";
+      RecRef@1002 : RecordRef;
+      FieldRef@1005 : FieldRef;
+      Counter@1009 : Integer;
+    BEGIN
+      Counter := 1;
+      CLEAR(Rec);
+      RESET;
+      DELETEALL;
+      CurrPage.UPDATE;
+
+      if ConfigPackage.GET(PackageCode) then begin
+        ConfigPackageTable.SETRANGE("Package Code",ConfigPackage.Code);
+        ConfigProgressBar.Init(ConfigPackageTable.COUNT,1,CreatingPreviewDataTxt);
+        ConfigPackageTable.SETAUTOCALCFIELDS("Table Name");
+        if ConfigPackageTable.FINDSET then
+          repeat
+            ConfigProgressBar.Update(ConfigPackageTable."Table Name");
+            RecRef.OPEN(ConfigPackageTable."Table ID");
+            ConfigXMLExchange.ApplyPackageFilter(ConfigPackageTable,RecRef);
+            if RecRef.FINDSET then
+              repeat
+                ConfigPackageField.SETRANGE("Package Code",ConfigPackageTable."Package Code");
+                ConfigPackageField.SETRANGE("Table ID",ConfigPackageTable."Table ID");
+                if ConfigPackageField.FINDSET then
+                  repeat
+                    FieldRef := RecRef.FIELD(ConfigPackageField."Field ID");
+                    INIT;
+                    ID := Counter;
+                    "Table No." := ConfigPackageTable."Table ID";
+                    "Field No." := ConfigPackageField."Field ID";
+                    "Field Value" := FORMAT(FieldRef.VALUE);
+                    "Field DataType" := FORMAT(FieldRef.TYPE);
+                    if not INSERT then
+                      repeat
+                        Counter := Counter + 1;
+                        ID := Counter;
+                      until INSERT;
+                  until ConfigPackageField.NEXT = 0;
+              until RecRef.NEXT = 0;
+            RecRef.CLOSE;
+          until ConfigPackageTable.NEXT = 0;
+        ConfigProgressBar.Close;
+      end;
+      // CurrPage.UPDATE;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,76 @@
+OBJECT Codeunit 417 Tenant Management
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160607.447T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      NavTenantSettingsHelper@1000 : DotNet "'Microsoft.Dynamics.Nav.NavUserAccount, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.NavUserAccount.NavTenantSettingsHelper";
+      DISPLAYNAMEKEYTxt@1001 : TextConst '@@@={Locked};ENU=DISPLAYNAME';
+      AADTENANTIDKEYTxt@1002 : TextConst '@@@={Locked};ENU=AADTENANTID';
+      TENANTIDKEYTxt@1003 : TextConst '@@@={Locked};ENU=TENANTID';
+
+    [External]
+    PROCEDURE GetTenantId@1() TenatIdValue : Text;
+    BEGIN
+      NavTenantSettingsHelper.TryGetStringTenantSetting(TENANTIDKEYTxt,TenatIdValue);
+    END;
+
+    [External]
+    PROCEDURE GetAadTenantId@2() TenantAadIdValue : Text;
+    BEGIN
+      NavTenantSettingsHelper.TryGetStringTenantSetting(AADTENANTIDKEYTxt,TenantAadIdValue);
+    END;
+
+    [External]
+    PROCEDURE GetTenantDisplayName@3() TenantNameValue : Text;
+    BEGIN
+      NavTenantSettingsHelper.TryGetStringTenantSetting(DISPLAYNAMEKEYTxt,TenantNameValue);
+    END;
+
+    [External]
+    PROCEDURE IsSandbox@4() : Boolean;
+    BEGIN
+      exit(NavTenantSettingsHelper.IsSandbox())
+    END;
+
+    [External]
+    PROCEDURE IsProduction@5() : Boolean;
+    BEGIN
+      exit(NavTenantSettingsHelper.IsProduction())
+    END;
+
+    [External]
+    PROCEDURE GetPlatformVersion@6() : Text;
+    BEGIN
+      exit(NavTenantSettingsHelper.GetPlatformVersion().ToString())
+    END;
+
+    [External]
+    PROCEDURE GetApplicationFamily@7() : Text;
+    BEGIN
+      exit(NavTenantSettingsHelper.GetApplicationFamily())
+    END;
+
+    [External]
+    PROCEDURE GetApplicationVersion@8() : Text;
+    BEGIN
+      exit(NavTenantSettingsHelper.GetApplicationVersion())
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

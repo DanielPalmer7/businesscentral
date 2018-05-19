@@ -1,0 +1,98 @@
+OBJECT Codeunit 10101 Post- Print Sales Tax Jnl
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160931.453T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Gen. Journal Line";
+    OnRun=BEGIN
+            GenJnlLine.COPY(Rec);
+            Code;
+            COPY(GenJnlLine);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      GenJnlTemplate@1030000 : Record "Gen. Journal Template";
+      GenJnlLine@1030001 : Record "Gen. Journal Line";
+      GLReg@1030002 : Record "G/L Register";
+      CustLedgEntry@1030003 : Record "Cust. Ledger Entry";
+      VendLedgEntry@1030004 : Record "Vendor Ledger Entry";
+      GenJnlPostBatch@1030005 : Codeunit "Gen. Jnl.-Post Batch";
+      ManageSalesTaxJournal@1030006 : Codeunit "Manage Sales Tax Journal";
+      TempJnlBatchName@1030007 : Code[10];
+      Text000@1030008 : TextConst '@@@=Posting Date cannot be filtered when posting recurring journals.;ENU=cannot be filtered when posting recurring journals.';
+      Text001@1030009 : TextConst 'ENU=Do you want to post the journal lines and print the report(s)?';
+      Text002@1030010 : TextConst 'ENU=There is nothing to post.';
+      Text003@1030011 : TextConst 'ENU=The journal lines were successfully posted.';
+      Text004@1030012 : TextConst 'ENU=The journal lines were successfully posted. You are now in the %1 journal.';
+
+    [External]
+    PROCEDURE Code@1030000();
+    BEGIN
+      with GenJnlLine do begin
+        GenJnlTemplate.GET("Journal Template Name");
+        if GenJnlTemplate."Force Posting Report" or
+           (GenJnlTemplate."Cust. Receipt Report ID" = 0) and (GenJnlTemplate."Vendor Receipt Report ID" = 0)
+        then
+          GenJnlTemplate.TESTFIELD("Posting Report ID");
+        if GenJnlTemplate.Recurring and (GETFILTER("Posting Date") <> '') then
+          FIELDERROR("Posting Date",Text000);
+
+        if not CONFIRM(Text001,false) then
+          exit;
+
+        TempJnlBatchName := "Journal Batch Name";
+
+        ManageSalesTaxJournal.PostToVAT(GenJnlLine);
+        ManageSalesTaxJournal.CreateGenJnlLines(GenJnlLine);
+        GenJnlPostBatch.RUN(GenJnlLine);
+
+        if GLReg.GET("Line No.") then begin
+          if GenJnlTemplate."Cust. Receipt Report ID" <> 0 then begin
+            CustLedgEntry.SETRANGE("Entry No.",GLReg."From Entry No.",GLReg."To Entry No.");
+            REPORT.RUN(GenJnlTemplate."Cust. Receipt Report ID",false,false,CustLedgEntry);
+          end;
+          if GenJnlTemplate."Vendor Receipt Report ID" <> 0 then begin
+            VendLedgEntry.SETRANGE("Entry No.",GLReg."From Entry No.",GLReg."To Entry No.");
+            REPORT.RUN(GenJnlTemplate."Vendor Receipt Report ID",false,false,VendLedgEntry);
+          end;
+          if GenJnlTemplate."Posting Report ID" <> 0 then begin
+            GLReg.SETRECFILTER;
+            REPORT.RUN(GenJnlTemplate."Posting Report ID",false,false,GLReg);
+          end;
+        end;
+
+        if "Line No." = 0 then
+          MESSAGE(Text002)
+        else
+          if TempJnlBatchName = "Journal Batch Name" then
+            MESSAGE(Text003)
+          else
+            MESSAGE(
+              Text004,
+              "Journal Batch Name");
+
+        if not FIND('=><') or (TempJnlBatchName <> "Journal Batch Name") then begin
+          RESET;
+          FILTERGROUP(2);
+          SETRANGE("Journal Template Name","Journal Template Name");
+          SETRANGE("Journal Batch Name","Journal Batch Name");
+          FILTERGROUP(0);
+          "Line No." := 1;
+        end;
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

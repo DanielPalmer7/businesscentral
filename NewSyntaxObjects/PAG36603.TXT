@@ -1,0 +1,215 @@
+OBJECT Page 36603 Credit & Collections Mgr. RC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161726.110T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[@@@="Use same translation as 'Profile Description' ";
+               ENU=Credit & Collections Manager];
+    PageType=RoleCenter;
+    ActionList=ACTIONS
+    {
+      { 1900000006;0 ;ActionContainer;
+                      Name=ActionContainer1900000006;
+                      ActionContainerType=Reports }
+      { 9       ;1   ;Action    ;
+                      Name="Customer Listing";
+                      CaptionML=ENU=Customer Listing;
+                      ToolTipML=ENU=View customers in a list format. You can use this report to display all customers or include only customers with outstanding balance amounts.;
+                      RunObject=Report "Customer Listing" }
+      { 13      ;1   ;Action    ;
+                      Name="Customer Balance to Date";
+                      CaptionML=ENU=Customer Balance to Date;
+                      ToolTipML=ENU=View a detailed balance for selected customers. The report can, for example, be used at the close of an accounting period or fiscal year.;
+                      RunObject=Report "Customer - Balance to Date" }
+      { 16      ;1   ;Action    ;
+                      Name="Aged Accounts Receivable";
+                      CaptionML=ENU=Aged Accounts Receivable;
+                      ToolTipML=ENU=View, print, or save an overview of when customer payments are due or overdue, divided into four periods.;
+                      RunObject=Report "Aged Accounts Receivable";
+                      Image=Report }
+      { 41      ;1   ;Action    ;
+                      Name="Customer Account Detail";
+                      CaptionML=ENU=Customer Account Detail;
+                      ToolTipML=ENU=View the detailed account activity for each customer for any period of time. The report lists all activity with running account balances, or only open items or only closed items with totals of either. The report can also show the application of payments to invoices.;
+                      RunObject=Report "Customer Account Detail" }
+      { 20      ;1   ;Separator ;
+                      Name=Separator20 }
+      { 1020002 ;1   ;Action    ;
+                      Name="Cash Applied";
+                      CaptionML=ENU=Cash Applied;
+                      ToolTipML=ENU=View how the cash received from customers has been applied to documents. The report includes the number of the document and type of document to which the payment has been applied.;
+                      RunObject=Report "Cash Applied" }
+      { 1020003 ;1   ;Action    ;
+                      Name="Projected Cash Payments";
+                      CaptionML=ENU=Projected Cash Payments;
+                      ToolTipML=ENU=View projections about what future payments to vendors will be. Current orders are used to generate a chart, using the specified time period and start date, to break down future payments. The report also includes a total balance column.;
+                      RunObject=Report "Projected Cash Payments" }
+      { 1900000011;0 ;ActionContainer;
+                      Name=ActionContainer1900000011;
+                      ActionContainerType=HomeItems }
+      { 1020001 ;1   ;Action    ;
+                      Name=Approvals;
+                      CaptionML=ENU=Approvals;
+                      ToolTipML=ENU=View the list of documents that await approval.;
+                      RunObject=Page "Approval Entries";
+                      Image=Approvals }
+      { 12      ;1   ;Action    ;
+                      Name=Customers;
+                      CaptionML=ENU=Customers;
+                      ToolTipML=ENU=View the list of customers.;
+                      RunObject=Page "Customer List - Collections" }
+      { 2       ;1   ;Action    ;
+                      Name=Balance;
+                      CaptionML=ENU=Balance;
+                      ToolTipML=ENU=View a detailed balance for selected customers. The report can, for example, be used at the close of an accounting period or fiscal year.;
+                      RunObject=Page "Customer List - Collections";
+                      RunPageView=WHERE("Balance on Date (LCY)"=FILTER(>0));
+                      Image=Balance }
+      { 42      ;1   ;Action    ;
+                      Name="Unlimited Credit";
+                      CaptionML=ENU=Unlimited Credit;
+                      ToolTipML=ENU=View a customer's available credit and how it is calculated. If the available credit is 0 and the customer's credit limit is also 0, then the customer has unlimited credit because no credit limit has been defined.;
+                      RunObject=Page "Customer List - Collections";
+                      RunPageView=WHERE("Credit Limit (LCY)"=CONST(0)) }
+      { 1020000 ;1   ;Action    ;
+                      Name="Limited Credit";
+                      CaptionML=ENU=Limited Credit;
+                      ToolTipML=ENU="View customers' remaining amount available to use for payments. It is calculated as follows: Credit Limit = Balance - Min. Balance - Total Amount on Payments";
+                      RunObject=Page "Customer List - Collections";
+                      RunPageView=WHERE("Credit Limit (LCY)"=FILTER(<>0)) }
+      { 1020004 ;1   ;Action    ;
+                      Name="Invoices by Due Date";
+                      CaptionML=ENU=Invoices by Due Date;
+                      ToolTipML=ENU=View the list of outstanding invoices by their payment due date.;
+                      RunObject=Page "Customer Ledger Entries";
+                      RunPageView=SORTING(Open,"Due Date")
+                                  WHERE(Open=CONST(true),
+                                        "Document Type"=FILTER(Invoice|"Credit Memo")) }
+      { 14      ;1   ;Action    ;
+                      Name="Sales Orders";
+                      CaptionML=ENU=Sales Orders;
+                      ToolTipML=ENU=View the list of ongoing sales orders.;
+                      RunObject=Page "Customer Order Header Status" }
+      { 3       ;1   ;Action    ;
+                      Name="Sales Return Orders";
+                      CaptionML=ENU=Sales Return Orders;
+                      ToolTipML=ENU=View the list of ongoing sales return orders.;
+                      RunObject=Page "Customer Order Header Status";
+                      RunPageView=WHERE("Document Type"=CONST("Return Order")) }
+      { 92      ;1   ;Action    ;
+                      Name="Sales Invoices";
+                      CaptionML=ENU=Sales Invoices;
+                      ToolTipML=ENU=View the list of ongoing sales invoices.;
+                      RunObject=Page "Sales Invoice List" }
+      { 6       ;1   ;Action    ;
+                      Name=Reminders;
+                      CaptionML=ENU=Reminders;
+                      ToolTipML=ENU=View the list of ongoing reminders.;
+                      RunObject=Page "Reminder List";
+                      Image=Reminder }
+      { 7       ;1   ;Action    ;
+                      Name="Finance Charge Memos";
+                      CaptionML=ENU=Finance Charge Memos;
+                      ToolTipML=ENU=View the list of ongoing finance charge memos.;
+                      RunObject=Page "Finance Charge Memo List";
+                      Image=FinChargeMemo }
+      { 1900000012;0 ;ActionContainer;
+                      Name=ActionContainer1900000012;
+                      ActionContainerType=ActivityButtons }
+      { 39      ;1   ;ActionGroup;
+                      Name="Posted Documents";
+                      CaptionML=ENU=Posted Documents;
+                      Image=FiledPosted }
+      { 11      ;2   ;Action    ;
+                      Name="Posted Sales Shipments";
+                      CaptionML=ENU=Posted Sales Shipments;
+                      ToolTipML=ENU=Open the list of posted sales shipments.;
+                      RunObject=Page "Posted Sales Shipments" }
+      { 25      ;2   ;Action    ;
+                      Name="Posted Sales Invoices";
+                      CaptionML=ENU=Posted Sales Invoices;
+                      ToolTipML=ENU=Open the list of posted sales invoices.;
+                      RunObject=Page "Posted Sales Invoices" }
+      { 10      ;2   ;Action    ;
+                      Name="Posted Return Receipts";
+                      CaptionML=ENU=Posted Return Receipts;
+                      ToolTipML=ENU=Open the list of posted return receipts.;
+                      RunObject=Page "Posted Return Receipts" }
+      { 26      ;2   ;Action    ;
+                      Name="Posted Sales Credit Memos";
+                      CaptionML=ENU=Posted Sales Credit Memos;
+                      ToolTipML=ENU=Open the list of posted sales credit memos.;
+                      RunObject=Page "Posted Sales Credit Memos" }
+      { 29      ;2   ;Action    ;
+                      Name="Issued Reminders";
+                      CaptionML=ENU=Issued Reminders;
+                      ToolTipML=ENU=View the list of issued reminders.;
+                      RunObject=Page "Issued Reminder List";
+                      Image=OrderReminder }
+      { 30      ;2   ;Action    ;
+                      Name="Issued Fin. Charge Memos";
+                      CaptionML=ENU=Issued Fin. Charge Memos;
+                      ToolTipML=ENU=View the list of issued finance charge memos.;
+                      RunObject=Page "Issued Fin. Charge Memo List" }
+      { 47      ;2   ;Action    ;
+                      Name="Posted Deposits";
+                      CaptionML=ENU=Posted Deposits;
+                      ToolTipML=ENU=View the posted deposit header, deposit header lines, deposit comments, and deposit dimensions.;
+                      RunObject=Page "Posted Deposit List" }
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 64      ;1   ;Separator ;
+                      Name=New;
+                      CaptionML=ENU=New;
+                      IsHeader=true }
+      { 105     ;1   ;Action    ;
+                      Name="Fin. Charge Memo";
+                      CaptionML=ENU=Fin. Charge Memo;
+                      ToolTipML=ENU=Create a new finance charge memo to fine a customer for late payment.;
+                      RunObject=Page "Finance Charge Memo" }
+      { 106     ;1   ;Action    ;
+                      Name=Reminder;
+                      CaptionML=ENU=Reminder;
+                      ToolTipML=ENU=Create a new reminder to remind a customer of overdue payment.;
+                      RunObject=Page Reminder;
+                      Image=Reminder }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000008;0;Container;
+                Name=Control1900000008;
+                ContainerType=RoleCenterArea }
+
+    { 1900724808;1;Group  ;
+                Name=Control1900724808 }
+
+    { 1905739008;2;Part   ;
+                Name=Control1905739008;
+                PagePartID="Credit Manager Activities";
+                PartType=Page }
+
+    { 1900724708;1;Group  ;
+                Name=Control1900724708 }
+
+    { 1907692008;2;Part   ;
+                Name=Control1907692008;
+                PagePartID="My Customers";
+                PartType=Page }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

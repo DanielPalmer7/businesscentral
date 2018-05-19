@@ -1,0 +1,1701 @@
+OBJECT Report 1322 Standard Purchase - Order
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160343.743T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Purchase - Order;
+    EnableHyperlinks=true;
+    OnInitReport=BEGIN
+                   GLSetup.GET;
+                   CompanyInfo.GET;
+                   PurchSetup.GET;
+                   CompanyInfo.CALCFIELDS(Picture);
+                 END;
+
+    OnPreReport=BEGIN
+                  if not CurrReport.USEREQUESTPAGE then
+                    InitLogInteraction;
+                END;
+
+    PreviewMode=PrintLayout;
+    DefaultLayout=Word;
+    WordMergeDataItem=Purchase Header;
+  }
+  DATASET
+  {
+    { 1   ;    ;DataItem;Purchase Header     ;
+               DataItemTable="Purchase Header";
+               DataItemTableView=SORTING("Document Type","No.") WHERE("Document Type"=CONST(Order));
+               ReqFilterHeadingML=ENU=Standard Purchase - Order;
+               OnAfterGetRecord=BEGIN
+                                  TotalAmount := 0;
+                                  TotalSubTotal := 0;
+                                  TaxAmount := 0;
+                                  TotalInvoiceDiscountAmount := 0;
+                                  CurrReport.LANGUAGE := Language.GetLanguageID("Language Code");
+                                  CLEAR(BreakdownTitle);
+                                  CLEAR(BreakdownLabel);
+                                  CLEAR(BreakdownAmt);
+
+                                  FormatAddressFields("Purchase Header");
+                                  FormatDocumentFields("Purchase Header");
+
+                                  if not CurrReport.PREVIEW then begin
+                                    CODEUNIT.RUN(CODEUNIT::"Purch.Header-Printed","Purchase Header");
+                                    if ArchiveDocument then
+                                      ArchiveManagement.StorePurchDocument("Purchase Header",LogInteraction);
+
+                                    if LogInteraction then
+                                      SegManagement.LogDocument(
+                                        13,"No.",0,0,DATABASE::Vendor,"Buy-from Vendor No.",
+                                        "Purchaser Code",'',"Posting Description",'');
+                                  end;
+
+                                  TotalTaxLabel := TaxLbl;
+                                  if "Tax Area Code" <> '' then begin
+                                    TaxArea.GET("Tax Area Code");
+                                    case TaxArea."Country/Region" of
+                                      TaxArea."Country/Region"::US:
+                                        TotalTaxLabel := TotalSalesTaxLbl;
+                                      TaxArea."Country/Region"::CA:
+                                        TotalTaxLabel := TotalTaxLbl;
+                                    end;
+                                    UseExternalTaxEngine := TaxArea."Use External Tax Engine";
+                                    SalesTaxCalc.StartSalesTaxCalculation;
+                                  end;
+
+                                  if "Posting Date" <> 0D then
+                                    UseDate := "Posting Date"
+                                  else
+                                    UseDate := WORKDATE;
+                                END;
+
+               ReqFilterFields="No.","Buy-from Vendor No.","No. Printed" }
+
+    { 117 ;1   ;Column  ;CompanyAddress1     ;
+               SourceExpr=CompanyAddr[1] }
+
+    { 114 ;1   ;Column  ;CompanyAddress2     ;
+               SourceExpr=CompanyAddr[2] }
+
+    { 113 ;1   ;Column  ;CompanyAddress3     ;
+               SourceExpr=CompanyAddr[3] }
+
+    { 111 ;1   ;Column  ;CompanyAddress4     ;
+               SourceExpr=CompanyAddr[4] }
+
+    { 109 ;1   ;Column  ;CompanyAddress5     ;
+               SourceExpr=CompanyAddr[5] }
+
+    { 108 ;1   ;Column  ;CompanyAddress6     ;
+               SourceExpr=CompanyAddr[6] }
+
+    { 40  ;1   ;Column  ;CompanyHomePage_Lbl ;
+               SourceExpr=HomePageCaptionLbl }
+
+    { 107 ;1   ;Column  ;CompanyHomePage     ;
+               SourceExpr=CompanyInfo."Home Page" }
+
+    { 54  ;1   ;Column  ;CompanyEmail_Lbl    ;
+               SourceExpr=EmailIDCaptionLbl }
+
+    { 104 ;1   ;Column  ;CompanyEMail        ;
+               SourceExpr=CompanyInfo."E-Mail" }
+
+    { 147 ;1   ;Column  ;CompanyPicture      ;
+               SourceExpr=CompanyInfo.Picture }
+
+    { 103 ;1   ;Column  ;CompanyPhoneNo      ;
+               SourceExpr=CompanyInfo."Phone No." }
+
+    { 102 ;1   ;Column  ;CompanyPhoneNo_Lbl  ;
+               SourceExpr=CompanyInfoPhoneNoCaptionLbl }
+
+    { 101 ;1   ;Column  ;CompanyGiroNo       ;
+               SourceExpr=CompanyInfo."Giro No." }
+
+    { 100 ;1   ;Column  ;CompanyGiroNo_Lbl   ;
+               SourceExpr=CompanyInfoGiroNoCaptionLbl }
+
+    { 99  ;1   ;Column  ;CompanyBankName     ;
+               SourceExpr=CompanyInfo."Bank Name" }
+
+    { 97  ;1   ;Column  ;CompanyBankName_Lbl ;
+               SourceExpr=CompanyInfoBankNameCaptionLbl }
+
+    { 152 ;1   ;Column  ;CompanyBankBranchNo ;
+               SourceExpr=CompanyInfo."Bank Branch No." }
+
+    { 182 ;1   ;Column  ;CompanyBankBranchNo_Lbl;
+               SourceExpr=CompanyInfo.FIELDCAPTION("Bank Branch No.") }
+
+    { 48  ;1   ;Column  ;CompanyBankAccountNo;
+               SourceExpr=CompanyInfo."Bank Account No." }
+
+    { 47  ;1   ;Column  ;CompanyBankAccountNo_Lbl;
+               SourceExpr=CompanyInfoBankAccNoCaptionLbl }
+
+    { 25  ;1   ;Column  ;CompanyIBAN         ;
+               SourceExpr=CompanyInfo.IBAN }
+
+    { 106 ;1   ;Column  ;CompanyIBAN_Lbl     ;
+               SourceExpr=CompanyInfo.FIELDCAPTION(IBAN) }
+
+    { 186 ;1   ;Column  ;CompanySWIFT        ;
+               SourceExpr=CompanyInfo."SWIFT Code" }
+
+    { 187 ;1   ;Column  ;CompanySWIFT_Lbl    ;
+               SourceExpr=CompanyInfo.FIELDCAPTION("SWIFT Code") }
+
+    { 23  ;1   ;Column  ;CompanyLogoPosition ;
+               SourceExpr=CompanyLogoPosition }
+
+    { 19  ;1   ;Column  ;CompanyRegistrationNumber;
+               SourceExpr=CompanyInfo.GetRegistrationNumber }
+
+    { 168 ;1   ;Column  ;CompanyRegistrationNumber_Lbl;
+               SourceExpr=CompanyInfo.GetRegistrationNumberLbl }
+
+    { 17  ;1   ;Column  ;CompanyVATRegNo     ;
+               SourceExpr=CompanyInfo.GetVATRegistrationNumber }
+
+    { 21  ;1   ;Column  ;CompanyVATRegNo_Lbl ;
+               SourceExpr=CompanyInfo.GetVATRegistrationNumberLbl }
+
+    { 14  ;1   ;Column  ;CompanyVATRegistrationNo;
+               SourceExpr=CompanyInfo.GetVATRegistrationNumber }
+
+    { 11  ;1   ;Column  ;CompanyVATRegistrationNo_Lbl;
+               SourceExpr=CompanyInfo.GetVATRegistrationNumberLbl }
+
+    { 9   ;1   ;Column  ;CompanyLegalOffice  ;
+               SourceExpr=CompanyInfo.GetLegalOffice }
+
+    { 7   ;1   ;Column  ;CompanyLegalOffice_Lbl;
+               SourceExpr=CompanyInfo.GetLegalOfficeLbl }
+
+    { 173 ;1   ;Column  ;CompanyCustomGiro   ;
+               SourceExpr=CompanyInfo.GetCustomGiro }
+
+    { 5   ;1   ;Column  ;CompanyCustomGiro_Lbl;
+               SourceExpr=CompanyInfo.GetCustomGiroLbl }
+
+    { 245 ;1   ;Column  ;DocType_PurchHeader ;
+               SourceExpr="Document Type" }
+
+    { 246 ;1   ;Column  ;No_PurchHeader      ;
+               SourceExpr="No." }
+
+    { 3   ;1   ;Column  ;DocumentTitle_Lbl   ;
+               SourceExpr=DocumentTitleLbl }
+
+    { 45  ;1   ;Column  ;Amount_Lbl          ;
+               SourceExpr=AmountCaptionLbl }
+
+    { 78  ;1   ;Column  ;PurchLineInvDiscAmt_Lbl;
+               SourceExpr=PurchLineInvDiscAmtCaptionLbl }
+
+    { 105 ;1   ;Column  ;Subtotal_Lbl        ;
+               SourceExpr=SubtotalCaptionLbl }
+
+    { 86  ;1   ;Column  ;VATAmtLineVAT_Lbl   ;
+               SourceExpr=VATAmtLineVATCaptionLbl }
+
+    { 88  ;1   ;Column  ;VATAmtLineVATAmt_Lbl;
+               SourceExpr=VATAmtLineVATAmtCaptionLbl }
+
+    { 31  ;1   ;Column  ;VATAmtSpec_Lbl      ;
+               SourceExpr=VATAmtSpecCaptionLbl }
+
+    { 130 ;1   ;Column  ;VATIdentifier_Lbl   ;
+               SourceExpr=VATIdentifierCaptionLbl }
+
+    { 134 ;1   ;Column  ;VATAmtLineInvDiscBaseAmt_Lbl;
+               SourceExpr=VATAmtLineInvDiscBaseAmtCaptionLbl }
+
+    { 135 ;1   ;Column  ;VATAmtLineLineAmt_Lbl;
+               SourceExpr=VATAmtLineLineAmtCaptionLbl }
+
+    { 150 ;1   ;Column  ;VALVATBaseLCY_Lbl   ;
+               SourceExpr=VALVATBaseLCYCaptionLbl }
+
+    { 167 ;1   ;Column  ;Total_Lbl           ;
+               SourceExpr=TotalCaptionLbl }
+
+    { 110 ;1   ;Column  ;PaymentTermsDesc_Lbl;
+               SourceExpr=PaymentTermsDescCaptionLbl }
+
+    { 112 ;1   ;Column  ;ShipmentMethodDesc_Lbl;
+               SourceExpr=ShipmentMethodDescCaptionLbl }
+
+    { 220 ;1   ;Column  ;PrepymtTermsDesc_Lbl;
+               SourceExpr=PrepymtTermsDescCaptionLbl }
+
+    { 57  ;1   ;Column  ;HomePage_Lbl        ;
+               SourceExpr=HomePageCaptionLbl }
+
+    { 58  ;1   ;Column  ;EmailID_Lbl         ;
+               SourceExpr=EmailIDCaptionLbl }
+
+    { 16  ;1   ;Column  ;AllowInvoiceDisc_Lbl;
+               SourceExpr=AllowInvoiceDiscCaptionLbl }
+
+    { 2   ;1   ;Column  ;CurrRepPageNo       ;
+               SourceExpr=STRSUBSTNO(PageLbl,FORMAT(CurrReport.PAGENO)) }
+
+    { 28  ;1   ;Column  ;DocumentDate        ;
+               SourceExpr=FORMAT("Document Date",0,4) }
+
+    { 49  ;1   ;Column  ;DueDate             ;
+               SourceExpr=FORMAT("Due Date",0,4) }
+
+    { 55  ;1   ;Column  ;ExptRecptDt_PurchaseHeader;
+               SourceExpr=FORMAT("Expected Receipt Date",0,4) }
+
+    { 60  ;1   ;Column  ;OrderDate_PurchaseHeader;
+               SourceExpr=FORMAT("Order Date",0,4) }
+
+    { 29  ;1   ;Column  ;VATNoText           ;
+               SourceExpr=VATNoText }
+
+    { 30  ;1   ;Column  ;VATRegNo_PurchHeader;
+               SourceExpr="VAT Registration No." }
+
+    { 33  ;1   ;Column  ;PurchaserText       ;
+               SourceExpr=PurchaserText }
+
+    { 34  ;1   ;Column  ;SalesPurchPersonName;
+               SourceExpr=SalespersonPurchaser.Name }
+
+    { 37  ;1   ;Column  ;ReferenceText       ;
+               SourceExpr=ReferenceText }
+
+    { 38  ;1   ;Column  ;YourRef_PurchHeader ;
+               SourceExpr="Your Reference" }
+
+    { 115 ;1   ;Column  ;BuyFrmVendNo_PurchHeader;
+               SourceExpr="Buy-from Vendor No." }
+
+    { 90  ;1   ;Column  ;BuyFromAddr1        ;
+               SourceExpr=BuyFromAddr[1] }
+
+    { 91  ;1   ;Column  ;BuyFromAddr2        ;
+               SourceExpr=BuyFromAddr[2] }
+
+    { 92  ;1   ;Column  ;BuyFromAddr3        ;
+               SourceExpr=BuyFromAddr[3] }
+
+    { 93  ;1   ;Column  ;BuyFromAddr4        ;
+               SourceExpr=BuyFromAddr[4] }
+
+    { 125 ;1   ;Column  ;BuyFromAddr5        ;
+               SourceExpr=BuyFromAddr[5] }
+
+    { 126 ;1   ;Column  ;BuyFromAddr6        ;
+               SourceExpr=BuyFromAddr[6] }
+
+    { 127 ;1   ;Column  ;BuyFromAddr7        ;
+               SourceExpr=BuyFromAddr[7] }
+
+    { 128 ;1   ;Column  ;BuyFromAddr8        ;
+               SourceExpr=BuyFromAddr[8] }
+
+    { 121 ;1   ;Column  ;PricesIncludingVAT_Lbl;
+               SourceExpr=PricesIncludingVATCaptionLbl }
+
+    { 82  ;1   ;Column  ;PricesInclVAT_PurchHeader;
+               SourceExpr="Prices Including VAT" }
+
+    { 221 ;1   ;Column  ;OutputNo            ;
+               SourceExpr=OutputNo }
+
+    { 222 ;1   ;Column  ;VATBaseDisc_PurchHeader;
+               SourceExpr="VAT Base Discount %" }
+
+    { 223 ;1   ;Column  ;PricesInclVATtxt    ;
+               SourceExpr=PricesInclVATtxtLbl }
+
+    { 42  ;1   ;Column  ;PaymentTermsDesc    ;
+               SourceExpr=PaymentTerms.Description }
+
+    { 41  ;1   ;Column  ;ShipmentMethodDesc  ;
+               SourceExpr=ShipmentMethod.Description }
+
+    { 51  ;1   ;Column  ;PrepmtPaymentTermsDesc;
+               SourceExpr=PrepmtPaymentTerms.Description }
+
+    { 56  ;1   ;Column  ;DimText             ;
+               SourceExpr=DimText }
+
+    { 35  ;1   ;Column  ;OrderNo_Lbl         ;
+               SourceExpr=OrderNoCaptionLbl }
+
+    { 224 ;1   ;Column  ;Page_Lbl            ;
+               SourceExpr=PageCaptionLbl }
+
+    { 53  ;1   ;Column  ;DocumentDate_Lbl    ;
+               SourceExpr=DocumentDateCaptionLbl }
+
+    { 69  ;1   ;Column  ;BuyFrmVendNo_PurchHeader_Lbl;
+               SourceExpr=FIELDCAPTION("Buy-from Vendor No.") }
+
+    { 70  ;1   ;Column  ;PricesInclVAT_PurchHeader_Lbl;
+               SourceExpr=FIELDCAPTION("Prices Including VAT") }
+
+    { 18  ;1   ;Column  ;Receiveby_Lbl       ;
+               SourceExpr=ReceivebyCaptionLbl }
+
+    { 20  ;1   ;Column  ;Buyer_Lbl           ;
+               SourceExpr=BuyerCaptionLbl }
+
+    { 154 ;1   ;Column  ;PayToVendNo_PurchHeader;
+               SourceExpr="Pay-to Vendor No." }
+
+    { 149 ;1   ;Column  ;VendAddr8           ;
+               SourceExpr=VendAddr[8] }
+
+    { 145 ;1   ;Column  ;VendAddr7           ;
+               SourceExpr=VendAddr[7] }
+
+    { 140 ;1   ;Column  ;VendAddr6           ;
+               SourceExpr=VendAddr[6] }
+
+    { 136 ;1   ;Column  ;VendAddr5           ;
+               SourceExpr=VendAddr[5] }
+
+    { 133 ;1   ;Column  ;VendAddr4           ;
+               SourceExpr=VendAddr[4] }
+
+    { 132 ;1   ;Column  ;VendAddr3           ;
+               SourceExpr=VendAddr[3] }
+
+    { 131 ;1   ;Column  ;VendAddr2           ;
+               SourceExpr=VendAddr[2] }
+
+    { 24  ;1   ;Column  ;VendAddr1           ;
+               SourceExpr=VendAddr[1] }
+
+    { 22  ;1   ;Column  ;PaymentDetails_Lbl  ;
+               SourceExpr=PaymentDetailsCaptionLbl }
+
+    { 13  ;1   ;Column  ;VendNo_Lbl          ;
+               SourceExpr=VendNoCaptionLbl }
+
+    { 52  ;1   ;Column  ;SellToCustNo_PurchHeader;
+               SourceExpr="Sell-to Customer No." }
+
+    { 46  ;1   ;Column  ;ShipToAddr1         ;
+               SourceExpr=ShipToAddr[1] }
+
+    { 39  ;1   ;Column  ;ShipToAddr2         ;
+               SourceExpr=ShipToAddr[2] }
+
+    { 36  ;1   ;Column  ;ShipToAddr3         ;
+               SourceExpr=ShipToAddr[3] }
+
+    { 27  ;1   ;Column  ;ShipToAddr4         ;
+               SourceExpr=ShipToAddr[4] }
+
+    { 26  ;1   ;Column  ;ShipToAddr5         ;
+               SourceExpr=ShipToAddr[5] }
+
+    { 15  ;1   ;Column  ;ShipToAddr6         ;
+               SourceExpr=ShipToAddr[6] }
+
+    { 12  ;1   ;Column  ;ShipToAddr7         ;
+               SourceExpr=ShipToAddr[7] }
+
+    { 10  ;1   ;Column  ;ShipToAddr8         ;
+               SourceExpr=ShipToAddr[8] }
+
+    { 8   ;1   ;Column  ;ShiptoAddress_Lbl   ;
+               SourceExpr=ShiptoAddressCaptionLbl }
+
+    { 6   ;1   ;Column  ;SellToCustNo_PurchHeader_Lbl;
+               SourceExpr=FIELDCAPTION("Sell-to Customer No.") }
+
+    { 50  ;1   ;Column  ;ItemNumber_Lbl      ;
+               SourceExpr=ItemNumberCaptionLbl }
+
+    { 83  ;1   ;Column  ;ItemDescription_Lbl ;
+               SourceExpr=ItemDescriptionCaptionLbl }
+
+    { 116 ;1   ;Column  ;ItemQuantity_Lbl    ;
+               SourceExpr=ItemQuantityCaptionLbl }
+
+    { 118 ;1   ;Column  ;ItemUnit_Lbl        ;
+               SourceExpr=ItemUnitCaptionLbl }
+
+    { 119 ;1   ;Column  ;ItemUnitPrice_Lbl   ;
+               SourceExpr=ItemUnitPriceCaptionLbl }
+
+    { 120 ;1   ;Column  ;ItemLineAmount_Lbl  ;
+               SourceExpr=ItemLineAmountCaptionLbl }
+
+    { 137 ;1   ;Column  ;ToCaption_Lbl       ;
+               SourceExpr=ToCaptionLbl }
+
+    { 129 ;1   ;Column  ;VendorIDCaption_Lbl ;
+               SourceExpr=VendorIDCaptionLbl }
+
+    { 98  ;1   ;Column  ;ConfirmToCaption_Lbl;
+               SourceExpr=ConfirmToCaptionLbl }
+
+    { 96  ;1   ;Column  ;PurchOrderCaption_Lbl;
+               SourceExpr=PurchOrderCaptionLbl }
+
+    { 95  ;1   ;Column  ;PurchOrderNumCaption_Lbl;
+               SourceExpr=PurchOrderNumCaptionLbl }
+
+    { 85  ;1   ;Column  ;PurchOrderDateCaption_Lbl;
+               SourceExpr=PurchOrderDateCaptionLbl }
+
+    { 247 ;1   ;Column  ;TaxIdentTypeCaption_Lbl;
+               SourceExpr=TaxIdentTypeCaptionLbl }
+
+    { 1020012;1;Column  ;InvoiceDiscountCaption_Lbl;
+               SourceExpr=InvoiceDiscountCaptionLbl }
+
+    { 1020014;1;Column  ;TotalPriceCaption_Lbl;
+               SourceExpr=TotalPriceCaptionLbl }
+
+    { 1020013;1;Column  ;TotalTaxLabel       ;
+               SourceExpr=TotalTaxLabel }
+
+    { 1020002;1;Column  ;Tax_Lbl             ;
+               SourceExpr=TaxLbl }
+
+    { 166 ;1   ;Column  ;OrderDate_Lbl       ;
+               SourceExpr=OrderDateLbl }
+
+    { 4   ;1   ;DataItem;Purchase Line       ;
+               DataItemTable="Purchase Line";
+               DataItemTableView=SORTING("Document Type","Document No.","Line No.");
+               OnPreDataItem=BEGIN
+                               NumberOfLines := COUNT;
+                               OnLineNumber := 0;
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  AllowInvDisctxt := FORMAT("Allow Invoice Disc.");
+                                  TotalSubTotal += "Line Amount";
+                                  TotalInvoiceDiscountAmount -= "Inv. Discount Amount";
+                                  TotalAmount += Amount;
+                                  if "Cross-Reference No." <> '' then
+                                    "No." := "Cross-Reference No.";
+
+                                  FormatDocument.SetPurchaseLine("Purchase Line",FormattedQuanitity,FormattedDirectUnitCost);
+
+                                  OnLineNumber := OnLineNumber + 1;
+
+                                  if ("Purchase Header"."Tax Area Code" <> '') and not UseExternalTaxEngine then
+                                    SalesTaxCalc.AddPurchLine("Purchase Line");
+
+                                  if Type = 0 then begin
+                                    "Unit of Measure" := '';
+                                    "Line Amount" := 0;
+                                    "Inv. Discount Amount" := 0;
+                                    Quantity := 0;
+                                  end;
+
+                                  if OnLineNumber = NumberOfLines then
+                                    if "Purchase Header"."Tax Area Code" <> '' then begin
+                                      if UseExternalTaxEngine then
+                                        SalesTaxCalc.CallExternalTaxEngineForPurch("Purchase Header",true)
+                                      else
+                                        SalesTaxCalc.EndSalesTaxCalculation(UseDate);
+                                      SalesTaxCalc.GetSummarizedSalesTaxTable(TempSalesTaxAmtLine);
+                                      BrkIdx := 0;
+                                      PrevPrintOrder := 0;
+                                      PrevTaxPercent := 0;
+                                      TaxAmount := 0;
+
+                                      TempSalesTaxAmtLine.RESET;
+                                      TempSalesTaxAmtLine.SETCURRENTKEY("Print Order","Tax Area Code for Key","Tax Jurisdiction Code");
+                                      if TempSalesTaxAmtLine.FIND('-') then
+                                        repeat
+                                          if (TempSalesTaxAmtLine."Print Order" = 0) or
+                                             (TempSalesTaxAmtLine."Print Order" <> PrevPrintOrder) or
+                                             (TempSalesTaxAmtLine."Tax %" <> PrevTaxPercent)
+                                          then begin
+                                            BrkIdx := BrkIdx + 1;
+                                            if BrkIdx > 1 then begin
+                                              if TaxArea."Country/Region" = TaxArea."Country/Region"::CA then
+                                                BreakdownTitle := TaxBreakdownLbl
+                                              else
+                                                BreakdownTitle := SalesTaxBreakdownLbl;
+                                            end;
+                                            if BrkIdx > ARRAYLEN(BreakdownAmt) then begin
+                                              BrkIdx := BrkIdx - 1;
+                                              BreakdownLabel[BrkIdx] := OtherTaxesLbl;
+                                            end else
+                                              BreakdownLabel[BrkIdx] := STRSUBSTNO(TempSalesTaxAmtLine."Print Description",TempSalesTaxAmtLine."Tax %");
+                                          end;
+                                          BreakdownAmt[BrkIdx] := BreakdownAmt[BrkIdx] + TempSalesTaxAmtLine."Tax Amount";
+                                          TaxAmount := TaxAmount + TempSalesTaxAmtLine."Tax Amount";
+                                        until TempSalesTaxAmtLine.NEXT = 0;
+
+                                      if BrkIdx = 1 then begin
+                                        CLEAR(BreakdownLabel);
+                                        CLEAR(BreakdownAmt);
+                                      end;
+                                    end;
+                                END;
+
+               DataItemLink="Document Type"=FIELD("Document Type"),"Document No."=FIELD("No.") }
+
+    { 226 ;2   ;Column  ;LineNo_PurchLine    ;
+               SourceExpr="Line No." }
+
+    { 227 ;2   ;Column  ;AllowInvDisctxt     ;
+               SourceExpr=AllowInvDisctxt }
+
+    { 225 ;2   ;Column  ;Type_PurchLine      ;
+               SourceExpr=FORMAT(Type,0,2) }
+
+    { 62  ;2   ;Column  ;No_PurchLine        ;
+               SourceExpr="No." }
+
+    { 63  ;2   ;Column  ;Desc_PurchLine      ;
+               SourceExpr=Description }
+
+    { 64  ;2   ;Column  ;Qty_PurchLine       ;
+               SourceExpr=FormattedQuanitity }
+
+    { 65  ;2   ;Column  ;UOM_PurchLine       ;
+               SourceExpr="Unit of Measure" }
+
+    { 66  ;2   ;Column  ;DirUnitCost_PurchLine;
+               SourceExpr=FormattedDirectUnitCost;
+               AutoFormatType=2;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 67  ;2   ;Column  ;LineDisc_PurchLine  ;
+               SourceExpr="Line Discount %" }
+
+    { 68  ;2   ;Column  ;LineAmt_PurchLine   ;
+               SourceExpr="Line Amount";
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 84  ;2   ;Column  ;AllowInvDisc_PurchLine;
+               SourceExpr="Allow Invoice Disc." }
+
+    { 89  ;2   ;Column  ;VATIdentifier_PurchLine;
+               SourceExpr="VAT Identifier" }
+
+    { 79  ;2   ;Column  ;InvDiscAmt_PurchLine;
+               SourceExpr=-"Inv. Discount Amount";
+               AutoFormatType=1;
+               AutoFormatExpr="Currency Code" }
+
+    { 141 ;2   ;Column  ;TotalInclVAT        ;
+               SourceExpr="Line Amount" - "Inv. Discount Amount";
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 43  ;2   ;Column  ;DirectUniCost_Lbl   ;
+               SourceExpr=DirectUniCostCaptionLbl }
+
+    { 44  ;2   ;Column  ;PurchLineLineDisc_Lbl;
+               SourceExpr=PurchLineLineDiscCaptionLbl }
+
+    { 80  ;2   ;Column  ;VATDiscountAmount_Lbl;
+               SourceExpr=VATDiscountAmountCaptionLbl }
+
+    { 72  ;2   ;Column  ;No_PurchLine_Lbl    ;
+               SourceExpr=FIELDCAPTION("No.") }
+
+    { 73  ;2   ;Column  ;Desc_PurchLine_Lbl  ;
+               SourceExpr=FIELDCAPTION(Description) }
+
+    { 74  ;2   ;Column  ;Qty_PurchLine_Lbl   ;
+               SourceExpr=FIELDCAPTION(Quantity) }
+
+    { 76  ;2   ;Column  ;UOM_PurchLine_Lbl   ;
+               SourceExpr=ItemUnitOfMeasureCaptionLbl }
+
+    { 77  ;2   ;Column  ;VATIdentifier_PurchLine_Lbl;
+               SourceExpr=FIELDCAPTION("VAT Identifier") }
+
+    { 81  ;2   ;Column  ;AmountIncludingVAT  ;
+               SourceExpr="Amount Including VAT" }
+
+    { 1020001;2;Column  ;LineAmtTaxAmtInvDiscountAmt;
+               SourceExpr="Line Amount" + TaxAmount - "Inv. Discount Amount" }
+
+    { 59  ;1   ;DataItem;Totals              ;
+               DataItemTable=Integer;
+               DataItemTableView=SORTING(Number) WHERE(Number=CONST(1));
+               OnAfterGetRecord=VAR
+                                  TempPrepmtPurchLine@1000 : TEMPORARY Record "Purchase Line";
+                                BEGIN
+                                  CLEAR(TempPurchLine);
+                                  CLEAR(PurchPost);
+                                  TempPurchLine.DELETEALL;
+                                  TempVATAmountLine.DELETEALL;
+                                  PurchPost.GetPurchLines("Purchase Header",TempPurchLine,0);
+                                  TempPurchLine.CalcVATAmountLines(0,"Purchase Header",TempPurchLine,TempVATAmountLine);
+                                  TempPurchLine.UpdateVATOnLines(0,"Purchase Header",TempPurchLine,TempVATAmountLine);
+                                  VATAmount := TempVATAmountLine.GetTotalVATAmount;
+                                  VATBaseAmount := TempVATAmountLine.GetTotalVATBase;
+                                  VATDiscountAmount :=
+                                    TempVATAmountLine.GetTotalVATDiscount("Purchase Header"."Currency Code","Purchase Header"."Prices Including VAT");
+                                  TotalAmountInclVAT := TempVATAmountLine.GetTotalAmountInclVAT;
+
+                                  TempPrepaymentInvLineBuffer.DELETEALL;
+                                  PurchasePostPrepayments.GetPurchLines("Purchase Header",0,TempPrepmtPurchLine);
+                                  if not TempPrepmtPurchLine.ISEMPTY then begin
+                                    PurchasePostPrepayments.GetPurchLinesToDeduct("Purchase Header",TempPurchLine);
+                                    if not TempPurchLine.ISEMPTY then
+                                      PurchasePostPrepayments.CalcVATAmountLines("Purchase Header",TempPurchLine,TempPrePmtVATAmountLineDeduct,1);
+                                  end;
+                                  PurchasePostPrepayments.CalcVATAmountLines("Purchase Header",TempPrepmtPurchLine,TempPrepmtVATAmountLine,0);
+                                  TempPrepmtVATAmountLine.DeductVATAmountLine(TempPrePmtVATAmountLineDeduct);
+                                  PurchasePostPrepayments.UpdateVATOnLines("Purchase Header",TempPrepmtPurchLine,TempPrepmtVATAmountLine,0);
+                                  PurchasePostPrepayments.BuildInvLineBuffer2("Purchase Header",TempPrepmtPurchLine,0,TempPrepaymentInvLineBuffer);
+                                  PrepmtVATAmount := TempPrepmtVATAmountLine.GetTotalVATAmount;
+                                  PrepmtVATBaseAmount := TempPrepmtVATAmountLine.GetTotalVATBase;
+                                  PrepmtTotalAmountInclVAT := TempPrepmtVATAmountLine.GetTotalAmountInclVAT;
+
+                                  TotalAmount := TotalSubTotal + TotalInvoiceDiscountAmount + TaxAmount;
+                                END;
+                                 }
+
+    { 94  ;2   ;Column  ;VATAmountText       ;
+               SourceExpr=TempVATAmountLine.VATAmountText }
+
+    { 87  ;2   ;Column  ;TotalVATAmount      ;
+               SourceExpr=VATAmount;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 75  ;2   ;Column  ;TotalVATDiscountAmount;
+               SourceExpr=-VATDiscountAmount;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 71  ;2   ;Column  ;TotalVATBaseAmount  ;
+               SourceExpr=VATBaseAmount;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 61  ;2   ;Column  ;TotalAmountInclVAT  ;
+               SourceExpr=TotalAmountInclVAT;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 158 ;2   ;Column  ;TotalInclVATText    ;
+               SourceExpr=TotalInclVATText }
+
+    { 157 ;2   ;Column  ;TotalExclVATText    ;
+               SourceExpr=TotalExclVATText }
+
+    { 124 ;2   ;Column  ;TotalSubTotal       ;
+               SourceExpr=TotalSubTotal;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 123 ;2   ;Column  ;TotalInvoiceDiscountAmount;
+               SourceExpr=TotalInvoiceDiscountAmount;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 122 ;2   ;Column  ;TotalAmount         ;
+               SourceExpr=TotalAmount;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 32  ;2   ;Column  ;TotalText           ;
+               SourceExpr=TotalText }
+
+    { 1020015;2;Column  ;TaxAmount           ;
+               SourceExpr=TaxAmount }
+
+    { 1030000;1;DataItem;TaxBreakdown        ;
+               DataItemTable=Integer;
+               DataItemTableView=SORTING(Number) WHERE(Number=CONST(1)) }
+
+    { 1030009;2;Column  ;BreakdownTitle      ;
+               SourceExpr=BreakdownTitle }
+
+    { 1030008;2;Column  ;BreakdownLabel1     ;
+               SourceExpr=BreakdownLabel[1] }
+
+    { 1030007;2;Column  ;BreakdownAmt1       ;
+               SourceExpr=FormatBreakdownAmounts(BreakdownLabel[1],BreakdownAmt[1]) }
+
+    { 1030006;2;Column  ;BreakdownLabel2     ;
+               SourceExpr=BreakdownLabel[2] }
+
+    { 1030005;2;Column  ;BreakdownAmt2       ;
+               SourceExpr=FormatBreakdownAmounts(BreakdownLabel[2],BreakdownAmt[2]) }
+
+    { 1030004;2;Column  ;BreakdownLabel3     ;
+               SourceExpr=BreakdownLabel[3] }
+
+    { 1030003;2;Column  ;BreakdownAmt3       ;
+               SourceExpr=FormatBreakdownAmounts(BreakdownLabel[3],BreakdownAmt[3]) }
+
+    { 1030002;2;Column  ;BreakdownAmt4       ;
+               SourceExpr=FormatBreakdownAmounts(BreakdownLabel[4],BreakdownAmt[4]) }
+
+    { 1030001;2;Column  ;BreakdownLabel4     ;
+               SourceExpr=BreakdownLabel[4] }
+
+    { 6558;1   ;DataItem;VATCounter          ;
+               DataItemTable=Integer;
+               DataItemTableView=SORTING(Number);
+               OnPreDataItem=BEGIN
+                               if VATAmount = 0 then
+                                 CurrReport.BREAK;
+                               SETRANGE(Number,1,TempVATAmountLine.COUNT);
+                               CurrReport.CREATETOTALS(
+                                 TempVATAmountLine."Line Amount",TempVATAmountLine."Inv. Disc. Base Amount",
+                                 TempVATAmountLine."Invoice Discount Amount",TempVATAmountLine."VAT Base",TempVATAmountLine."VAT Amount");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  TempVATAmountLine.GetLine(Number);
+                                END;
+                                 }
+
+    { 159 ;2   ;Column  ;VATAmtLineVATBase   ;
+               SourceExpr=TempVATAmountLine."VAT Base";
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 156 ;2   ;Column  ;VATAmtLineVATAmt    ;
+               SourceExpr=TempVATAmountLine."VAT Amount";
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 155 ;2   ;Column  ;VATAmtLineLineAmt   ;
+               SourceExpr=TempVATAmountLine."Line Amount";
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 153 ;2   ;Column  ;VATAmtLineInvDiscBaseAmt;
+               SourceExpr=TempVATAmountLine."Inv. Disc. Base Amount";
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 151 ;2   ;Column  ;VATAmtLineInvDiscAmt;
+               SourceExpr=TempVATAmountLine."Invoice Discount Amount";
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 148 ;2   ;Column  ;VATAmtLineVAT       ;
+               DecimalPlaces=0:5;
+               SourceExpr=TempVATAmountLine."VAT %" }
+
+    { 146 ;2   ;Column  ;VATAmtLineVATIdentifier;
+               SourceExpr=TempVATAmountLine."VAT Identifier" }
+
+    { 2038;1   ;DataItem;VATCounterLCY       ;
+               DataItemTable=Integer;
+               DataItemTableView=SORTING(Number);
+               OnPreDataItem=BEGIN
+                               if (not GLSetup."Print VAT specification in LCY") or
+                                  ("Purchase Header"."Currency Code" = '') or
+                                  (TempVATAmountLine.GetTotalVATAmount = 0)
+                               then
+                                 CurrReport.BREAK;
+
+                               SETRANGE(Number,1,TempVATAmountLine.COUNT);
+
+                               if GLSetup."LCY Code" = '' then
+                                 VALSpecLCYHeader := VATAmountSpecificationLbl + LocalCurrentyLbl
+                               else
+                                 VALSpecLCYHeader := VATAmountSpecificationLbl + FORMAT(GLSetup."LCY Code");
+
+                               CurrExchRate.FindCurrency("Purchase Header"."Posting Date","Purchase Header"."Currency Code",1);
+                               VALExchRate := STRSUBSTNO(ExchangeRateLbl,CurrExchRate."Relational Exch. Rate Amount",CurrExchRate."Exchange Rate Amount");
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  TempVATAmountLine.GetLine(Number);
+                                  VALVATBaseLCY :=
+                                    TempVATAmountLine.GetBaseLCY(
+                                      "Purchase Header"."Posting Date","Purchase Header"."Currency Code","Purchase Header"."Currency Factor");
+                                  VALVATAmountLCY :=
+                                    TempVATAmountLine.GetAmountLCY(
+                                      "Purchase Header"."Posting Date","Purchase Header"."Currency Code","Purchase Header"."Currency Factor");
+                                END;
+                                 }
+
+    { 195 ;2   ;Column  ;VALExchRate         ;
+               SourceExpr=VALExchRate }
+
+    { 194 ;2   ;Column  ;VALSpecLCYHeader    ;
+               SourceExpr=VALSpecLCYHeader }
+
+    { 192 ;2   ;Column  ;VALVATAmountLCY     ;
+               SourceExpr=VALVATAmountLCY;
+               AutoFormatType=1 }
+
+    { 190 ;2   ;Column  ;VALVATBaseLCY       ;
+               SourceExpr=VALVATBaseLCY;
+               AutoFormatType=1 }
+
+    { 1849;1   ;DataItem;PrepmtLoop          ;
+               DataItemTable=Integer;
+               DataItemTableView=SORTING(Number) WHERE(Number=FILTER(1..));
+               OnAfterGetRecord=BEGIN
+                                  if Number = 1 then begin
+                                    if not TempPrepaymentInvLineBuffer.FIND('-') then
+                                      CurrReport.BREAK;
+                                  end else
+                                    if TempPrepaymentInvLineBuffer.NEXT = 0 then
+                                      CurrReport.BREAK;
+
+                                  if "Purchase Header"."Prices Including VAT" then
+                                    PrepmtLineAmount := TempPrepaymentInvLineBuffer."Amount Incl. VAT"
+                                  else
+                                    PrepmtLineAmount := TempPrepaymentInvLineBuffer.Amount;
+                                END;
+                                 }
+
+    { 175 ;2   ;Column  ;PrepmtLineAmount    ;
+               SourceExpr=PrepmtLineAmount;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 172 ;2   ;Column  ;PrepmtInvBufGLAccNo ;
+               SourceExpr=TempPrepaymentInvLineBuffer."G/L Account No." }
+
+    { 174 ;2   ;Column  ;PrepmtInvBufDesc    ;
+               SourceExpr=TempPrepaymentInvLineBuffer.Description }
+
+    { 144 ;2   ;Column  ;TotalInclVATText2   ;
+               SourceExpr=TotalInclVATText }
+
+    { 143 ;2   ;Column  ;TotalExclVATText2   ;
+               SourceExpr=TotalExclVATText }
+
+    { 183 ;2   ;Column  ;PrepmtInvBufAmt     ;
+               SourceExpr=TempPrepaymentInvLineBuffer.Amount;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 184 ;2   ;Column  ;PrepmtVATAmountText ;
+               SourceExpr=TempPrepmtVATAmountLine.VATAmountText }
+
+    { 185 ;2   ;Column  ;PrepmtVATAmount     ;
+               SourceExpr=PrepmtVATAmount;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 191 ;2   ;Column  ;PrepmtTotalAmountInclVAT;
+               SourceExpr=PrepmtTotalAmountInclVAT;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 193 ;2   ;Column  ;PrepmtVATBaseAmount ;
+               SourceExpr=PrepmtVATBaseAmount;
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 169 ;2   ;Column  ;PrepmtInvBuDescCaption;
+               SourceExpr=PrepmtInvBuDescCaptionLbl }
+
+    { 170 ;2   ;Column  ;PrepmtInvBufGLAccNoCaption;
+               SourceExpr=PrepmtInvBufGLAccNoCaptionLbl }
+
+    { 171 ;2   ;Column  ;PrepaymentSpecCaption;
+               SourceExpr=PrepaymentSpecCaptionLbl }
+
+    { 3388;1   ;DataItem;PrepmtVATCounter    ;
+               DataItemTable=Integer;
+               DataItemTableView=SORTING(Number);
+               OnPreDataItem=BEGIN
+                               SETRANGE(Number,1,TempPrepmtVATAmountLine.COUNT);
+                             END;
+
+               OnAfterGetRecord=BEGIN
+                                  TempPrepmtVATAmountLine.GetLine(Number);
+                                END;
+                                 }
+
+    { 205 ;2   ;Column  ;PrepmtVATAmtLineVATAmt;
+               SourceExpr=TempPrepmtVATAmountLine."VAT Amount";
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 206 ;2   ;Column  ;PrepmtVATAmtLineVATBase;
+               SourceExpr=TempPrepmtVATAmountLine."VAT Base";
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 207 ;2   ;Column  ;PrepmtVATAmtLineLineAmt;
+               SourceExpr=TempPrepmtVATAmountLine."Line Amount";
+               AutoFormatType=1;
+               AutoFormatExpr="Purchase Header"."Currency Code" }
+
+    { 208 ;2   ;Column  ;PrepmtVATAmtLineVAT ;
+               DecimalPlaces=0:5;
+               SourceExpr=TempPrepmtVATAmountLine."VAT %" }
+
+    { 198 ;2   ;Column  ;PrepmtVATAmtLineVATId;
+               SourceExpr=TempPrepmtVATAmountLine."VAT Identifier" }
+
+    { 203 ;2   ;Column  ;PrepymtVATAmtSpecCaption;
+               SourceExpr=PrepymtVATAmtSpecCaptionLbl }
+
+    { 209 ;1   ;DataItem;LetterText          ;
+               DataItemTable=Integer;
+               DataItemTableView=SORTING(Number) WHERE(Number=CONST(1)) }
+
+    { 210 ;2   ;Column  ;GreetingText        ;
+               SourceExpr=GreetingLbl }
+
+    { 211 ;2   ;Column  ;BodyText            ;
+               SourceExpr=BodyLbl }
+
+    { 212 ;2   ;Column  ;ClosingText         ;
+               SourceExpr=ClosingLbl }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+      SaveValues=true;
+      OnInit=BEGIN
+               LogInteractionEnable := true;
+               ArchiveDocument := PurchSetup."Archive Orders";
+             END;
+
+      OnOpenPage=BEGIN
+                   LogInteractionEnable := LogInteraction;
+                 END;
+
+    }
+    CONTROLS
+    {
+      { 6   ;0   ;Container ;
+                  Name=Control6;
+                  ContainerType=ContentArea }
+
+      { 5   ;1   ;Group     ;
+                  Name=Options;
+                  CaptionML=ENU=Options }
+
+      { 2   ;2   ;Field     ;
+                  Name=ArchiveDocument;
+                  CaptionML=ENU=Archive Document;
+                  ToolTipML=ENU=Specifies whether to archive the order.;
+                  ApplicationArea=#Suite;
+                  SourceExpr=ArchiveDocument }
+
+      { 1   ;2   ;Field     ;
+                  Name=LogInteraction;
+                  CaptionML=ENU=Log Interaction;
+                  ToolTipML=ENU=Specifies if you want to log this interaction.;
+                  ApplicationArea=#Suite;
+                  SourceExpr=LogInteraction;
+                  Enabled=LogInteractionEnable }
+
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      PageLbl@1040 : TextConst '@@@="%1 = Page No.";ENU=Page %1';
+      VATAmountSpecificationLbl@1039 : TextConst 'ENU="Tax Amount Specification in "';
+      LocalCurrentyLbl@1038 : TextConst 'ENU=Local Currency';
+      ExchangeRateLbl@1037 : TextConst '@@@="%1 = CurrExchRate.""Relational Exch. Rate Amount"", %2 = CurrExchRate.""Exchange Rate Amount""";ENU=Exchange rate: %1/%2';
+      CompanyInfoPhoneNoCaptionLbl@1036 : TextConst 'ENU=Phone No.';
+      CompanyInfoGiroNoCaptionLbl@1034 : TextConst 'ENU=Giro No.';
+      CompanyInfoBankNameCaptionLbl@1033 : TextConst 'ENU=Bank';
+      CompanyInfoBankAccNoCaptionLbl@1032 : TextConst 'ENU=Account No.';
+      OrderNoCaptionLbl@1031 : TextConst 'ENU=Order No.';
+      PageCaptionLbl@1030 : TextConst 'ENU=Page';
+      DocumentDateCaptionLbl@1029 : TextConst 'ENU=Document Date';
+      DirectUniCostCaptionLbl@1027 : TextConst 'ENU=Unit Price';
+      PurchLineLineDiscCaptionLbl@1026 : TextConst 'ENU=Discount %';
+      VATDiscountAmountCaptionLbl@1025 : TextConst 'ENU=Payment Discount on Tax';
+      PaymentDetailsCaptionLbl@1023 : TextConst 'ENU=Payment Details';
+      VendNoCaptionLbl@1022 : TextConst 'ENU=Vendor No.';
+      ShiptoAddressCaptionLbl@1021 : TextConst 'ENU=Ship-to Address';
+      PrepmtInvBuDescCaptionLbl@1020 : TextConst 'ENU=Description';
+      PrepmtInvBufGLAccNoCaptionLbl@1019 : TextConst 'ENU=G/L Account No.';
+      PrepaymentSpecCaptionLbl@1018 : TextConst 'ENU=Prepayment Specification';
+      PrepymtVATAmtSpecCaptionLbl@1017 : TextConst 'ENU=Prepayment Tax Amount Specification';
+      AmountCaptionLbl@1016 : TextConst 'ENU=Amount';
+      PurchLineInvDiscAmtCaptionLbl@1015 : TextConst 'ENU=Invoice Discount Amount';
+      SubtotalCaptionLbl@1014 : TextConst 'ENU=Subtotal';
+      VATAmtLineVATCaptionLbl@1013 : TextConst 'ENU=Tax %';
+      VATAmtLineVATAmtCaptionLbl@1012 : TextConst 'ENU=Tax Amount';
+      VATAmtSpecCaptionLbl@1011 : TextConst 'ENU=Tax Amount Specification';
+      VATIdentifierCaptionLbl@1010 : TextConst 'ENU=Tax Identifier';
+      VATAmtLineInvDiscBaseAmtCaptionLbl@1009 : TextConst 'ENU=Invoice Discount Base Amount';
+      VATAmtLineLineAmtCaptionLbl@1008 : TextConst 'ENU=Line Amount';
+      VALVATBaseLCYCaptionLbl@1007 : TextConst 'ENU=Tax Base';
+      PricesInclVATtxtLbl@1048 : TextConst 'ENU=Prices Including Tax';
+      TotalCaptionLbl@1006 : TextConst 'ENU=Total';
+      PaymentTermsDescCaptionLbl@1005 : TextConst 'ENU=Payment Terms';
+      ShipmentMethodDescCaptionLbl@1004 : TextConst 'ENU=Shipment Method';
+      PrepymtTermsDescCaptionLbl@1003 : TextConst 'ENU=Prepmt. Payment Terms';
+      HomePageCaptionLbl@1002 : TextConst 'ENU=Home Page';
+      EmailIDCaptionLbl@1001 : TextConst 'ENU=Email';
+      AllowInvoiceDiscCaptionLbl@1000 : TextConst 'ENU=Allow Invoice Discount';
+      GLSetup@1106 : Record "General Ledger Setup";
+      CompanyInfo@1105 : Record "Company Information";
+      ShipmentMethod@1104 : Record "Shipment Method";
+      PaymentTerms@1103 : Record "Payment Terms";
+      PrepmtPaymentTerms@1102 : Record "Payment Terms";
+      SalespersonPurchaser@1101 : Record "Salesperson/Purchaser";
+      TempVATAmountLine@1100 : TEMPORARY Record "VAT Amount Line";
+      TempPrepmtVATAmountLine@1099 : TEMPORARY Record "VAT Amount Line";
+      TempPurchLine@1097 : TEMPORARY Record "Purchase Line";
+      TempPrepaymentInvLineBuffer@1093 : TEMPORARY Record "Prepayment Inv. Line Buffer";
+      TempPrePmtVATAmountLineDeduct@1035 : TEMPORARY Record "VAT Amount Line";
+      TempSalesTaxAmtLine@1020001 : TEMPORARY Record "Sales Tax Amount Line";
+      TaxArea@1020011 : Record "Tax Area";
+      RespCenter@1092 : Record "Responsibility Center";
+      Language@1091 : Record Language;
+      CurrExchRate@1090 : Record "Currency Exchange Rate";
+      PurchSetup@1089 : Record "Purchases & Payables Setup";
+      FormatAddr@1087 : Codeunit "Format Address";
+      FormatDocument@1086 : Codeunit "Format Document";
+      PurchPost@1085 : Codeunit "Purch.-Post";
+      SegManagement@1083 : Codeunit SegManagement;
+      PurchasePostPrepayments@1028 : Codeunit "Purchase-Post Prepayments";
+      ArchiveManagement@1065 : Codeunit ArchiveManagement;
+      SalesTaxCalc@1020013 : Codeunit "Sales Tax Calculate";
+      VendAddr@1081 : ARRAY [8] OF Text[50];
+      ShipToAddr@1080 : ARRAY [8] OF Text[50];
+      CompanyAddr@1079 : ARRAY [8] OF Text[50];
+      BuyFromAddr@1078 : ARRAY [8] OF Text[50];
+      PurchaserText@1077 : Text[30];
+      VATNoText@1076 : Text[80];
+      ReferenceText@1075 : Text[80];
+      TotalText@1074 : Text[50];
+      TotalInclVATText@1073 : Text[50];
+      TotalExclVATText@1072 : Text[50];
+      FormattedQuanitity@1064 : Text;
+      FormattedDirectUnitCost@1070 : Text;
+      OutputNo@1067 : Integer;
+      DimText@1066 : Text[120];
+      LogInteraction@1061 : Boolean;
+      VATAmount@1060 : Decimal;
+      VATBaseAmount@1059 : Decimal;
+      VATDiscountAmount@1058 : Decimal;
+      TotalAmountInclVAT@1057 : Decimal;
+      VALVATBaseLCY@1056 : Decimal;
+      VALVATAmountLCY@1055 : Decimal;
+      VALSpecLCYHeader@1054 : Text[80];
+      VALExchRate@1053 : Text[50];
+      PrepmtVATAmount@1052 : Decimal;
+      PrepmtVATBaseAmount@1051 : Decimal;
+      PrepmtTotalAmountInclVAT@1050 : Decimal;
+      PrepmtLineAmount@1049 : Decimal;
+      AllowInvDisctxt@1047 : Text[30];
+      LogInteractionEnable@1024 : Boolean INDATASET;
+      TotalSubTotal@1044 : Decimal;
+      TotalAmount@1043 : Decimal;
+      TotalInvoiceDiscountAmount@1042 : Decimal;
+      DocumentTitleLbl@1068 : TextConst 'ENU=Purchase Order';
+      TaxAmount@1020000 : Decimal;
+      CompanyLogoPosition@1069 : Integer;
+      ReceivebyCaptionLbl@1071 : TextConst 'ENU=Receive By';
+      BuyerCaptionLbl@1107 : TextConst 'ENU=Buyer';
+      ItemNumberCaptionLbl@1108 : TextConst 'ENU=Item No.';
+      ItemDescriptionCaptionLbl@1109 : TextConst 'ENU=Description';
+      ItemQuantityCaptionLbl@1110 : TextConst 'ENU=Quantity';
+      ItemUnitCaptionLbl@1111 : TextConst 'ENU=Unit';
+      ItemUnitPriceCaptionLbl@1112 : TextConst 'ENU=Unit Price';
+      ItemLineAmountCaptionLbl@1113 : TextConst 'ENU=Line Amount';
+      PricesIncludingVATCaptionLbl@1114 : TextConst 'ENU=Prices Including Tax';
+      ItemUnitOfMeasureCaptionLbl@1115 : TextConst 'ENU=Unit';
+      ToCaptionLbl@1123 : TextConst 'ENU=To:';
+      VendorIDCaptionLbl@1122 : TextConst 'ENU=Vendor ID';
+      ConfirmToCaptionLbl@1121 : TextConst 'ENU=Confirm To';
+      PurchOrderCaptionLbl@1120 : TextConst 'ENU=PURCHASE ORDER';
+      PurchOrderNumCaptionLbl@1119 : TextConst 'ENU=Purchase Order Number:';
+      PurchOrderDateCaptionLbl@1118 : TextConst 'ENU=Purchase Order Date:';
+      TaxIdentTypeCaptionLbl@1117 : TextConst 'ENU=Tax Ident. Type';
+      TotalPriceCaptionLbl@1126 : TextConst 'ENU=Total Price';
+      ArchiveDocument@1063 : Boolean;
+      InvoiceDiscountCaptionLbl@1124 : TextConst 'ENU=Invoice Discount';
+      SalesTaxBreakdownLbl@1020007 : TextConst 'ENU=Sales Tax Breakdown';
+      OtherTaxesLbl@1020006 : TextConst 'ENU=Other Taxes';
+      TotalSalesTaxLbl@1020005 : TextConst 'ENU=Total Sales Tax';
+      TotalTaxLbl@1020003 : TextConst 'ENU=Total Tax';
+      TaxLbl@1020002 : TextConst 'ENU=Tax';
+      TotalTaxLabel@1020010 : Text[30];
+      BreakdownTitle@1020009 : Text[30];
+      BreakdownLabel@1020008 : ARRAY [4] OF Text[30];
+      UseExternalTaxEngine@1020012 : Boolean;
+      NumberOfLines@1020015 : Integer;
+      OnLineNumber@1020014 : Integer;
+      UseDate@1020019 : Date;
+      BrkIdx@1020020 : Integer;
+      PrevPrintOrder@1020022 : Integer;
+      PrevTaxPercent@1020021 : Decimal;
+      TaxBreakdownLbl@1020023 : TextConst 'ENU=Tax Breakdown';
+      BreakdownAmt@1020004 : ARRAY [4] OF Decimal;
+      GreetingLbl@1020024 : TextConst 'ENU=Hello';
+      ClosingLbl@1020018 : TextConst 'ENU=Sincerely';
+      BodyLbl@1020016 : TextConst 'ENU=The purchase order is attached to this message.';
+      OrderDateLbl@1020017 : TextConst 'ENU=Order Date';
+
+    [External]
+    PROCEDURE InitializeRequest@4(LogInteractionParam@1003 : Boolean);
+    BEGIN
+      LogInteraction := LogInteractionParam;
+    END;
+
+    LOCAL PROCEDURE FormatAddressFields@1(VAR PurchaseHeader@1000 : Record "Purchase Header");
+    BEGIN
+      FormatAddr.GetCompanyAddr(PurchaseHeader."Responsibility Center",RespCenter,CompanyInfo,CompanyAddr);
+      FormatAddr.PurchHeaderBuyFrom(BuyFromAddr,PurchaseHeader);
+      if PurchaseHeader."Buy-from Vendor No." <> PurchaseHeader."Pay-to Vendor No." then
+        FormatAddr.PurchHeaderPayTo(VendAddr,PurchaseHeader);
+      FormatAddr.PurchHeaderShipTo(ShipToAddr,PurchaseHeader);
+    END;
+
+    LOCAL PROCEDURE FormatDocumentFields@2(PurchaseHeader@1000 : Record "Purchase Header");
+    BEGIN
+      with PurchaseHeader do begin
+        FormatDocument.SetTotalLabels("Currency Code",TotalText,TotalInclVATText,TotalExclVATText);
+        FormatDocument.SetPurchaser(SalespersonPurchaser,"Purchaser Code",PurchaserText);
+        FormatDocument.SetPaymentTerms(PaymentTerms,"Payment Terms Code","Language Code");
+        FormatDocument.SetPaymentTerms(PrepmtPaymentTerms,"Prepmt. Payment Terms Code","Language Code");
+        FormatDocument.SetShipmentMethod(ShipmentMethod,"Shipment Method Code","Language Code");
+
+        ReferenceText := FormatDocument.SetText("Your Reference" <> '',FIELDCAPTION("Your Reference"));
+        VATNoText := FormatDocument.SetText("VAT Registration No." <> '',FIELDCAPTION("VAT Registration No."));
+      end;
+    END;
+
+    LOCAL PROCEDURE InitLogInteraction@5();
+    BEGIN
+      LogInteraction := SegManagement.FindInteractTmplCode(13) <> '';
+    END;
+
+    LOCAL PROCEDURE FormatBreakdownAmounts@1020000(BreakdownLabel@1020000 : Text;BreakdownAmount@1020001 : Decimal) : Text;
+    VAR
+      BreakdownTextAmount@1030000 : Text;
+    BEGIN
+      // If the breakdown label is blank, the breakdown amount should be blank too.
+      // This enables the NA report layout to serve both CA and US.
+      if BreakdownLabel <> '' then
+        BreakdownTextAmount := FORMAT(BreakdownAmount,0,'<Precision,2><Standard Format,0>')
+      else
+        BreakdownTextAmount := '';
+
+      exit(BreakdownTextAmount);
+    END;
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+    <?xml version="1.0" encoding="utf-8"?>
+<Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2016/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
+  <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="DataSource">
+      <ConnectionProperties>
+        <DataProvider>SQL</DataProvider>
+        <ConnectString />
+      </ConnectionProperties>
+      <rd:SecurityType>None</rd:SecurityType>
+      <rd:DataSourceID>0e09a881-a901-4d62-8056-25c4b83b9294</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <ReportSections>
+    <ReportSection>
+      <Body>
+        <Height>2in</Height>
+        <Style />
+      </Body>
+      <Width>6.5in</Width>
+      <Page>
+        <Style />
+      </Page>
+    </ReportSection>
+  </ReportSections>
+  <Code>Public Function BlankZero(ByVal Value As Decimal)
+    if Value = 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankPos(ByVal Value As Decimal)
+    if Value &gt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankZeroAndPos(ByVal Value As Decimal)
+    if Value &gt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNeg(ByVal Value As Decimal)
+    if Value &lt; 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+
+Public Function BlankNegAndZero(ByVal Value As Decimal)
+    if Value &lt;= 0 then
+        Return ""
+    end if
+    Return Value
+End Function
+</Code>
+  <Language>=User!Language</Language>
+  <ConsumeContainerWhitespace>true</ConsumeContainerWhitespace>
+  <rd:ReportUnitType>Inch</rd:ReportUnitType>
+  <rd:ReportID>0eeb6585-38ae-40f1-885b-8d50088d51b4</rd:ReportID>
+</Report>
+    END_OF_RDLDATA
+  }
+  WORDLAYOUT
+  {
+    UEsDBBQABgAIAAAAIQD768Nq2QEAACsMAAATAAgCW0NvbnRlbnRfVHlwZXNdLnhtbCCiBAIooAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzJZNb9swDIbvA/YfDF2HWGkPwzDE6aHdjluBZcCuqg==
+    RDvC9AWRaZt/P8lOvKFLa2Oe214C2CLf96Hp0Fxd3FtT3EJE7V3FzsolK8BJr7RrKvZ983nxgRVIwilhvIOK7QHZxfrtm9VmHwCLlO2wYlui8JFzlFuwAksfwKWT2kcrKF3Ghg==
+    ByF/igb4+XL5nkvvCBwtKGuw9eoKarEzVHy6T7c7kuAaVlx2cdmqYtrm/Hyfn8yIYPBBigjBaCkonfNbpx5wLQ5MZcpsY3CrA75LAY845JPHDQ55X9PDjFpBcS0ifRE2RfE7Hw==
+    FVde7mzKLJ+WOcHp61pL6POzWoheAmLqkjVlf2KFdkf+Uxxyh+TtD2u4JrDX0Qc8m4zTi2Y9iKShf4YjGc6fm6HtB9LeAP7/bnS6w/ZAlBLmADgoDyLcwc232Sj+EB8Eqb0n5w==
+    aY5u9NKDEODUTAxH5UGELQgFcfpf8i+CTnhUH2bx74RH1j99HEyrfwb/kfXXyXIjbgzMQXCQHoRojEcUcf8cH6yj13ioF57avzlefnz3LK9mjvdEr+JFprSMQvc7faS1Mk9Zpg==
+    yHaZSctt/Ieyj7tozl6EUVtM75ikJ9cHec1VoE5483bVX/8CAAD//wMAUEsDBBQABgAIAAAAIQAekRq37wAAAE4CAAALAAgCX3JlbHMvLnJlbHMgogQCKKAAAgAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAArJLBasMwDEDvg/2D0b1R2sEYo04vY9DbGNkHCFtJTBPb2GrX/v082NgCXelhR8vS05PQenOcRnXglF3wGpZVDYq9Cdb5XsNb+7x4AJWFvKUxeNZw4gyb5vZm/cojSSnKgw==
+    i1kVis8aBpH4iJjNwBPlKkT25acLaSIpz9RjJLOjnnFV1/eYfjOgmTHV1mpIW3sHqj1FvoYdus4ZfgpmP7GXMy2Qj8Lesl3EVOqTuDKNain1LBpsMC8lnJFirAoa8LzR6nqjvw==
+    p8WJhSwJoQmJL/t8ZlwSWv7niuYZPzbvIVm0X+FvG5xdQfMBAAD//wMAUEsDBBQABgAIAAAAIQBU+GRCYwEAAO4HAAAcAAgBd29yZC9fcmVscy9kb2N1bWVudC54bWwucmVscw==
+    IKIEASigAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALxVy07DMBC8I/EPke/ESYDyUJNeEFKvECSubrx5iMSO7C2Qvw==
+    xzTk0VJZHFyOOxvPjGad9XL12dTeOyhdSRGT0A+IByKTvBJFTF7Sx4tb4mlkgrNaCohJB5qskvOz5RPUDM0hXVat9gyL0DEpEdt7SnVWQsO0L1sQppNL1TA0pSpoy7I3VgCNgg==
+    YEHVnIMke5zemsdErbnRT7sW/sIt87zK4EFm2wYEHpGgJTAOyjAyVQAazl0d+oaI0OP64aVLA0UttWaqG76ZrAwdyn9aNlNOPWnsajPV0Ulf2+RvXMqD4ELi3MCAWMcSufSQSw==
+    gSnb1DCZGCGbC6cmsq1G2bwatdGE708orRCayJrJf7ux/jgLtwOSeHBLRsgaidNMviXn66OvrTO5dqn/AZtnQDS7eZbDDLQmEZx+kVqTuHK6s37FMCA2C3envwz2t8RpBmjOzg==
+    Ftau7MHRBN17pZMvAAAA//8DAFBLAwQUAAYACACEfTRJuAVhjBkQAAAJ6AAAEQAAAHdvcmQvZG9jdW1lbnQueG1s7V3bcuO4Ef0Vl/KQJ69wJQBXPCled6ZqdteZmc2mKpWaog==
+    JdpmRiJVJH3bVL4sD/mk/EIA3kxKlE3JlIeS+GKZFzQb3TgH3QAI/u8///3Tnx/ms5M7L4r9MDgfwR/A6MQLJuHUD67PR7fJ1SkfncSJG0zdWRh456NHLx79+d2f7s+m4eR27g==
+    BcmJFBDEZ/eLyfnoJkkWZ+NxPLnx5m78w9yfRGEcXiU/TML5OLy68ife+D6MpmMEIEj/W0ThxItj+TTTDe7ceJSLmzy0kzaN3HtZWAkk48mNGyXew5MMuLEQOhZjvioIbSFI1g==
+    EMFVUXhjUdpYabUiiGwlSGq1IoluJ2mlcvPVJhAuvEBevAqjuZvIw+h6PHejb7eLUyl44Sb+pT/zk0cpE2iFmFA2vCg4y0WclrqoImeZLvlPUSJq89ysiJU32/SJ48ibSR3CIA==
+    vvEXZdubbytNXrwphNw9V4m7+WxU4ga2dOQ64FiZW54EtlE/9+V8lmn+vEQIWnhEiShLtFGh/sxCk7nrB08P3so0FePClk27EIBWBGixt5kImosYx4/zJ2jcL65f5+Ufo/B28Q==
+    JM1/nbQPwbdSVrBZBfPWUm3B8euU+XzjLiSU55OzD9dBGLmXM6mR9P2JdN9J6oEThZKR6nUuw+mj+k0uZ/nPRZT/8zl5nMk7z+7c2fnoi5LyY+TLJjnOr/8mr8mGKTs4efi4kA==
+    z3Bvk/DpuiGVkv1gehQuCkGB7PVUiUk4C6OiyP1Z/HsuKV64Ey/9P5Uz866SLYtehkkSzrcsHPnXN9s+2A9if+q9f1Xpv25Verxi+MvZR/cxvE1KH135D17FiR/D8FvxKED0VA==
+    5JUfxcmnUPoWqsOZmx89XTTD2e08qFwvTqS3BOF7QwY45dFfsyNYUbFsZKpJqX+v5a8UkjUpJDDPVaydh5ijpvPr7i/Pj2vPSiJ5WQZo009SRSA4tKA9yk99idQ5m1DgGKPs5g==
+    XNfovVdtExiRUnRxyyT7Wxz9VtWisP/0wS3L5XcuCnUu0odzW9MBHK3X8UKdYjqCDJR3Wd6VeztLKjenkvMH1KD83nNVNApzi8nGMfMD7+PdrGwHhYJpcfWbq/tMJTPXtKlkzw==
+    6hNPk/wnk+3OfDcuSv7hZ/fu7GR8cRvJyCz2vqpHedH4s4xuklCfTiNJuF8/Xs4KPLnX9ZKf00A/mn4tJfyioDmGGBUN2Z8WRU4hI7JVMQCKqixmEts34UwWyTOECxkfFvcLaA==
+    UJvrhkk5IYhZus0EthxN5w7RMdXLWi9JcRPX8ANlMilpEXmSEX5yFwt5LPudrAsKYnD+RxWhPEUm08fAlUfxaeDeyTBvEUZJPH6ufuM/Kmc+yJj05nw0lhLPpEl+k9T0KS38tw==
+    +UxV5u/wH+m1JRMXp1csLS+krJeEkfch8eYfrPPRvxyoU4ot/dTEDjolpq2dctuyTyG0LCGIYJrD/l34yHtIcsOUPpf/2MH0IsrukEdmGCQyCu0Q1JggDMyXQO3ojJn0DUCgHA==
+    H4ZXdhSVdYgX3kz2+dInRRfYWIPUCu9W/JJWPZX/jHRp5FKLEoLjusXHJSSPgE7TzmPjLmmZsvLuJ3KkDRV1TeJERo3SOHNfhn/vdRlQFCpE7UnOuH10onCufAw74TcIIZVg1A==
+    BGtFb1Rwy8K64VCICadU2NTSkIQ00k2bAHII9Fa18b4yWzt8QUOzNWsbfP0cfpYhbpo+j7dp7U+UtyVYkndVN9WI7lVE9uqQ6fvb9IVYajfEpPqeL2F3vHQKCWNMBlGUDMRUiQ==
+    u3IbD7zUW16qeGkLWnobtJpqWDp4zEPFbhBLCcYyUyLt8iRmCRvL1ApYpkG44QiTOUjIFmwTG0ELHAJel6w8YLa3mF3y1Ma43ZOUAXXVNUMEqQZbQv0YuuaqkQec7xznjYp3kA==
+    SKAhkehPItERWyGJA4FkbDKQ1UoeMXBVf2OSipf2JI/oCLAUYAk4ILRWgOU6QAJxBgEHxISabhiW7VBKiG5TTeBDAOySmQfQ9ha0S5461EQCd4J0yKGQWQRAwxBfQx6BB5jvbQ==
+    HoGHPKI/eUQ3ZCURxiHBBLN2cckxsFXFxgNZ9TYmqXhpTxKJjhBLBCBcw6gdYE1scocgAoVhEtOBQufQ5Iw6tgGRZvJDAOySmQfQ9ha0S5461ESCdIN0pDHANVAuOB665qqNBw==
+    mO9tIkGGRKI/iUQ3ZAUh1JiMK7RhQmI1jxi4qr8hScVLe5JHdARYhCDGBCDRCrAaIVSiWwBHB0QjFicMEmo7EJq6dLM4BMAumXkAbW9Bu+SpQ80jaCdIR5BgDDDlQ9fckEfQAQ==
+    5nubR9Ahj+hPHtERWWmAMoEBHbhqJY0YqKq/EUnFS3uSRnSDVyg45kCgloA1uIMNHTEbY0ZsSHXIbQdAphONCmQeBGCXzDyAtregXfLUtmmE+sn2tKkFCUwHOsV1a1EC7cZXvw==
+    85vXWis9gHVTxb+XvSZ4JiK4f8WOOxAgtY5pudXcD5vuDJvunG+/6Q7UCmu86rzsQ0jloc2b7thCQ6Tc6CJL6gWnDOqNSX2bjvTCfVQ7x33xonlsefGks31ZIGYyU0ei5TtIOQ==
+    f1w83fT1FHJKgIyGyUG8bNhk6d50qGmrbN+h1htiQ9t8YXeQ/Oa1XcTu92WpaJC8a3JNrQdd94DNtmbZBp/G7aOEQmegJAhzTLSWS+QOH5SleY8WiQATy3xbJJaDX5npe4K0Tw==
+    3sTz77zLxw63JsOYIJlQoqEPzE7XbHy0kOtX51fzSU+wqIagVI/8k5fchNNO41KNMQYgQmCAZDkmu2rqvmAzS4uOFpvNzukcpGvmkN8g3eymnxUMC8YRRgOmG1PNvqB5Nz1tfQ==
+    KHcdmtuGpcu260uP6M68OD154UVxGPzszr1u+kPEAWUMtVuZffjYaTL00eIHEt1Am+GnyX49wZD9sEhktLtIrKRsPtmljgZXGMMECNFucdLhQ2m9vY8VUI6kWoNvBqj1VuwJrA==
+    VoPUbuAECAOIU20Yq1yXqfUFRrvJ0rqN61att6s0as0cekMN18+hv5SHfr85dDzMoQ9z6N3OocOCoJfnxAlqPL/ufrXDVON5VO4tVz+voaqSzXPu3EIWcuqDIIBRXefPfuiGPg==
+    bWxV3LLVeElx/NEPvPHPYda5qIPuZilkyIqBYLzlJIWJGRI6hkAHBBqYm4auE4F0YesOPoy3Z2pWL04uG78vnW+GhgZKnlSIoU6O6nNns3U0QxpppirsTp/510EhLBP9Qo+/NA==
+    4roKrBfGZfOb1/aHu5umXHZ7T4LuOjGkI8PdUwMVAAFNg+0+PXK0zLBq/b5wQ9aDDtywI25YdXwv2eEvyeMuyAELADTe7p3bo+WGFdv3hRqGsGGVGv45KS6k+WD3hLHSGnrJFw==
+    v/7y0y7yDMg4ZtJRbcfHj5UyVszfG8pI8+uBMnYUTaz4vZfkYPmRN0l+DXwzjJPuVmUR6Q4CQbuNho+WGlaM3xtqSIfYeksNex84rDi+J9yg2pxqoPo8vA26o4NTSDnTOCXlyw==
+    Ui981FljwhKEmZyZBNpEGI6DTAoZQWqOxTgEQlg1dW/An46j9xb8m8QFmq0BW+wDI6w2h7daFrrljAikmipz8+l2JpXxHtxJsjxD8ppUtTLneEg9y0Yfxn7dOOBgwaENdshlLQ==
+    7dompzxQu3ZkwTah94FacKcts01U0y+7fufoZTmmSBqXPaxbraROmfHSyXF5/8YjFZ0kIvKkxqBGYT4wAel+JQ1LFnlFsiBrLrX23ETW87PMRf0w2CR16KgVVFJE6RkBgUwSWw==
+    ZYhQhqc6ptS0sEMMxoQNHUNAR+MMO4a+ZoFoQ6WV7TbKmbqInRFAL60meitY1RYhdTUxwChQHwhs+f7WsY7+VS3fm9y/MS5en4ZDi3CKXkrDEaLAYe06sq0a/kYJd2MNXoG5+g==
+    oqI3GMl7M26oL4johh0QwJRA1nZbvqNlh7rt+8IPzSMPAz88zw91Xx4SQ9RWQHRDEERoavP/lt8WOlp+qFm+L/QwhA/b0EPNlYfEDrUlEN0k8DKx4JjAli8RHis51AzfG3JoHA==
+    Gx7I4XlyqLnykMjB8qNfAz9JV0B0SxIISucTjIeFiS+tPlp1QG/IonEaZCCLFxKNJpceEmlkSyS6JgwOCMEy4xhejHqWMFaM3xuyaJzbG8jiebJYceeuVhytv9rMLr1cn7TBvA==
+    rS4Qo2ZvVhS0H7Pbj/ocmn/a50V7Up/Wodue1Kd179Kr+pQrNup0mlPnpnTaMGXdCTzr6lysWrBqruLmccVpy6FodaoJQQEh1lrONB38jlNf3Acj8txv0/A+KHfML0588ZNZdw==
+    AV272L6q0LiuydZx/VIo2eWU1pr2SjCGOm5qr3kEWYF300qsjcLALHSr22oHCd6usL3eVhUOugzDb3M3+pZWXN4qsSKf9vXH0HAn31RZf1ow39PNsn61K0vcvtVOeLeXSZi4sw==
+    Dl+L0yBirN079lDYRCMONbgJiMVtzmXaCXWALUvXbOMg0syqhfuSTCIMGxfgqr2mPi/cck0n2rTtm0h6szGfrLT9bnmiat83GAZqxflKnzj7keqlv91MDSGKAacUtJsbOgZ4ZQ==
+    tq4dFSbvC9o2C677gaqaIXc1aHLEcTsUAguB+LD/f4u4/aN76c1gLwL3TJWjjNyX4/LMFDVu2K5LrcICQEgRYGD4/FQLXOjzpB+oUIq8HSZ2mKFVMLHc3FUdO2jsrbYoCO5Cfw==
+    4ll+PFFvSpvuQr3G0d1WBZqgUIMEtwMZc2zbtKlDIZbJnW7qzBKMcGFyzaQGhYcAs/UW70sQeUgp23pr9zCBW1I227ygGxxiobahb7sM+Bhw2JDNNdq/L6jc29Su0arfM89zZA==
+    34vpoeV5CFCNMhmQDnle2zwP9SKizVQZ8rzSFJ3meZBASiETZEjz2qV5/QCFUuQI0rwu2npLI3e4/RzXEJCxJGi3/Ry1KGfc1h2DMcKIrRNdd7ApVMdnQIgPBFRDBrejGDIzbQ==
+    z9I196HD7AwyxDGmGLVbMX0UgKpnZ4W5+wKwvUzGCiMOudd2udeu4ulOtPjOeWjuqMv8pg3eSKkOgH2R6OyEUREUADFB2w13qQyBaJYlOVgjhDq6wXVsExNyrunQYAdIqIW1+w==
+    QqibRSyq4G52z20CTPaOyBJj74jXm5G0Eds3qr0eo/konWoMbxBjdcMTXY6MQ8IEJ9I7LRc6HSdX7EP4NbBC56yw24BR/TR8C7i+AeoL3wLOb64YsMNvAdfU0gCyBWmpVn7zbg==
+    1Iq9icTOet3UZozpWcaoaaVK3KQA/+RdeZEXTLwn7GQqj06idLF39GFahExXYZi0K1EswF73jPQruZX7IXjhESsFyrHb68+/5wwgA7wUUDeKDTgWGbKnsnS5Hvz6Jzdto+FC5g==
+    zFoGPwUpVTr7UHNGEeVV9X3l8iCrTXmY6VoeXt8m6WFRFUkq8ROHMFBYMVFvFFxcZweyK1Gf0VVP8gPvwk8mUnuslc7O/Jr+exlOH9N/ZJlb9WXud/8HUEsDBBQABgAIAIR9NA==
+    SeWtvUGnBwAALSMAABAAAAB3b3JkL2hlYWRlcjIueG1s7VrrbuM2Fn4VQfujwAIeXSz5hnEKx5dMgGRqJNm2QFsMaIm2hZFEgaRvW/TJ9sc+0r7CHlKkLEV24tjZ3S4wP2Lxdg==
+    Ph6eu6j86x///Pj9NomNNaYsImnfdD7YpoHTgIRRuuibKz5vdEyDcZSGKCYp7ps7zMzvrz5uesuQGkCbsh7qm0vOs55lsWCJE8Q+kAynMDcnNEEcunRhhRRtADOJLde2W1aCog==
+    1FT0WRScgQBUfEWxBkGOVwNJooASRub8Q0ASi8znUYA1DIA4doWNTVZn4yDChtAwJxetjJIAMwaQQ5SuEdNwwfbN/HhWsESU4+0ew3kziG91rU4dyD0DCE7oOnWo5puhWpbgqg==
+    BvR2jQkg4KqG5J+HVDtccpIlJoh+XWUNAM4Qj2ZRHPGdNEoNQ8B1aNpTEI2CF0HSy3lRD01BT9k3JxmRYJXglOduQHEMPJCULaOssL3kXDSYXGqQ9UuHWCfx3m9Odb1jjjPK1Q==
+    sgc8Ixy8jOjYJ2hEQBQUp7BQ3fNQaNucJ5qScJ0TTVsDuDWAFsNvg/AVhMV2yd41NtniMi3fULLK9mjRZWi36dcCK33bAZW1lC2YXcbM4xJl4MpJ0LtdpISiWQwcge4NUJ8hNQ==
+    YAgvMUXe5LNYPaZUNR75LoYVvTWK++aToL6hEZiipeZ/gjkwSN+2ITvDyC4D+Czg+xXXwA7kcNkjmYZKIWMLgoDEBAIMWnEiuuzvfVMCsQwFWLYlTozn/EzSGeGcJGcS02ixPA==
+    d+MoZVGIP11E/eNZ1FZN8LN4iOP4HtGSMDeKNNdZuEXPznx43nqOBr07Qr5qRm1vIKnmEWX8gQCII7oxUr395JDEqyQtzesBuSQln66htCt6P+Y9p8REYaTCJEVzAU8AUSbZbQ==
+    OepElXHP9fwSiKblFKah1AwfYEt76DU9WzImhp6oGPNaze5olDtKkP8qDgLlBW7X7da9wNqvzI7vMRVDbtcZT3w99DDCc7SKuZiZTPxmpy03zxRW1TUjHmO9nVrBQq4eeR/FEQ==
+    YprgL5/RumdY0xWFOoPhL58wAmuxdM6VeF/uZrF2ZLSoUj7KwpuGXwqEH4S5WU7TdbUJh5qk0fS67War5amZLAZrXZIYCEQ3JMEUah29Wh17ul/0peF0fBBW0/MKC3+OgTi6jg==
+    UvFyADgZxfNoe4+yDPoQQfNgmjK7/53ItfscG+5SBD3WSNEaCpaMUM6sl85mfSfUs4Xqatk3LUDsgTh+Ald7kMQ/J7E4yi/Ob3LumXj1cE3KMCG9mBOKbzlObkd98/eJM/D95g==
+    aNAYNiduwxuOW43OeDRuOM5o1O2CRFuT9h9aP3jLlWAKfUNjnIZTmq+A3pCkHHaVGqCEzMeUFtbKMnBpODjVobvwh6m0/uuR6/gds2zAakhuf1U7krR7yRA9viHwZ+7ZLvizCg==
+    46145WRgd8YqVYn8qKMeaJthusbmlfFs13Nc4DPJ9Z5338f+Hdt1ml3fcexvHpCTVIT8Zzb/mqVXWX8PMxe6vDRgjxDH72SrnbbXaXZa7fY3W61EayHi/76llu1w7Puj7rhSMg==
+    jAZ2u+kdKhnUzNGS4XE14weqhhNcoxrxhVje6gXZCyE/qyae6pkf6md+RQyvVU5HxHCOL07R4h1rpo7ruG3P6Xa+uWE+rKT7Z08WJb/jV5rp/0A1VN7nSDX0vByq0Ntdz/cGkg==
+    fh6HwyUSs6r1JJma4YW4L7JeB4C3VU6fhFwPMzId3IwN49e/GgOKZlEgm/fjh5vx5IeH+8GT5LPAOJtfhjNEdR48iOG6vj3JgwHNFZ+SqdCFplBvdFfOZZLDe03WyVu2Pei8rA==
+    OKumubep6RSdfP7bvVDLo3GyNv5Hon+N5CQdFElHv7sfe4P3L3qDV5cEB/JQ6frgYB569roxY+qp58WtjcDNCIRmx/H3lxhqrZLGrCycfT6jx5bkm5S09jzzHSY6JR8OxVeIdA==
+    N9Wfw94jK7q23em4tufrtMiWRNynT+PgU6jC9/9VWqsK6eLkpr49viW/Vdy0OWoPRhU3neU0B11PfemAZgYRI45SbIQR40/y2k60rovWXdES+5iSBMIL8GCI75FOtwXvWLAi2A==
+    Qcf22247t3CxbD7HAR/ni2OJw+Uvlb+zvtn13WK1KIyoEeWXhaBRcGQlXMPRa4LP6xuKsmUUTCisEIdBvUVp5I4EX9nFH5FTAuEoXeABpPeA728vX2bg0m1LUFCbI2NF6x80Tg==
+    /4h99RFawqze5ZN4jpauQSPizKIDolD6sg/rSy/KSZDgIFfPAfEWQ5SSzRIcjRVSr8JYNT5mcZRNojgWW4i2QXs4mWHgi96GjpQq2Osd46qVy/V3tzOAgsC9bgx9e9jw7Pa4MQ==
+    6HrtRtsetz3b6zhDZ/iHoHa83ooJw0LxKIve4X8D8vv2/HCSI/2UPFr5KQSzjAYPICCxEDqcYh4sRXMOp9UTVmnGqopD9BikEWO2uSchVl8fBMB2ThPxBB6NreRlpznKRfSiZw==
+    W3uAjDJ+g0liiAYIHJiSG6A1nEWt1WvEeEoEa/k+cVodsfIhS7OtmvAn50qeUe7nbpnHMBnhitBW1A/Hr25UWSEeVH9YqFULKrIeKA1KMfe10kAn9GLfZUiv/g1QSwMEFAAGAA==
+    CACEfTRJgKJAF2ADAAA4EAAAEAAAAHdvcmQvZm9vdGVyMS54bWztV9ty2jAQ/RXG74lsh/uEZBrIbabtZEImfRZGBk9kSSMJCPm1PvST+gtd2fIFHFIw0+lLXrAl7Z7do90jmQ==
+    3z9/nV++xrSxJFJFnA0c79R1GoQFfBqx2cBZ6PCk6zSUxmyKKWdk4KyJci4vzlf9UMsG+DLVX4lg4My1Fn2EVDAnMVancRRIrnioTwMeIx6GUUDQissp8l3PTd6E5AFRCgINMQ==
+    W2LlWLjgdT+0qcQrcDaATRTMsdTktcDwDgZpoR7qVoH8GkDA0PeqUGcHQ7WRyaoC1KwFBFlVkFr1kCrk4moLcEEYLIZcxljDUM5QjOXLQpwAsMA6mkQ00mvAdNsZDIeek6xvIQ==
+    TvJcjEs/zcU+Mg+5T9zUZcSDRUyYTiIiSSjkwJmaRyLvvbguGizOM5DlRySWMXVy3Xh7FnKXcEZpWQrAfdK3tYxpmvnHiJ67R0UMRO6xTwqbMbNMYhyxInCtrSltrrdna2cAfg==
+    BaCtyGEQLQuB1DoupLESs+OqfCv5QhRo0XFo9+wlx2KHEbTdUu5gdVwy4zkWIOU46N/PGJd4QiEjqH0DytdIKtAwKnHMhaMn1D4epH0Z6zUFi/4S04HzZLxvZQStiOz6D1iDhg==
+    bLkuXGswsxYALwJdWAwJpWOBA8gltfW8wnL6igvLK0gcrslkxEUWlMGlaBwCTjkcRXihuRmqt4GThFSATZL3BIeSUNd0nXCteVzTWUazed3AEVPRlNwd5f1cyxtVNj4t2DcsSw==
+    m7myrts1yzibBmh3qhZoGw9GXzl/yVJ1m18S3DCSSj9y0xtmSLEdFYtDThcxK61nE4kJ43dX8P2Uj57TkVdKIm9o077mdQZPALEt6frmhsytMyP4AAOWsL2PD7CVrtvr+r1WEg==
+    JJk0U97IG1772dRTYjZsnjVdL5WUTCMHmOmxgNvYdru8I+WG8f3OgYpBBbYO0t9sZDXZ7HW6VU2ikuW/kPuniD9F/H9E3Gv1Wh9quCTNnXJ9X0rv93tJSmJ3jIfk4HDbZ51hfg==
+    cIxIiBdUbwUXFmtDhN+5PQqycqVG6i0z8Np2Rb0N1dYksvbIgpunzdueINluVUhsnmt/IWGNjyDRfY9E9xgS6Ym9SSNh5l67He9mg9mWVYmZNd7J7IZzTeROWv57tPyPacHf/g==
+    iz9QSwMEFAAGAAgAhH00SUATeKn6BQAAgCMAABAAAAB3b3JkL2hlYWRlcjEueG1s7Vnrbts2FH4VQ/tRYICriyXZMuoUji9JgCY1kqwdsA0FLdG2VokUSNpxWuzJ9mOPtFfYoQ==
+    JMqWL5nsZL0M+WOJl/Od++Gh/Peff716vYyj2gIzHlLS0cyXhlbDxKdBSKYdbS4m9ZZW4wKRAEWU4I52j7n2+uTVXXsWsBrQEt6+S/yONhMiaes692c4RvxlHPqMcjoRL30a6w==
+    dDIJfazfURbolmEa6VvCqI85B0Y9RBaIazmcv6yGFjB0B8QS0Nb9GWICL1cY5sEgju7prW0g6wgg0NAyt6EaB0O5upRqC8g+Cgik2kJyjkPaUi7eDgGaYAKLE8piJGDIpnqM2A==
+    x3lSB+AEiXAcRqG4B0zDVTAUYo6Rdg5RL2SRJO1MlvyhKFgVvhlJn/rzGBORctQZjkAGSvgsTIrYi49Fg8WZAlk8pMQijrQib8yKjtyXOP3MLSvAKuLnvoyjTPKHEU2jgkckRA==
+    QVFFhDJPJUmMQrJifJRp1oxrVgxtBWBtAbgcHwbh5BA6v49XqXGXTB/n5TNG58kKLXwc2gX5WGCRwxTMo2U9gvnjhLmZoQRSOfbbF1NCGRpHIBH4vgbuq6UeqMks0eSBI8ZR/g==
+    GLH85UbcR7CjvUBRR7uV1GcshFDU8/X3sAYB6RgGHGswc58AfOKL1Y5TEAcOv3REEwVF4KiTBD6NKBQYNBdUDvmnjpYC8QT5OH1PcSI8EUeSjqkQND6SmIXT2bGMQ8LDAJ8/ig==
+    +t1R1PqW4cdRD0fRJWJrxrzLSTOfBUu0ofPudX0TDUZvKP2oBDXsbko1CRkX1xRATDmMUD5aLfZoNI/J2rqaSLcQen4KPVExepeNzDUhiiCVISlfp/AEkDwkvaaXa1Saty2ruQ==
+    BqJoBYNl6NGCa2Bp9OyGbaSCyalbJueaTWvQbWaJ4me/uQR+ngWWZ3nbWaCvdiaKxyhFHJpN17C0dcblqdGOXX08QfNIpCtDp9HKJEpyBuV8DUWElVezDWxIieCwAXE/DG+hoA==
+    gKRxCJXhvAsRJ7nM5MvOFZ+L7eksybIH/6RYW5bSPWWsFxLyQOSPXKCvKhfwi0LE1eoPV2jRrumjOYPmi+MP5xhBCumqEUnt+eHNOFLVDU3LlDdpG8+CDwXCW5mDutnI+UJeBw==
+    iqRuunajCXHWaOVrSQRJPKMRkMhhQP0RtIBqv2e3nKZldfuu5dheq9c67Vmm5w6Gpm10XcdVim2iIIFOQyKvG4CUMDwJl5coSWAMR0t2yhBudF7IJmTVfAT3BMGI1wlaQCeXUA==
+    Jrj+kH76C+mKJbSds46mA2IbTPIeatB1SvxzHEllfjF/S9c2TKymtywNC2l5E5ThC4Hji35H+zw0u47T6HfrvcbQqtu9gVtvDfqDumn2+55ne0132PxD+QgvRW6YIubgZUCCEQ==
+    y4MjgMpDBHBNfcAonQwYK9KYJ1DrQHGmzjRWNYm/hfAWJ1smTQtStme/wmAfbWW2wj56kcDflxVkN6XOSEgBjtkCaye1DVN8j7XpimbJmA2fqDAZnmO7XtNoPBemfLps5ueq9A==
+    2KpUtudTlCQZYFWSeL/c/FOPPyoXVantI4GfJBNNmVie6TjPebjRIEgTf/ksfOL2fZWQO9v3m/lYPNDBHxXIq0b82JLyhDm1ak6kOw8tAskD3Umy7pTyZe6Rd6oregNtRPoBbw==
+    3Svj4247+wx3WN0ZoekTXkscB+qI6Zrec9FR07l9/2/H/r9HnzhRun8Dt4YK4u7p8zcb/f9YjEkU9GZIMsnfblMTjfFUfn7Xv5gcIeGC3cqY222WUfdsUKv9+mOty9A49NPXyw==
+    wfXZYPj2+rJ7m1qtwPja1uM4QUw1VluipHXetZ3uoQcUoSMZypthb30TEYNX+fQlpNgXJ/pz/uy0y9VPlzKFbp5z6Ovl0B7ulRKqaCLV9/zsd/OrvtE0q33V39NslqfWm818ZQ==
+    b7NZ+qjzu6+m039oKvSfJf3kg6l/PXbcZsy+2RuU3dF3DcPtl3QpT63rkq9U0wU6Pwkh9YBbrm3uUGb9A4Kp2tT164S5+2ZTKD0L2Mk/UEsDBBQABgAIAIR9NEkrj2W+wgQAAA==
+    +h0AABAAAAB3b3JkL2Zvb3RlcjIueG1s7Vhfb9s2EP8qhvbQJ4eiLDuyUbdIbKcJkHZGUjQDhiGgJcoWQpECSf/bsE/Wh36kfYUdZUmWaydwFG8zurxEJI/34/Hufrxz/vr67Q==
+    7ftFzGozKlUkeNfCJ7ZVo9wXQcTHXWuqw7pn1ZQmPCBMcNq1llRZ79+9nXdCLWugy1Vnnvhda6J10kFI+RMaE3USR74USoT6xBcxEmEY+RTNhQyQY2M7HSVS+FQpOKhH+IwoKw==
+    g/MX+6EFksxB2QC6yJ8QqelijYGfDdJEbeRtAzkVgOCGDt6GajwbqoWMVVtAbiUgsGoLqVkNaety8XYKiIRyEIZCxkTDVI5RTOTDNKkDcEJ0NIpYpJeAabdyGAE5J3kng6gXtg==
+    GJXOypbsk2vIfc5dqfSFP40p1+mJSFIGNgiuJlFS5F5cFQ2Ekxxk9tQlZjGzCt7gPQP5GHH6q7CsAfcxP4tlzFaWP42I7T0iYiAKjX1M2DwztyQmEV8fXMk1JefiPVM7B3C2AA==
+    Woo+D6KZQSC1jNfUmCfjl0X5gxTTZI0WvQztij8UWPx5F8yypZzB6mXG3E5IAlSO/c7VmAtJRgwsgtjXIHy1NAI1wxLLFBw9YtlnKLPBrV4y2NGZEda1PhvtDzKCVESZ/A5kkA==
+    kFDTYLpMAJtMtVjLz8EYKH3pTCQ5EIdCZzR8wYTMVeYd9XuGpBLi03Sc4jAa6oqqI6G1iCsqy2g8qXpwxFUU0MsXaX+ppI22HD9i12QpprqIURgtaCmI10I85EfZ7lkKGUZS6Q==
+    GwGxxWbKSDZbC3uCTWNekucL6RYuLs+hpylmX1YzXDKxSDKTUmY4hi+ArFLKxdjLTNxYx+3mzvViP9rAhB4KAgnevAFTbHfQcu3UYLP0WZq1s17LPnNSAqhAZ5+VbYRFROWe+Q==
+    6ROZdWpoOJVQmRW9v6QEPIx6ptTy5aWI6ZCM6f31iOWeJeNN3du0y5PBfYHxswkSwg3HyQMf5CrNU6/ddNpuI5MkDGI8EQwUzDQQ/hD6g3x3n4ZkyvRwvem+jr0mXLbhukVefA==
+    j0E0OY+46UQBJ5EU8uIjSRKYw6uzeoC4srtvTH1a16VgyQnMVJ2TGRT5REit0FN3Q2+MxxfQkUy6FgLEDrjjDhL0JlX+JWbmKr/i31LZdw7Ol3f4GURp9msh6ZWm8VW/a/1xgQ==
+    z5rNRv+s3mtcOHW3N2jVvUF/UMe432+33fZp6+L0zzxCdKEz1xQxh8GAB0O52gGznuAaupB0v7/6m2Wuf1dOvZxcwYIUeZjtTB7PweH20k0WzJIkBcmwNp5k4yMIV54+QHIWcQ==
+    ej1j+YaCcLm6FCIcSFmYqxLK4JmHAOSvXnq3dzv8nV4pBXsCCpxXHJk5IXdw4UlUplpVxg0n8Cp+EgcjnNNyGg7Gp698K/Ot5OVjoduqAvyYdCu5+7jYNoDfDuxgXMPNpocbQA==
+    N+eVbWW2FV4+Fq79yKWtcPbBmWak8r/oPg9Cznqj5bWxg187z52d5/+MmhX7xeOqXllZPQw9gBq2iz3Pe20Vd7WKx8KPf6lNrNbgHRc9Bh+hEh6GHG3zE6rdwPYrNzYaO+PhYw==
+    YcZxVo7URf9UK4aK/25v3O0Cn7ZsZ9dFMsmj3emFEJrKjQ60MCeEE/8GUEsDBBQABgAIAIR9NEm7M8neFwIAAFYIAAARAAAAd29yZC9lbmRub3Rlcy54bWzFlUty2zAMhq+i4Q==
+    3qbkV12N5SzippNdJjkBQ1EWJ+JjSMqyz9ZFj9QrFHq7VeqR7UU3epDAhx8CIP768XPzcBSZd2DGciUjFEx95DFJVczlPkK5SyZr5FlHZEwyJVmETsyih+2mCJmMpXLMegCQNg==
+    LDSNUOqcDjG2NGWC2Kng1CirEjelSmCVJJwyXCgT45kf+NWTNooyayHaI5EHYlGDo8dxtNiQApxL4ALTlBjHjj0juBqyxF/xegia3QCCDGfBEDW/GrXCpaoBaHETCFQNSMvbSA==
+    g+TEsAWUZhI2E2UEcfBq9lgQ85HrCYA1cfydZ9ydgOmvWoyCxjMybBCTTkvpEtZamlvrYcbErV12iuaCSVdFxIZloEFJm3Ld9Z64lQabaQs5XEriIDLUzU0wspD/GpxdXZYeOA==
+    Rn5TS5HVyi8TA39ERUpE5zFGwp8xWyWCcNkHvunTnH3cYGRrt4DZALCy7DrEskFgexL9aBR6f1+VvxuV657G76M9y4+OJa9LsOmW8w6294l5S4mGURY0fN5LZch7Boqg9h6Uzw==
+    qyrglVOCzk4drwjdSYOZZZoY4pRBsMTjCE2Cyk7DK5xp8WuEfP/paTlff0HN0ku59G3hP67m7dLrjiUkz9yZcQV5MeXNakJBJtiSxDH418AZibcb3BnUVq2SZs/UFtW1Uf1ZAg==
+    VEnHZV79hd7+Tsb/T7l8KupSXv2z3f4GUEsDBBQABgAIAAAAIQCqJg6+vAAAACEBAAAbAAAAd29yZC9fcmVscy9oZWFkZXIyLnhtbC5yZWxzjM+xisMwDAbg/aDvYLQ3TjqU4w==
+    iJOlHGQt7QMIW3FMY9nYvuPy9jV0aaHDjZL4vx/1459fxS+l7AIr6JoWBLEOxrFVcL187z9B5IJscA1MCjbKMA67j/5MK5YayouLWVSFs4KllPglZdYLecxNiMT1MofksdQxWQ==
+    GVHf0JI8tO1RpmcDhhdTTEZBmkwH4rJF+o8d5tlpOgX944nLmwrpfO2uICZLRYEn4/Cx7JrIFuTQy5fHhjsAAAD//wMAUEsDBBQABgAIAIR9NEmPCDSxGAIAAFwIAAASAAAAdw==
+    b3JkL2Zvb3Rub3Rlcy54bWzFlUty2zAMhq+i4d6m5FddjeUs4qaTXSY5AUNRFifiY0jKss/WRY/UKxR6Wq1Sj2wvurFMEvjwQwDEXz9+bh6OIvMOzFiuZISCqY88JqmKudxHKA==
+    d8lkjTzriIxJpiSL0IlZ9LDdFGGilJPKMesBQdqw0DRCqXM6xNjSlAlip4JTo6xK3JQqgVWScMpwoUyMZ37gV/+0UZRZC+EeiTwQixocPY6jxYYU4FwCF5imxDh2PDOCqyFL/A==
+    Fa+HoNkNIMhwFgxR86tRK1yqGoAWN4FA1YC0vI00SE4MW0BpJuEwUUYQB0uzx4KYj1xPAKyJ4+884+4ETH/VYhR0npFhg5h0WkqXsNbSPFoPMyZu7bJTNBdMuioiNiwDDUralA==
+    6673xK00OExbyOFSEgeRoW5ugpGF/Nfg7OqynIFj5De1FFmt/DIx8EdUpER0HmMk/BmzVSIIl+fAN72a3ssNRrZ2C5gNACvLrkMsGwS2J3EejULv76vyd6Nyfabx+2jP8qNjyQ==
+    6xJsuqXfwfY+MW8p0TDKgobPe6kMec9AEdTeg/J5VQW8ckpQ/9rxitCdNNhZpokhThkEWzyO0CSoDDUs4VaLXyPk+09Py/n6C2q2Xsqtbwv/cTVvt153LCF55nrGFeTFlA+rCQ==
+    BZ1gSxLH4GMDtyTebnBnUFu1SpozU1tUv63sT1OgSjou8+pD9PZ3Ov5/yuZTURcz6y3s9jdQSwMEFAAGAAgAAAAhAKpSJd8jBgAAixoAABUAAAB3b3JkL3RoZW1lL3RoZW1lMQ==
+    LnhtbOxZTYsbNxi+F/ofxNwdf834Y4k32GM7abObhOwmJUd5Rp5RrBkZSd5dEwIlORYKpWnpoYHeeihtAwn0kv6abVPaFPIXqtF4bMmWWdpsYClZw1ofz/vq0ftKjzSey1dOEg==
+    Ao4Q45imHad6qeIAlAY0xGnUce4cDkstB3AB0xASmqKOM0fcubL74QeX4Y6IUYKAtE/5Duw4sRDTnXKZB7IZ8kt0ilLZN6YsgUJWWVQOGTyWfhNSrlUqjXICceqAFCbS7c3xGA==
+    BwgcZi6d3cL5gMh/qeBZQ0DYQeYaGRYKG06q2Refc58wcARJx5HjhPT4EJ0IBxDIhezoOBX155R3L5eXRkRssdXshupvYbcwCCc1Zcei0dLQdT230V36VwAiNnGD5qAxaCz9KQ==
+    AAwCOdOci471eu1e31tgNVBetPjuN/v1qoHX/Nc38F0v+xh4BcqL7gZ+OPRXMdRAedGzxKRZ810Dr0B5sbGBb1a6fbdp4BUoJjidbKArXqPuF7NdQsaUXLPC2547bNYW8BWqrA==
+    ra7cPhXb1loC71M2lACVXChwCsR8isYwkDgfEjxiGOzhKJYLbwpTymVzpVYZVuryf/ZxVUlFBO4gqFnnTQHfaMr4AB4wPBUd52Pp1dEgb17++Oblc3D66MXpo19OHz8+ffSzxQ==
+    6hpMI93q9fdf/P30U/DX8+9eP/nKjuc6/vefPvvt1y/tQKEDX3397I8Xz1598/mfPzyxwLsMjnT4IU4QBzfQMbhNEzkxywBoxP6dxWEMsW7RTSMOU5jZWNADERvoG3NIoAXXQw==
+    ZgTvMikTNuDV2X2D8EHMZgJbgNfjxADuU0p6lFnndD0bS4/CLI3sg7OZjrsN4ZFtbH8tv4PZVK53bHPpx8igeYvIlMMIpUiArI9OELKY3cPYiOs+DhjldCzAPQx6EFtDcohHxg==
+    aloZXcOJzMvcRlDm24jN/l3Qo8Tmvo+OTKTcFZDYXCJihPEqnAmYWBnDhOjIPShiG8mDOQuMgHMhMx0hQsEgRJzbbG6yuUH3upQXe9r3yTwxkUzgiQ25BynVkX068WOYTK2ccQ==
+    GuvYj/hELlEIblFhJUHNHZLVZR5gujXddzEy0n323r4jldW+QLKeGbNtCUTN/TgnY4iU8/Kanic4PVPc12Tde7eyLoX01bdP7bp7IQW9y7B1R63L+Dbcunj7lIX44mt3H87SWw==
+    SG4XC/S9dL+X7v+9dG/bz+cv2CuNVpf44qqu3CRb7+1jTMiBmBO0x5W6czm9cCgbVUUZLR8TprEsLoYzcBGDqgwYFZ9gER/EcCqHqaoRIr5wHXEwpVyeD6rZ6jvrILNkn4Z5aw==
+    tVo8mUoDKFbt8nwp2uVpJPLWRnP1CLZ0r2qRelQuCGS2/4aENphJom4h0SwazyChZnYuLNoWFq3M/VYW6muRFbn/AMx+1PDcnJFcb5CgMMtTbl9k99wzvS2Y5rRrlum1M67nkw==
+    aYOEttxMEtoyjGGI1pvPOdftVUoNelkoNmk0W+8i15mIrGkDSc0aOJZ7ru5JNwGcdpyxvBnKYjKV/nimm5BEaccJxCLQ/0VZpoyLPuRxDlNd+fwTLBADBCdyretpIOmKW7XWzA==
+    5nhBybUrFy9y6ktPMhqPUSC2tKyqsi93Yu19S3BWoTNJ+iAOj8GIzNhtKAPlNatZAEPMxTKaIWba4l5FcU2uFlvR+MVstUUhmcZwcaLoYp7DVXlJR5uHYro+K7O+mMwoypL01g==
+    p+7ZRlmHJppbDpDs1LTrx7s75DVWK903WOXSva517ULrtp0Sb38gaNRWgxnUMsYWaqtWk9o5Xgi04ZZLc9sZcd6nwfqqzQ6I4l6pahuvJujovlz5fXldnRHBFVV0Ip8R/OJH5Q==
+    XAlUa6EuJwLMGO44Dype1/Vrnl+qtLxBya27lVLL69ZLXc+rVwdetdLv1R7KoIg4qXr52EP5PEPmizcvqn3j7UtSXLMvBTQpU3UPLitj9falWtv+9gVgGZkHjdqwXW/3GqV2vQ==
+    Oyy5/V6r1PYbvVK/4Tf7w77vtdrDhw44UmC3W/fdxqBValR9v+Q2Khn9VrvUdGu1rtvstgZu9+Ei1nLmxXcRXsVr9x8AAAD//wMAUEsDBAoAAAAAAAAAIQBUAQa58gMAAPIDAA==
+    ABUAAAB3b3JkL21lZGlhL2ltYWdlMS5wbmeJUE5HDQoaCgAAAA1JSERSAAAAyAAAAMgIAgAAACI6OckAAAABc1JHQgCuzhzpAAAACXBIWXMAAA7EAAAOxAGVKw4bAAADl0lEQQ==
+    VHhe7dKxFYJAAERBuAYI6b87ybAAPQ0ogR8xW8AG/8065zze38UUuK/Avo31dX7uO/SkwFVgKKFAUQCsoqrPBSwIkgJgJVmdgsVAUgCsJKtTsBhICoCVZHUKFgNJAbCSrE7BYg==
+    ICkAVpLVKVgMJAXASrI6BYuBpABYSVanYDGQFAAryeoULAaSAmAlWZ2CxUBSAKwkq1OwGEgKgJVkdQoWA0kBsJKsTsFiICkAVpLVKVgMJAXASrI6BYuBpABYSVanYDGQFAAryQ==
+    6hQsBpICYCVZnYLFQFIArCSrU7AYSAqAlWR1ChYDSQGwkqxOwWIgKQBWktUpWAwkBcBKsjoFi4GkAFhJVqdgMZAUACvJ6hQsBpICYCVZnYLFQFIArCSrU7AYSAqAlWR1ChYDSQ==
+    AbCSrE7BYiApAFaS1SlYDCQFwEqyOgWLgaQAWElWp2AxkBQAK8nqFCwGkgJgJVmdgsVAUgCsJKtTsBhICoCVZHUKFgNJAbCSrE7BYiApAFaS1SlYDCQFwEqyOgWLgaQAWElWpw==
+    YDGQFAAryeoULAaSAmAlWZ2CxUBSAKwkq1OwGEgKgJVkdQoWA0kBsJKsTsFiICkAVpLVKVgMJAXASrI6BYuBpABYSVanYDGQFAAryeoULAaSAmAlWZ2CxUBSAKwkq1OwGEgKgA==
+    lWR1ChYDSQGwkqxOwWIgKQBWktUpWAwkBcBKsjoFi4GkAFhJVqdgMZAUACvJ6hQsBpICYCVZnYLFQFIArCSrU7AYSAqAlWR1ChYDSQGwkqxOwWIgKQBWktUpWAwkBcBKsjoFiw==
+    gaQAWElWp2AxkBQAK8nqFCwGkgJgJVmdgsVAUgCsJKtTsBhICoCVZHUKFgNJAbCSrE7BYiApAFaS1SlYDCQFwEqyOgWLgaQAWElWp2AxkBQAK8nqFCwGkgJgJVmdgsVAUgCsJA==
+    q1OwGEgKgJVkdQoWA0kBsJKsTsFiICkAVpLVKVgMJAXASrI6BYuBpABYSVanYDGQFAAryeoULAaSAmAlWZ2CxUBSAKwkq1OwGEgKgJVkdQoWA0kBsJKsTsFiICkAVpLVKVgMJA==
+    BcBKsjoFi4GkAFhJVqdgMZAUACvJ6hQsBpICYCVZnYLFQFIArCSrU7AYSAqAlWR1ChYDSQGwkqxOwWIgKQBWktUpWAwkBcBKsjoFi4GkAFhJVqdgMZAUACvJ6hQsBpICYCVZnQ==
+    gsVAUmDsG1tJ2Sef/lH9AIZvCrHX5u+tAAAAAElFTkSuQmCCUEsDBBQABgAIAAAAIQA3VGuX6QYAAOEuAAAaAAAAd29yZC9nbG9zc2FyeS9kb2N1bWVudC54bWzcmklv40YWxw==
+    7wPMdyB0nrJqX4y4g1ozuRmTzCGngKZoS2iKFEjabmEw330etdhW3A4odw+M8GKLrKo/q+r96i2ifvjxy7rKHsq2WzX11Yxc4FlW1kWzWNV3V7N//5qQnmVdn9eLvGrq8mq2LQ==
+    u9mPn/7+tx8eL++qpuvydhua4n5d1n0GUnV3+bgprmbLvt9czuddsSzXeXexXhVt0zW3/UXRrOfN7e2qKOePTbuYU0zw7tOmbYqy6+C5Pq8f8m52kCu+jFNbtPkjDB4E+bxY5g==
+    bV9+edYgZ4uIuZnr10L0HUKwQkpeS7GzpeR8mNUrIf4uIZjVKyXxPqVXi1u/RqDZlDU03jbtOu/hsr2br/P28/0GgfAm71c3q2rVb0ETy6NMczW7b+vLgwR6mssw5HI/l8O/4w==
+    iHbMc/dDjtjunjhvywrm0NTdcrV5Ym/9XjVoXB5FHv5sEQ/r6tjvcUNGGvKtgxP2ZnkWHDP9gy3X1X7mf65I8AiLDBJPI8ZM4fSZx5ms81X9/OB3bc2LzSUj0T4K0FcCsivPkw==
+    EAeJebddPx+Nx83dt1n5p7a53zyrrb5N7ef685PW4N/P0DrQ8pLg7tsm88sy38BRXheXP9/VTZvfVDAjsH0G5st2FsiGUzL7BNFn0RTX4HO6F59ffLxuh4s6X8OIy4e8upqF8g==
+    Nr+v+usqL8plUy3K9ndEtOCYMM7xbD70L/K+vGva7R/H/lTWZZtX+053eVWV7fbYtnkWHNrnpyr9dlPupjh8OA65ubmuin8ujv2f+tyUy/xh1bQnF8dBRVP34F8OY0663t2vFg==
+    x27/kcZjLoVFXmmFuPYOGeYDSgljbElK3qT/HlRONutw4ZrFbuYbUISsYPGvqxnGgWJOzex467CXQ0s0iuKws8gw1V3zdTu0JEltIvuW/RPaX/pt9bQLLyzxa/nluLBD1/6Trw==
+    VsXnDNbf55tsWbZl1jeQmvQl3IHuF7ud2w/Z/d28XNF+Ec/XYyExxImorfNCc05VsFEZFpK0OnHLhJ0OJjgFkSJWiBCfEE+UIMMBEwqrxk5TT8X5mERNPCFfw0RzYV04tly/uA==
+    tRPZS29O+Bhji8HuB7b++vAJo0Ng1iUBLkkLYaIIkhISqPWRYz4d+JLhwdIgkVPcIM6JQI4oi0xQIRglDSf2Y+EbY4tJwaeCiUxxhoN3XLtkvErUJGIjj5SECQVIIi1ORnEEgQ==
+    0oPnCx45QShgyORgXiU+2vONscWk4NMWU0O1Ilhj7sFAzoWYhODcRiENmw58XluIYcwjAhkV4h5H5ALjSAsZqU+ScOM+Fr4xtpgUfJ55yCgoJ8Z57hMxFrZTK8iOHKHS6+nABw==
+    tQ5k8QIjATEM4AsUaeLA/VGiYtJBCMk+Fr4xtpgUfJJzoeBY4WShauNBc0W4iAmycouNNtOBTxsrwJ8EJAWXEGwVQ8ZGihKDdB68YnL2g+EbY4tJwed0Ys5SFRlkG5EIS3RMGA==
+    EnEuhaF+QgWHSy4YLSmK0kLBkWxAVnGAzylsKIG6Q39w2B1ji0nBZ6CsUpRaKKsEN9pr58EQEo4bx1YKOR34EhUkQUaFIoPYyz01SGPJELfEeO1djDKcDZ/hgmL/Nfg85G+Kng==
+    wHe49SZ8Y2wxKfiCZ4oaywgGV08cAytYyw21JtrEphR2FSwnWKEQjTECcsogC+tGngGMKXoCaeDZ8DnGY1Rfg49IbMMpfIdbb8I3xhbT8nxSmWC4gsTWcxKh4kuJekEgIBEBOw==
+    MB34fDCYEEWR4Br8XfAaag0oPZLR2DIasbHnh93vCt8YW0wKPmKHZFsIHyDvdkqZSJIzJEmthhR8St/zcWMcjxJJLjXiREtkHSGIMSeYNQpo5B8L3xhbvAlfVNzp/avQ98AXdw==
+    nOX1NjvsZ9Yv8z7bNvfZYz5cNVlbbsq8/0e2qovqfvhBUNb0gOnTgOF/21TdRfYbjCryOsurroHuXdkOcqvu2CXL2+a+XgDoNzDBtnnsoBeQvxhQPz4o28Cmd1lzm+X7jv+nAw==
+    YCIUd0k47THUeFFrCD/EYhaCldFNKPQHhaHo5gQ5YaDoIYwjF5JGQTkCtbhMlJ3vfZVWkEN87QCkKBTBJwfgcOvtAzDCFpPyvirF6KMY3iqBV7LeqmAU11AGSC+cINOBjweZNA==
+    9wNySiHOHYGiB3NkqOKwaEKcPP8V33eFb4wtJgWfCEIrDUk1hBqueLTcQoLtjQ40QGCc0FsWSN24pOD0mLYePF+ySCcuEHYuMsuSipJ+LHxjbDEp+IgQhMsQoOwcvmdN1kHqEw==
+    uSdaS0ucmpDnAztSJinCfviSx8uENMUKJYeJ8lSR4M5/v/x9w+4IW/xF4Hv+3O0u/vib9E//AwAA//8DAFBLAwQUAAYACAAAACEA0nc7M/UAAAB1AQAAHAAAAHdvcmQvX3JlbA==
+    cy9zZXR0aW5ncy54bWwucmVsc4yQMU/DMBCFdyT+g3USI3HaAaGqTocWpA4sNN2yHPYlcevYlm0g/ffcUolKDEynu9P73tNbb+bJiS9K2QavYFHVIMjrYKwfFBzb18dnELmgNw==
+    6IInBRfKsGnu79bv5LCwKI82ZsEUnxWMpcSVlFmPNGGuQiTPnz6kCQuvaZAR9RkHksu6fpLpNwOaG6bYGwVpbxYg2kuk/7BD31tNu6A/J/LlDwuJpSDrTUtT5DsxG9NARUFvHQ==
+    MV1uV90xcx3dCXX4+D51O8rnEmJ3sCyxvSXzsKwP6CjzvHpVJpT5CnsLhuO+zIWSRweyWcubspofAAAA//8DAFBLAwQUAAYACAAAACEA5272kAcFAAADEQAAGgAAAHdvcmQvZw==
+    bG9zc2FyeS9zZXR0aW5ncy54bWy0WNtu2zgQfV9g/8Hw8yYWKYqUjaaFrrstku2iTj+AlmiHiCQKFB3X+/U7kqzabSdFukWfLM3h3M4MqaFfvflUV7MnZTttmps5ufbmM9UUpg==
+    1M3uZv7xPr8K57POyaaUlWnUzfyouvmb17//9uqw6pRzsKybgYmmW9XFzfzBuXa1WHTFg6pld21a1QC4NbaWDl7tblFL+7hvrwpTt9Lpja60Oy6o5/H5yYy5me9tszqZuKp1YQ==
+    TWe2rldZme1WF+r0M2nYl/gdVVJT7GvVuMHjwqoKYjBN96DbbrJW/19rAD5MRp6+l8RTXU3rDsR7QboHY8vPGi8Jr1dorSlU10GB6moKUDdnx+wbQ599X4PvU4qDKVAn3vB0GQ==
+    efBjBug3BninfsxEcDKx6I61+jQZ6qqXUDJCt3pjpR0b7sRHXaze7hpj5aaCcICXGaQ2G6Kbv4Yuf9LqMIMfCW6a3mA1X/TyUm3lvnL3crN2pp1WCOqNcPEgrSycsutWFlCExA==
+    NM6aalpXmr+NS2ATWKjRSWPYEv3TvlN5diuPZu8ukPW43cBCI2sI9YstdGdK2A+gavXLOe0VhmhIcBnC144MHA9Wl+q+p2jtjpXKIZm1/ldFTflu3zkNFoeN9BMRfC8A1fSe3w==
+    Q1Hvj63KlXR7oO0XORsqk1e6vdPWGvu2KWGH/zJnertVFhxo6dQdtJO25jDw/JeSJZzKP+l3cdlWcMaX3fTwwRg3LfW8bAmNm46R9ugZ8RgXS4EjgqY4ElCW49Z4wJmPIqEIaQ==
+    hiKZ8JIIQwghvliiCPOW3on5rxDuRSlFkYg9EwH1aEjQCCilJGYowj2RoX6oEGKJckBDL/DRfOhSMBKjSO7lAs2U5pSGaBV8CECg1gBJn0Filgk0aj/zlzHqh0Xc905Hy5dIQA==
+    PUFQroNlwDKU0SDxgpijSE5YjHLAGRVRgiKCChbiCCccjYCHQCrKAU8EE2imwvd4hjIqQhHh3StiqCkaQUhYxlE/IQ08hvoJKQ/j55CMoX0dsiDCaxomLMR3fZgJGqOMLgmJvA==
+    HEUYdAJanyUTnOPWIn8ZoBFEETCH8halJJu+zF8hGUlStKYRnDt4j0Y5ERzViQkUAWU09lmWoVHHHLY3yk4sBCFoFeIIThc006Q/K9BzJ4n8Z/ogyWC2QjsxJZzgXKfUYxTX4Q==
+    hARoj6ZLFoVopmnK/RD3k1OfoEjmUegeFOEUjnkc8XmI1icLSULQM+T5b2OWwLGIW0t4gHOQpSzlaFdlKY/xrsoJifFq5/ClJWimcIDkKY4s/cRH88mzQDxjLRMkQnsnz+FDNw==
+    VGExQjBh1Kv+LvSPnZ76cXFWjxqJrDdWy9ldf1ta9Cs29jHWzYRvFEzt6hJZ7zcTeHU1Ah1M4VUO8/UEDEHXq1J3baq2w3N1J+3ubPe0wqJSmOXffbZVwDim7J/W7NsRPVjZjg==
+    Y+C0hDB20tSNu9X1JO/2m/Wk1cA94wLaN+X7JzvwdKbnsHIwzg3j9K0cxsJhrWquPq5HsovKrvuRT93Jth0nx82O3MwrvXtwpB/2HLyVcKkeXjY7esLogNERG15k0WcGq08PZw==
+    GZ1kF+v8SeafZWySsbMsmGTBWcYnGe9lDzCz20o3jzDETo+9fGuqyhxU+dcZ/0Y0klCqQkPF18d6c75BXY9YpTuYqlu4bDljJ+yPASPBcAtz99Aoj8DdB7WNZafKsVenfy9e/w==
+    BwAA//8DAFBLAwQUAAYACAAAACEAg9C15eYAAACtAgAAJQAAAHdvcmQvZ2xvc3NhcnkvX3JlbHMvZG9jdW1lbnQueG1sLnJlbHOskk1LxDAQhu+C/yHM3aa7iohsuhcR9qr1Bw==
+    ZNPpB6aTkBk/+u8NwmoXl8VDj/MO87xPIJvt5+jVOyYeAhlYFSUoJBeagToDL/Xj1R0oFkuN9YHQwIQM2+ryYvOE3ko+4n6IrDKF2EAvEu+1ZtfjaLkIESlv2pBGK3lMnY7WvQ==
+    2g71uixvdZozoDpiql1jIO2aa1D1FPE/7NC2g8OH4N5GJDlRoT9w/4wi+XGcsTZ1KAZmYZGJoE+LrJcU4T8Wh+ScwmpRBZk8zgW+53P1N0vWt4GktnuPvwY/0UFCH32y6gsAAA==
+    //8DAFBLAwQUAAYACAAAACEAm9akZdELAABPMgAAEQAAAHdvcmQvc2V0dGluZ3MueG1stFtbbxs3Fn5fYP+Doed1zPtFiFOQQ3KbotkWtfuyb2NpbA8iaYTROI7763tGlzhxvg==
+    KdIWfYrMb3h4eO6HZF5/93G9OvvQ9Lu221zO+Cs2O2s2i27Zbu4uZ79el3M3O9sN9WZZr7pNczl7anaz7978+1+vH+e7Zhjos90Zkdjs5uvF5ex+GLbzi4vd4r5Z17tX3bbZEA==
+    eNv163qgP/u7i3Xdv3/Yni+69bYe2pt21Q5PF4IxMzuS6S5nD/1mfiRxvm4Xfbfrbodxyry7vW0XzfGf04z+W9Y9TEnd4mHdbIb9ihd9syIeus3uvt3uTtTWf5UagfcnIh/+aA==
+    Ex/Wq9N3j5x9w3Yfu375aca3sDdO2PbdotntSEHr1YnBdvO8sPqK0Ke1X9Haxy3uSdF0zva/Pudc/zkC4isCZtf8ORL6SOJi97RuPp4I7VbfIpID9GN709f9weCO8lgv5m/vNg==
+    XV/frIgdkssZbe1sz93sDVn5b123Pnucb5t+QaomF2FsdjECfbPuPjQ/k+t0m3r1dnNYjczpMzTVQxM2y+t23exHSSnd7dVAo0Ryt21Wq72fLVZNTaw8zu/6ek0echrZz6mHoQ==
+    JuaX1816uxpn9vN2eTnr3y754YNlc1s/rIbr+uZq6LZE5UNNIrHiyOf90/a+2ew5+z+58AlXQh/wxX3d14uh6a+29YLYqbrN0Her03fL7n/dUJG79mRNR4rL/uq+3jbpsPDuzQ==
+    626+GweOnOzOPsybjySrZtkOFD627XJdf7ycCab8SOECkXic33bdsOmG5uf+87+Ij3G758fNvhje7/Hi5dxms/zqjxd0vhw9kfli4iFGPf+6OsQ7mrKp12QrX8Swd92yGTX40A==
+    t99u1OOEvZD5SRdwITKkvm+XzfVoo1fD06oppKOr9rfRtn542A0tUdwr+G9w8EcMkPnQyj+RV10/bZvS1MMDWcM/tNje4Mqq3b5r+77r326W5Hf/2GLt7W3T0wItedY7ssS27w==
+    Hvdy/r6pl+Tbf3Pdi8/NiJLscm/p449fyGJPnzKWtEo5HwMLoc8I47JUEiKCRV4gIkU2e1f7GtE2R4gYoYuCiGU5O4woro/yfYnoEPAcJ6LAc5zMHHPtlApYBs54GSDilVYYCQ==
+    xmiMJB1MgkhmdkLW2TADeaNMoTxchzPplMGI4Qbqh3PrJUaEDBZyzYVJeKdcMmMtRlSwUD+k6srinWrF8yktfokYwRPUKQ/CnFLQCyRKmaCseTQZ64dHkk4Fkcpmi6klXmWBEQ==
+    5fQU4gW0a56MY1iixYSEqRVrsF2PFZeDmhNCswLXEZJUByUqpBIV9G0hdRWg5oTSkcGIRAxwhdcx3Flo16Rr46H1CmN8wohlvoKyFlbGAK1KeB4L1DYhuWCuvREO7zQIjy1RBA==
+    6QS0NxFNxL4tohWHAugrpBLBYWqJs4gtJIug4TqSRM3gTqW0VkBqZCCCY2pKSAZ5k1rnU5H5ArFKTlBzTGELkU4qj9fxinQEkcA89jkZJE8TiJ3IjTLypKeQYqAHy0pUHu8ncQ==
+    ys8YUdFhuSUbJrjOglvoC7JYi6OY4jZEaNdKSo7jjtLkwZADZaRPMPYqO/o9RDzFFxh3lNcB1xQqCId9TgWVcGZSUYgCtaCishlzHVXOWAbRlAz9R0XrLIzKqjIMx15FHvypZQ==
+    fIFY67DmMnMJ7zQbxTBSmPETiFASrqO5Mdi3tVAlQ4lqKVmGXqKlCbg+0Ep6jhHNs8fUtJiokbSRqYI61VbyCtqOdpZraNfaK1dBzWmvC64ctCcWoGdpikgeWrwOvBRo8bpSHg==
+    W5UuQuOIpIvO1QRiYgV1aqjydZA3Q/WGgBwQkvF+DGdBQrs2XPA4MUeECCVqqNxImANpBIPaNsp4jRFLVRKMvYRIHKuoHNbYqggJCVqIcWN9ixGqUfBOnawqaDvGURSBFk9Ixg==
+    XZtxWju8H8qMBXq9CSJYTK2SDFfrplLa4Z1SNvPYDpJRAe80k/1iiVI3haOLIV/AXQ4hVF0ixDJqmiDXltmIo7/lFKyg/1husoB2TW1wslDWhBQcr0cEd3pWSxuhL1jDCu6qrQ==
+    0RxrwVKIx5WDtVRGTyEhYRk4nbA3Wm8lrjoJsbjutYEFAb1kRDTWT6BKCO80UrWBJZqlwN2ho6ocz6FmzuLaxXGdBMwljsytQN4IyTifOjE2RxCRVFZhDpQs2BudonoDUxsDLA==
+    lDUhVG9AhJJ9xnO0iTiSOyOywhw4q/ApgQtS4RrJBU0FIUQq6bFnuSQStiqXrLLQRl3mCfeNLpswsU4m34K+4ArlRizRoriHdu0p01looxTIBa4GvdAK520vZYpwp15SVIZWRQ==
+    bZaVeI6SgUOL90rLiLnWlM0wQhEJ5wVCEsO8WapDoP94xwWWNSGJ43Wc8Bram3facixRzwWOo4RYjdcZBYf34ymSYmpROXxm5ysecHb2FWU6LJ3Kmgmuk2YORj6fqP/B2s6UAg==
+    MW9Z6AlZFz6R632hOhEigbHoJxAeIpRBYMplaG+B6kd8wkQFbIVtJygRcQ9Iacnjs7SgtcH9XDAq4w4sWFMk1Fyg6IbP34IXVKpiRDEcrwM5EI5VIaiMz2HD2NNirpNMAkt0jA==
+    o9CzAsXRiOcUnvHJQihK4XPYUIyooCUSkhWkFhlPAco6cpYMtPjIRZFQ2+ORA+4BozBWQS1EKahahoiiQgTadVTS4u4jaqr68BwzXihhROoJhAoRbFXRyeShFggpOJtFp8IEbw==
+    jvpTrB9H1T+Wm+dVgBkwelFwXojeUPcKkUpIbL0xUULDMkikCKztJDiO5IRQ/YQRqXEGpKDjscXHbCKuIGNhheOdUoeB808lVMHnIZWwFc6AlTQF986VtA7XB5UixjEH1DNhPw==
+    HRHcm1VKTpx+VcoKBqVTGaVxFKus5dhGK88ZzkxVMBKfh1TR6AmJRksREyIV0w5zkHjEPlclo/GtSJVVLtB6q6xDhByQ8SZ8e5momUrQqpKitDWB8IR5I6TgnSYqILHXUwgLBg==
+    anv6tjxprbGskzaywtTMeFYBESsCvl8gJDOon2THwncCCbgDIyTi2j85ZvD9TwpMuCnE4pxFSOFYBtRn4VMPQhyD8SBFNdE7E0KZGyIVm4jkqVIV9vpUJLGNkMykwucUmXOOqw==
+    tMxViFBzVNwmB/WTuXVYC1mIaKElZkWhB89RnOM6MVN8w6e6hBgObTQrzQrUQlbW4ROmrFXB8TprnTzejxEcnxpmoxV+BZKNpc4NIp4J3ElQmyfw7TIhAeftHIQymOsgbMDrRA==
+    JcwEoiN+h5Ir7nFfksl6HfT6nJjEN2qZ+ix8I5AzFbfYdrKW+Pa/MCFw916Ytvicr3DF8W0smYfB8Y2QiO81i2AFn4JSo+exB1PzU/D7gyJtxrfyFFqcwOsoa3DWpHaB4+q2GA==
+    GaqJOSbgNz+F2m3co5fxRgDvx/GAT7aLkx6/JShOOezbxRllsE4Dc7jiKkElfL9QgrX4DqxEZnC8LlEmfI9Rkgn4NK9k7ia4Llo6bNfFKNzplVFBeKfUA+J7wFJsOtyXXByg3Q==
+    m9fr+fh0e3zzefg1Pq48Wx9mVPX6pm/rs3fj4+6L8Yub/n1sNyf8prnt+uZz5Orh5gSenx+A3bperUpfL07AXjjr+bLdbVNzu/+9elf3d890j1/0cHTZ3P7widb4Krnp/9t3Dw==
+    2wP62Nfbw6PJ0ydcqePMdjP82K5P47uHm6vTrE3dP30GPWyWP33o93J6Fs/jfLhv1vvHpz/W+0eU+2+bzfmvVwdhL1b91fhAsnlXb7eHd5Y3d/xytmrv7gc+Po0c6K9l3b/f/w==
+    cXMnjpjYY+KA7f+oF+PO6Ovjj+cxcRr77Dt5GpPPY+o0pp7H9GlMP4+Z05gZx+6ftk2/ajfvL2effo7jt91q1T02y++f8a+GDkLYP4X+q2+jj1+v6qfuYfji2xEbP95+SWFZDw==
+    9emx6ReT9yb+gpfxsfiiJXO8elrfPL/xfnVgfNXuhqtmW/f10PUn7D97jOv9O/Hhmqz4PSn2l+Y21rtmeXCk0/8EefM7AAAA//8DAFBLAwQUAAYACAAAACEABr7rL+EAAABVAQ==
+    AAAYACgAY3VzdG9tWG1sL2l0ZW1Qcm9wczIueG1sIKIkACigIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJyQwWrDMBBE74X+g9m7IiV24zhYDsR2IdfSQq6KvA==
+    tgWWZCS5tJT+e2V6So89DbPD7hu2PH3oKXlH55U1HLYbBgkaaTtlBg5vr8/kAIkPwnRisgY5GAun6vGh7PyxE0H4YB1eAuokDlTUS8Phq0j3RZ1vUxI1J1mbn0nB6pak5yZj+Q==
+    7tBm9dM3JBFt4hnPYQxhPlLq5Yha+I2d0cSwt06LEK0bqO17JbGxctFoAt0xtqdyiXh91RNUa5/f7Rfs/b1dqy1O/ZdyU7dJ2cGJefwEWpX0D2r1d6+ofgAAAP//AwBQSwMEFA==
+    AAYACAAAACEAP72VVQMBAABTAQAAGAAoAGN1c3RvbVhtbC9pdGVtUHJvcHMxLnhtbCCiJAAooCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABckE9rwzAMxe+DfQ==
+    h+C76/xp0yYkKaVJoKeNdYPdirGVJhDbQXbKxth3n7OdupP46SG9JxX7DzUGN0A7GF2SaBWSALQwctDXkry9tnRHAuu4lnw0GkqiDdlXjw+FtLnkjltnEE4OVOAbg6+nuiRfbQ==
+    dNhskvpAj0kb0/WxSemuqRsaRXWdZetsm7bbbxJ4a+3X2JL0zk05Y1b0oLhdmQm0FzuDijuPeGWm6wYBtRGzAu1YHIYpE7O3V+9qJNWS52/6BTp7j0u0GYeSzKhzNQg01nSOyg==
+    T809War5jSFMBp1l599TUV6eZxQ9t3B5QgnIoiSOGWFVwf4ZLXz3iOoHAAD//wMAUEsDBBQABgAIAAAAIQB6qHJ0xQAAADIBAAATACgAY3VzdG9tWG1sL2l0ZW0yLnhtbCCiJA==
+    ACigIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKyPQWrDMBBFryJmX8vNIhRjOwSSLJOC26y6keWxLZBmjDQpzu0rQpsTdDn8x/t/6t0avPrGmBxTA69FCQrJ8g==
+    4Ghq4PPj9PIGKomhwXgmbIAYdm3dVx3fosWkOvRoBYdO7j7HX/v3fedWmY+Dk6y8jKOzeCHvCIs1eVAP8GxChjML6vrXvQWVt1Cq+gZmkaXSOtkZg0kFL0g5GzkGI/mMk+aH+A==
+    wPYWkERvynKre9d7x1M0y3z/lf2Lqq318+H2BwAA//8DAFBLAwQUAAYACAAAACEAXJYnIsIAAAAoAQAAHgAIAWN1c3RvbVhtbC9fcmVscy9pdGVtMi54bWwucmVscyCiBAEooA==
+    AAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIzPwYrCMBAG4PuC7xDmblM9iCxNvSyCN5EueA3ptA3bZEJmFH17g6cVPA==
+    eJwZ/u9nmt0tzOqKmT1FA6uqBoXRUe/jaOC32y+3oFhs7O1MEQ3ckWHXLr6aE85WSognn1gVJbKBSSR9a81uwmC5ooSxXAbKwUoZ86iTdX92RL2u643O/w1oX0x16A3kQ78C1Q==
+    3RN+YtMweIc/5C4Bo7yp0O7CQuEc5mOm0qg6m0cUA14wPFfrqpig20a//Nc+AAAA//8DAFBLAwQUAAYACAAAACEAdD85esIAAAAoAQAAHgAIAWN1c3RvbVhtbC9fcmVscy9pdA==
+    ZW0xLnhtbC5yZWxzIKIEASigAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIzPsYrDMAwG4P3g3sFob5zcUMoRp0spdA==
+    O0oOuhpHSUxjy1hqad++5qYrdOgoif/7Ubu9hUVdMbOnaKCpalAYHQ0+TgZ++/1qA4rFxsEuFNHAHRm23edHe8TFSgnx7BOrokQ2MIukb63ZzRgsV5QwlstIOVgpY550su5sJw==
+    1F91vdb5vwHdk6kOg4F8GBpQ/T3hOzaNo3e4I3cJGOVFhXYXFgqnsPxkKo2qt3lCMeAFw9+qqYoJumv103/dAwAA//8DAFBLAwQUAAYACAAAACEAp4zYLUsQAAASiwAAGAAAAA==
+    d29yZC9nbG9zc2FyeS9zdHlsZXMueG1svJ3fk5vIEcffU5X/QbVPyYNvGRhgcMWX4mfsyvnOufXlnlmJ3SVGoAA6e/PXpxmQFm0zwMDI5QevfvRnmun+9kyDkP7292/7bPNHUg==
+    VmmRv7shP2g3myTfFrs0f3x389vn6A272VR1nO/irMiTdzfPSXXz9x///Ke/fX1b1c9ZUm0AkFdv99t3N091fXh7e1ttn5J9XP1QHJIcXnwoyn1cw8Py8XYfl1+OhzfbYn+I6w==
+    9D7N0vr5Vtc066bDlHMoxcNDuk2CYnvcJ3nN7W/LJANikVdP6aE60b7OoX0tyt2hLLZJVcFB77OWt4/T/IwhFIH26bYsquKh/gEOpvOIo8CcaPyvffYCMOUAOgJYVSKHMDvEbQ==
+    9bxPvt1s9tu3Hx7zoozvMyDBIW3Aqw0H3/wI0dwV2yB5iI9ZXTUPy09l97B7xP+LiryuNl/fxtU2TT+DF4Dap0B97+ZVegOvJHFVu1Ua918Mu+ea15+aNw5abqu697SX7tKb2w==
+    ZtDqf/DiH3H27kbXT8/4jRMXz2Vx/nh6Lsnf/HbXd6b31D1w393E5Zs7tzG87Y6t/b93xIfXj/jAh3ib8nHihzqBXCWW1kCztJGGbjqnB78em0mOj3XRDcIB7f9n7C2adEhhSA==
+    6LtWV/Bq8vBTsf2S7O5qeOHdDR8Lnvztw6cyLUrQzrsbh48JT94l+/R9utslee+N+VO6S35/SvLfqmT38vy/Ip7/3RPb4pjD34ZNeSJk1S78tk0OjZrg1TxuYvJzY5A17z6mLw==
+    g3Pz/55gpIvEkP1TEjclZUNeI7j7Ugi9sah6RzvMPL46dv4uqYGM7zUQ/V4Dmd9rIOt7DWR/r4HY9xqIY645UJrvkm+tEPEwiDrFEahRmiMQmzRHoCVpjkAq0hyBEqQ5gkSX5g==
+    CPJYmiNIUwlOXWxFWdhLdkOQ7ePc6TViGXd6SVjGnV4BlnGnC/4y7nR9X8adLufLuNPVexl3uljLc9ut1uYDyCyvV6vsoSjqvKiTTZ18W0+Lc2DxPksNr1n0klLJQSrAtJWtWw==
+    iFfTtjF/PJ0hXKTL1/O66eg2xcPmIX08ltCer3U8yf9IMmiUN/FuBzyFwDKpj6VgRpbkdJk8JGWSbxOVia0O2nSCm/y4v1eQm4f4URkryXeKp+9EVFIUzgkN/fNTI5JUQVLv4w==
+    bVmsd62IldWHn9Jq/Vw1kI13zLJEEetnNSnGWet7A45Z3xpwzPrOgGPWNwa9mKmaoo6maKY6mqIJ62iK5q3NT1Xz1tEUzVtHUzRvHW39vH1O64yX+P6ug8w/d+dnRXNmfLUfdw==
+    6WMewwZg/XLTnTPdfIrL+LGMD0+b5sT0MLZ/zLLjeMXuefNZxZp2Jqna1/MU8eGo0/y4fkIvaKrEdeYpkteZp0hgZ956iX2EbXKzQXuvpp+5O97Xg6LlpFmivYuzY7uhXa+2uA==
+    Xp9hLwKI0rJSJoNhrIIM/rnZzjbhVFH5Xrxc79gLa72sXlclpe51SAVeZsX2i5oy/P75kJTQln1ZTYqKLCu+Jjt1xLu6LNpc60te5yGZJflwf3iKq5T3SheI+Uv96Zr65mN8WA==
+    fUCfsjjN1cQtfLOP02yjbgfx/vPHnzafi0PTZjYTowboFXVd7JUxuzOBf/k9uf+rGgddaILzZ0VH6yo6PcRhfqpgkWlJxU4RCbaZaZ4qWUM575/J830Rlzs1tE9l0n6MpU4UEQ==
+    7+L9od10KNAW1MWvUH8U7IY4799xmTbnhVSJ6rMSWO+0YXW8/0+yXV/qfi42Ss4M/XKs+flHvtXl1upw67cJF7j1WwQeTVgemvxVcLAXuPUHe4FTdbB+FldVKryEupin6nBPPA==
+    1ce7vvnreEVWlA/HTN0EnoDKZvAEVDaFRXbc55XKI+Y8hQfMeaqPV2HKcJ6CU3Kc948y3SkLBoepigSHqQoDh6mKAYcpDcD6T+j0YOs/ptODrf+sTgtTtAXowVTlmdLlX9FVng==
+    HkxVnnGYqjzjMFV5xmGq8swINsnDA2yC1S0xPaSqnOsh1S00eZ3sD0UZl8+KkGGWPMYKTpC2tE9l8dDc31Dk7Ye4FSCbc9SZws12i1MV5N+Te2WuNSyVfik4IxpnWVEoOrf2sg==
+    4HDLy8+uTZnxOzlWu/Api7fJU5HtklJwTGJb6Jfv2tsyXrvP3Zh12vOn9PGp3tw9nc/29zGWNml5atgvzKYHHJpz63Q/y5DZx2SXHvcnR/HNFJYx35hn9IUxnTZ+2UlcWJozLQ==
+    8ZjWtOXLLvnC0p5picdkMy25Ti8sx/QQxOWXwUSwx/Ln3OMJks8ey6Kz8eCwY4l0thxKQXssiy6ksnG32+ZqAY7OPM2I7eeJR2wvoyIxRUZOYspsXYkRYwL7NfkjbVZ2maLJxw==
+    O396AtV9vomeVTn/dSza8/YXF5zm39T1ATZOeZVsBjnG/AtXF1VGPI+zy40YMbvuiBGzC5AYMasSCc2lSpKYMrs2iRGzi5QYIV2t8IogV62wvVy1wvZLqhWmLKlWK3YBYsTs7Q==
+    gBghLVSMkBbqip2CGCElVGS+SKiYIi1UjJAWKkZICxVvwOSEiu3lhIrtlwgVU5YIFVOkhYoR0kLFCGmhYoS0UDFCWqgL9/ZC80VCxRRpoWKEtFAxQlqofL+4QqjYXk6o2H6JUA==
+    MWWJUDFFWqgYIS1UjJAWKkZICxUjpIWKEVJCReaLhIop0kLFCGmhYoS0UNtbDZcLFdvLCRXbLxEqpiwRKqZICxUjpIWKEdJCxQhpoWKEtFAxQkqoyHyRUDFFWqgYIS1UjJAWKg==
+    v1i4QqjYXk6o2H6JUDFliVAxRVqoGCEtVIyQFipGSAsVI6SFihFSQkXmi4SKKdJCxQhpoWLEWH52lyhFH7Mn8mc9hZ/Yn3/pqnPq1/6t3H2UMR918krMmn8vglcUXzaDNx4avA==
+    35gHSe+ztOCnqAWX1ftc/pEIqQufv/jjd/j06Su/dKm7F4JfM0VwOtcSnVOhYynft0RNHh3L9L4l2nXSserbt0TLIB0rulyXpw+lwHKEjMfKTM+YCMzHqnXPHE/xWI3uGeIZHg==
+    q8w9QzzBY/W4Z2humuL82tqcOU/W+fOliDCWjj2CLSaMpSWO1akcY2HMDZqYMDd6YsLcMIoJUvEUYuQDK0ZJR1iMWhZqLDPZUC8XqpggG2pMWBRqhFkeaoxaHGqMWhZqXBhlQw==
+    jQmyoV5enMWERaFGmOWhxqjFocaoZaHGS5lsqDFBNtSYIBvqlQuyELM81Bi1ONQYtSzUeHMnG2pMkA01JsiGGhMWhRphlocaoxaHGqOWhRp1ydKhxgTZUGOCbKgxYVGoEWZ5qA==
+    MWpxqDFqLNT8LMpFqKUi3DOX24T1DOUW5J6hXHHuGS7olnrWC7ulHmFht4RjdYq5XLfUD5qYMDd6YsLcMIoJUvEUYuQDK0ZJR1iMWhZquW5pKNTLhSomyIZarlsShlquWxoNtQ==
+    XLc0Gmq5bkkcarluaSjUct3SUKiXF2cxYVGo5bql0VDLdUujoZbrlsShluuWhkIt1y0NhVquWxoK9coFWYhZHmq5bmk01HLdkjjUct3SUKjluqWhUMt1S0OhluuWhKGW65ZGQw==
+    LdctjYZarlsSh1quWxoKtVy3NBRquW5pKNRy3ZIw1HLd0mio5bql0VDLdUsfwSRV8BVQd/u4rDfqvi/ufVw91bHElxPefr34gakGzH/CDd5fg1fNd4z3bgjatd+x2gH5Gz/szg==
+    PwTVGDdubLqf3Oqe5t52F0TbEbkhHmr7BGNtu2+HEgzVfcvr+TYl/h2vrwcWfBUsd+QlxKd3d/P5Ml/t+y5ma9TvukmpEZ95yo3OUZuVIgedTmZTHoI/91n7o2Twx4d8B4Cv3Q==
+    D3K1nu6+xS0KXveTLPsYt+8uDuK3ZslD3b5KNP6lAK9ev2+/305oX/JCKATcXjrTPux+GE0w3+033ndX6IUp2ah9YLr5x0XWzvTMHD5707uXmd/K/NotdK9zO7MxjPZLI+5+Vg==
+    X6a+3IGUVdokBX+LpkWhaZOu9nY/5rdtquLpHUxr/nVBOv0inuC4L8rE9lhBSvCK8joukWMEjq7rke2H1PItR3c0Sn2XhNQhlmWiqZk0GDgwQohh8xlY7zDzIkJ03YGhfKq7kQ==
+    qxEGf0WBYYRuZGjI4UmDAYfdgIT6aaZXOuy7oc1Molm2a1JLj5jphrrDTJ1BwJlhI4cnDa7ssOFaBrXcIPAIpYwYnmnokWcR5jGb+jZ2eNLg2g47tqcFNiVepFGmEwi172mO4Q==
+    a3qTnTiHJw2u7TAkH7U019KYSXWfuY7rEWL6puv5kRmG2OEpgys7DNPlhwbRiO0Y1KGmZ/rEda3IdUKIte8ihycNruywQzwzZDA7JqNUtwOQFNStyHJZRF3DxA5PGgw4zCjMfw==
+    oMZh02FBYLheZBKDMtOEeQosnZBAd6HOau2vfvYdnjS4ssN24ISGTQ0t8D0KNdbx7Uh3IuKGNNRJgOvwpMGVHWZuo24GKyzTqE8s1/OCMDJNSt3QtBwDLxxTBld22Dd8SD6dEg==
+    x/OpHxHHZcRnthmFHtEtn+GFY8rgyg5blJo2zIwGayy1aMCoTagZwvLru5rDHOTwpMGVHfZYZHiubocGJGZITJewMIKa5VLLdHQfi27S4Nop4dtGBMsWg/SjzLY8DabQACG5tg==
+    SyKCRTdpMOSwT1nAF+31Doe2G0Qk8CLdC2AVMByNuFQnUFlt6hjEQg5PGlzZYQ90btgB8wIroBpIPgqjwDQs3XM012V4aZ40GHA4MkGkila6yLJcjdkaMwJCI9ga+M0/zdFDRw==
+    00wLOzxpcHWHNVM3I0KDyKOa5zo2owHxLC0MjNA2gwGHJwyu7LAZWpEREsfxDA1SMmq2t7pu665twf5c8/HSPGVwZYcd2A/Yuu7CfsCkDvOZ5zd7XKirkKCWiUU3aTDgcLNXbg==
+    b+ZQsB/2QtgI2I5lwjbXjUwGzQNoKAopgzVsYGmeNBhwOITdUXuD1nqHg4g2qrFCajrUZQxWsED3Qt+hkWVGOu44Jg2u7LARMQsKqeeFBrS+dujBwIxouma7FvHIwAxPGQw4bA==
+    hIajaqUziG1Q26K+qRkUVi2P+CZMnk1034B9Ot5LTBpc2WE9hBbH10A50AwHBixjoQfbLzswGWzTGZ7hSYMBh4NIh+NUtFvzPChMrm7BKkWpBjty6C0D3YFuB9wwcVmbNBhwGA==
+    Fhqm8yVFgeh8w25GIxrsFolnMN9zXero0FO6kTGwvZw0GHAYFOcGisqaY9lO4FAb9uA+bc6PeVGk+yaxYUNjgkO4Dk8ZXNlhaNEZRNP0A9g0erbthCTyHBJZDHaRnou3l5MGVw==
+    dhhWKuIYlsc036e2qTMPAmtqLDRcwzF1nBKTBld22NNDD1IQVgONUMJM2LoaTsgixw2I7kX4vMSkwbVTwgmhM4tMj/kaNGghY6Ap4mpGEMBq5uEZnjQY2vycT3wrOC8RhaEfmg==
+    zWkRi1qw5tqBY8O2wGeWb3omweclpgyu7LAJBd9mUJFAPxS6Spe6kJO+wwI98MjA0jxpcGWHiWkSagWBYZhNAx+5HtSAkPqEMcslHj4/PGkw0+HTX9WP/wcAAP//AwBQSwMEFA==
+    AAYACACEfTRJMHtMbzoBAABIAgAAEQAIAWRvY1Byb3BzL2NvcmUueG1sIKIEASigAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAApVJLTsMwEL1K5H1iJy1VGyWpBIgVlZBAArEz9rQ1jT+yp017NhYciSuQhDQIxI7dzLyPZp7m4+29WB51HR3AB2VNSdKEkQiMsFKZTUn2uI7nZFkVwnq489aBRwUhag==
+    NSbkUpRki+hySt3e14n1GyoFhRo0GAw0TVJKRi6C1+FPQY+MzGNQI6tpmqSZ9LyMsZQ+rW7vxRY0j5UJyI2AQTUqQg+HpF3VtMjaes0x9A6Oix3fQOc0oxqQS46cdpfFbjyNVA==
+    hRQ5Kqwhon0d9i+vIHDohAeO1nfdDk6N9TIMiIQgvHLY5thNah5w1ca4ViAvT93Ew0F1KVdpQce6GIL5MgYZtefneHJQkjPyOLm6frghVcbSWcwWccYeMpZPpzlbJIvsYpLO2Q==
+    c0F/+Xwb62GJfzufjaqC/nyH6hNQSwMEFAAGAAgAAAAhAKUw00qFDwAAxpMAAA8AAAB3b3JkL3N0eWxlcy54bWzsnVtz2zYWgN93Zv8DR0+7D6klWbbjTN2OLdvrTBPXjZ32GQ==
+    IiGLNUVoSSq2++sXN1KgDkHygFhvZ7qTh1gkz0fg3IAD3r7/8WWdBN9olscsPRtNvhuPApqGLIrTx7PR14frd+9HQV6QNCIJS+nZ6JXmox9/+Pvfvn/+kBevCc0DDkjzD+vwbA==
+    tCqKzYeDgzxc0TXJv2MbmvKdS5atScF/Zo8Ha5I9bTfvQrbekCJexElcvB5Mx+PjkcZkfShsuYxDesnC7ZqmhZQ/yGjCiSzNV/EmL2nPfWjPLIs2GQtpnvNOrxPFW5M4rTCTGQ==
+    AK3jMGM5Wxbf8c7oFkkUF5+M5V/rZAc4wgGmAHCcUxziSCMO8tc1fRkF6/DDx8eUZWSRcBLvUsBbFUjw6AduzYiFl3RJtkmRi5/ZXaZ/6l/yv2uWFnnw/IHkYRw/8FZw1Drm1A==
+    m/M0j0d8DyV5cZ7HpHHnSvzRuCfMC2PzRRzFowNxxvwPvvMbSc5G02m5ZS5aUNuWkPSx3EbTd1/vzZYYmxacezYi2bv7cyF4oDum/je6u9n/JU+8IWEsz0OWBeWOOjkeC2gSiw==
+    uJgenZY/vmyFhsm2YPokEqD+r7AHQOPcf7k336ug4nvp8hMLn2h0X/AdZyN5Lr7x68e7LGYZD5yz0ak8J994T9fxTRxFNDUOTFdxRH9b0fRrTqPd9l+upfPrDSHbpvzvw5OZ9A==
+    giSPrl5CuhGhxPemRNjkVggk4uhtvDu5FP93CZtoSzTJrygR+SSY7CNk81GIqZDIjd42M7d7fZdHoU50+FYnmr3ViY7e6kTHb3Wik7c60fu3OpHE/DdPFKcRfVGBCE8DqF0cSw==
+    NKI5lmBDcyyxhOZYQgXNsUQCmmNxdDTH4sdojsVNEZyChTYvNJz90OLt7dzuMcKN2z0kuHG7RwA3bnfCd+N253c3bnc6d+N2Z283bneyxnPVVCv4yMMsLQZH2ZKxImUFDQr6Mg==
+    nEZSzpJFlh+eGPRo5qWTHjAqs+mBeDAtJPJ3t4fIIHUfzwtRzgVsGSzjx23Ga/OhDafpN5rwKjkgUcR5HoEZLbaZRSMuPp3RJc1oGlKfju0PKirBIN2uFx58c0MevbFoGnlWXw==
+    SfSSFCqH5vXzSgRJ7MGp1yTM2PCmMeItP3yK8+G6EpDgYpsk1BPr1o+LSdbw2kBihpcGEjO8MpCY4YWBYTNfKtI0T5rSNE8K0zRPelP+6UtvmuZJb5rmSW+aNlxvD3GRyBRvzg==
+    Oib91+7mCRPL4s3tMCcyzQ3re5r7+DElfH4wfDTSS6rBHcnIY0Y2q0AsWne2H32eCxa9Bg8+hryK5GvaLz1oznsdp9vhCq3RfMVexfMUfRXPU/xVvOER+JnPosX87cZPuXO/XQ==
+    FI0xjQg2kmzVfHd4tJFiuIftAuA6znJvYdCM9eDBt2K2K8zpYya4a+Xwhu1Yw8NqPyt5bZ5GemhlwsInP2n45nVDM161PQ0mXbMkYc808ke8LzKmfM0M+ak0Sa+Qv1pvViSPZQ==
+    KVVD9J8JlNfbg89kM7hDdwmJUz92u3q3JnES+JtB3Dx8/hQ8sI2oQoVi/AAvWFGwtTemXij8x2908U8/DTznNXL66qm3555WjyRsHnsYZBSJRZ5IfJoZp7GXMVTyfqKvC0ayyA==
+    D+0uo+oWl4J6It6T9UZNOjzEFs+Lzzz/eJgNSd6vJIvFspGvoHrwAjNWFfPt4ncaDk91tyzwsnD087aQy5Nyqiul/eGGTxNquOFTBGlNPjwI//XQ2RpueGdrOF+dnSckz2PrFQ==
+    Vmeer+6WPN/9HV78aR5LWLbcJv4UWAK9abAEelMhS7brNPfZY8nz2GHJ891fjy4jeR5W7CTvX1kceTOGhPmyhIT5MoOE+bKBhHk1wPAbeAzY8Lt4DNjwW3kUzNMUwID58jOvww==
+    v6eLQAbMl59JmC8/kzBffiZhvvzs8DKgyyWfBPsbYgykL58zkP4GmrSg6w3LSPbqCXmV0EfiYYFU0e4ythTPPrBU3ePtASnWqBOPk22F82Xk3+jCW9MEy2e7PKyIkiRhzNPa2g==
+    bsCRkvVb27rE5IMeg5twl5CQrlgS0czSJ7ssr5fv1VMb+82Xzei17PkpflwVwf2qWu03McfjTsmyYK+JdZ+wSefH5eMuTWKfaRRv12VD4bMWx4f9haVH14Rn3cK7mURN8qinJA==
+    POdxt+RullyTPOkpCc/5vqekutxtSrbFwyXJnhod4aTNf6oaz+J8J21eVAk3nrbNkSrJJhc8afOiWqgE52EorhZA6/SLGbt8v+Cxy2OiyE7BhJOd0juu7Ii2APtCv8ViZMckTQ==
+    eb7q7gmQ9+Ukulfm/GXL1Lp97YJT/2e+PvKJU5rToJFz2P/CVS3L2PXYO93YEb3zjh3ROwHZEb0ykVUclZLslN65yY7onaTsCHS2giMCLltBeVy2gvIu2QpSXLLVgFmAHdF7Og==
+    YEegAxUi0IE6YKZgR6ACFYg7BSqkoAMVItCBChHoQIUTMFygQnlcoEJ5l0CFFJdAhRR0oEIEOlAhAh2oEIEOVIhAB6rj3N4q7hSokIIOVIhABypEoANVzhcHBCqUxwUqlHcJVA==
+    SHEJVEhBBypEoAMVItCBChHoQIUIdKBCBCpQgbhToEIKOlAhAh2oEIEOVPUkonugQnlcoEJ5l0CFFJdAhRR0oEIEOlAhAh2oEIEOVIhABypEoAIViDsFKqSgAxUi0IEKEehAlQ==
+    FwsHBCqUxwUqlHcJVEhxCVRIQQcqRKADFSLQgQoR6ECFCHSgQgQqUIG4U6BCCjpQIQIdqBDR5p/6EqXtNvsJftXTesd+/0tXulFfzCe9TdRhf1TZKjur/7MIF4w9BY3PJR7Keg==
+    ox8kXiQxk0vUlsvqJlfeEoG68PnzvP0JH5M+8J1M+lkIec0UwGd9JcGayqzN5U1JUOTN2jzdlASzzllb9jUlwTA4a0u6Mi7Lm1L4cASE29KMITyxiLdla0McqrgtRxuCUMNtmQ==
+    2RCECm7Lx4bgUSCS8770UU89HVf3lwJCmzsahBM7oc0toa3KdAwDo6/R7IS+1rMT+prRTkDZ04rBG9aOQlvYjnIzNQwzrKndA9VOwJoaEpxMDTDupoYoZ1NDlJupYWLEmhoSsA==
+    pnZPznaCk6kBxt3UEOVsaohyMzUcyrCmhgSsqSEBa+qBA7IV425qiHI2NUS5mRpO7rCmhgSsqSEBa2pIcDI1wLibGqKcTQ1RbqYGVTLa1JCANTUkYE0NCU6mBhh3U0OUs6khqg==
+    zdRyFaVmapSFDXHcJMwQxA3IhiAuORuCDtWSIe1YLRkEx2oJ2qq0Oa5aMo1mJ/S1np3Q14x2AsqeVgzesHYU2sJ2lJupcdVSk6ndA9VOwJoaVy1ZTY2rllpNjauWWk2Nq5bspg==
+    xlVLTabGVUtNpnZPznaCk6lx1VKrqXHVUqupcdWS3dS4aqnJ1LhqqcnUuGqpydQDB2Qrxt3UuGqp1dS4aslualy11GRqXLXUZGpctdRkaly1ZDU1rlpqNTWuWmo1Na5aspsaVw==
+    LTWZGlctNZkaVy01mRpXLVlNjauWWk2Nq5ZaTY2rlj5zkdjDK6Du1yQrAn/vi7sh+aogiJcTHjzXvj8lwPLzbvz4grdKvILceCAoUu9Y1UB54Meo+k6UEBbNCPQXufRm2Vp9QQ==
+    VP6d5bxq1ceMx5dHs8urK3WU7Ytb07H5xa1Z9cP6xS3ZtI7OVM3X13snoAO771fJ1i0I19vPQtmge6l4uWHDdmHUcnt5mvmKZGrvzt3KY3RA2bV1PpteXOlLpjZtmbraKU7pig==
+    vpCwUOJMvW7p07ekwptarD7+tpBH7z7INtF5w/wg20TmM+O7ai4GmFoNoEPRjwGmPQxQj5UOm8zmx+PzTptYdF5GYV3nHdqW2wZq+9CqbX0XgB9tH/rWdkMEPFG6ueVNktvEjw==
+    T1zHuVJbZYiFeDMeV4rKHl1mkR4HzNL8HUTye8t3EMXOK71N7K99CrEmufsUoth8UX0KMRQjVWX669nliXw3hzxYjmI8A8oxTCZluVncWMVBJ9el71Td0vdp1D6mKLd1e1PIDQ==
+    yZOHenmfZSTQL+GuniKVr+De9zPLm7otPqKT7244a3YZe7sLMeK3tFnOCFqHMDVpsDqx9uKuFvL2LBLlR/yPj6nw6WedrVVLoxeiUHz/nCbJZ6KOZhv7oQldilDkeydj5Rf1/Q==
+    C/X6Uat8JuepVsBBvTHqZ7ufqO+V6BuorDMGMRlrULe8m2+opnv4Qt36Yh0dNEbNFOUupcl6PjTdxtLe8l0Z9QR2NRvPy3te+wzhXdOdul9dsCyimZzIKb+RZxWv8tcd/4OnQA==
+    +Qc/J60+BqrSiCZXXuUkW3mck3Tpj07CMU+lEb0ZJv6rm7gKjUr9fSKleXy+Vt+12ndH/bmrJle0DcGK1DoA20fgTqflsaTcjCzK48QopMaHDctFlfteD7DGMdLA1SGnh+omdg==
+    oS7Na547dU/ua+NTuM25E8qiZj/3GFrZ17HaFew0tqfoxuHNovYuldv027ODVXf0K8L3u6I343oBW1t+adk+HzM9o1YxLOZiCjZkltoQBfrbcZgoUKT/R0E9Cgyt7OtY7RoaBQ==
+    2oBvFAXG26Lky6L2+wTeJjU0MCxzkc7YqM3m34/FP93fjjBpmbqoy/X7XTZuDlAHNHW5xyymvMl6r2vzyekpYiHi7WYxF9fin9hglkgLEj49ZmybRqBMutBlEn7S43wqlzmS8w==
+    yRymVM7ncpqBDTwbcsLmeDZv87tbVr6bbj9ijdfWdQ1w1jq5ZaCeTCZzXf+3LlP5HWSqJc/93uqdwcTHSCPOYk3VTfnLXEZ6s4VO9fDTviLU1qb+m2NonzU3SWqb6Ux0Lh+2wA==
+    PJk2rxT3WB6zLH/taf6wp5b7+uFOL426H+qAhgHtKu90vzfXXrOPVt8Z21dVtcOHp5awVmftTGkNWqytbPacWvV1o1qjbeoZ6kx1Ndu18j/VRO1Syr4mysQ+9ZTYdQnaM7GbVw==
+    Y7xeTUHqRl34sOnm0JNudHHhPuj9pS9pNGfA8tOn+7YrtzcZzZbntExbmtMm7L58YM+Dk+nh+cml4oBBu7zwNX3fcOUrlpchROXDDVE+xft7WKLVMoXS5Z/tUtjRxenFpbxDpw==
+    yW+8hrRpRYtXDI3nmnP1dRK7F/wVrSQ3NtcaatfgoVlS9HYWPjWuEZ7OT8aqSrBYgduaJPEiq2m/tlGqvLYlzMUsc03z4JY+B1/YmqQNuh6PT8ZzHdiwaOFuVW7QhTI+R3Zq3w==
+    onlUzjTs2JH3TF1b896xmfaqdda2bPYnt1D5V/7DfwAAAP//AwBQSwMEFAAGAAgAAAAhAMEjYBagAQAACgQAABQAAAB3b3JkL3dlYlNldHRpbmdzLnhtbJSTTW/bMAyG7wP2Hw==
+    DN0bO1kaDEadAkHRYUD3gbXbXZbpRJgkCqIS1/31Y/zRZMsO9UnkS/ERCVI3t8/WJAcIpNEVYj7LRAJOYaXdthA/n+6vPoqEonSVNOigEC2QuF2/f3fT5A2UjxAj36SEKY5yqw==
+    CrGL0edpSmoHVtIMPTgO1hisjOyGbWpl+L33Vwqtl1GX2ujYpossW4kBE95CwbrWCu5Q7S242OWnAQwT0dFOexppzVtoDYbKB1RAxP1Y0/Os1O4VM19egKxWAQnrOONmhoo6FA==
+    p8+zzrLmBLieBlhcAFYE0xDXAyKl1sKzSKzKP28dBlkaJnFLCVeVdGCx5pFW+kDDmTS5rgrxYZktF/NV1oVLrNq7LnSQhrdFpEeV5/kAdRzV7FX9obe7/8hP6C/FDcaI9h+dyw==
+    2FThaMVTjuM9FOzQy/He0fBSwWArNMjrI/cRe4Q5q2xaZvlXRdNyw3nnU1LTU9O9OZ7dWMafOZL3TrMA/Zvoo7b6Be4xbAI2BKEvBUz7zf368tB50hhsvn/91D919oPXfwAAAA==
+    //8DAFBLAwQUAAYACAAAACEAS1ntXbgBAAA8BQAAEgAAAHdvcmQvZm9udFRhYmxlLnhtbNyS32rbMBTG7wd7B6H7xrITp52pU9augcHYxWgfQFFkW1R/jI4SN2+/I9nJoKHQ3A==
+    7KI2GOn7pJ+OPp/bu1ejyV56UM7WNJ8xSqQVbqtsW9Pnp/XVDSUQuN1y7ays6UECvVt9/XI7VI2zAQjut1AZUdMuhL7KMhCdNBxmrpcWzcZ5wwNOfZsZ7l92/ZVwpudBbZRW4Q==
+    kBWMLemE8R+huKZRQv5wYmekDWl/5qVGorPQqR6OtOEjtMH5be+dkAB4Z6NHnuHKnjD54gxklPAOXBNmeJmpooTC7TlLI6P/AcrLAMUZYAnyMkQ5ITI4GPlKiRHVz9Y6zzcaSQ==
+    eCWCVZEEpqvpZ5Khstyg/cC12niVjJ5bBzJHb891TVnB1qzEb3wXbB6/NIsLRcc9yAgZF7JRbrhR+nBUYVAAo9GrILqjvudexdJGC1SLxg42rKaPjLHi+3pNRyXH6qKyuL6flA==
+    Ip6Vnm+TMj8pLCoicdI0HzkicU5r8MxsTOAsiSdlJJDfciB/nOH2nUQKtsQkSswjJjO/KBGfuBcn8vg2keub8r8kMvUG+aXaLrzbIbEvPmmHTANY/QUAAP//AwBQSwMEFAAGAA==
+    CAAAACEAZfvE2z8MAAC+aAAAEwAoAGN1c3RvbVhtbC9pdGVtMS54bWwgoiQAKKAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAArF1rbxy3FeXnAv0PRr+nTuzECQ==
+    AleBH41jQI6VSEmaT4YjrRwhlmRoV47159PeM1ya5H3xclUEtXZ5zz3nDGeGw9ds//vXw/RN+pDO09t0J71Pq3SV1uksXaaL9K/0j/RZ+mf6lP7eochFOqbyE4pepDdL9Dpt0g==
+    afqEUA/o2zdpLz1M36fXxPMLIa8I+yPlvVs+b9J/FpUDiuPbna3qBellriv6/DWVnZHOFeWs6X+nhPyEeG4o9nobW1MJvr1PdwlX+df0/ZD+vqboyaJykl6RHpiP0+9Usib0qw==
+    9HKJ4EjvkvP76R79d5cc7KW/p7+Rrzt0FDLrO/r39TavIjP6ER3HW3LxZ3pO2u/pE3yu0lP6u6ZPr9J++o0Qe2HkQ3IUZ+Vuzgl7TTmbTlmWZhUN3TM+pvjNcuQVIcvApiE1rg==
+    bwlxnn5erqoTumYuuzPV1/VsRvUxo3I7l7xe5jN3cT2u40tiekToE/r8Weeuj/TqPCvCfs9kv+ewIyvCft9kv++wIyvC/rnJ/rnDjqwI+xcm+xcOO7Ii7A9M9gcOO7Ii7F+a7A==
+    XzrsyIqwf2Wyf+WwI6tnf7LE3y0t/81H3IpayfVy/fpxKI0Y4nq4ov34SE/eEx4a17gfH+nJu8RD46r34yM9ed94aNwHfnykJ+8kD407w4+P9OS91aMfL3//oKzjpUeVn71o5w==
+    ubKNlB481t3c1KfLbMaMO+sZpuc/plrGJzwJvRrjONuRZNzFx6iuLHzc11w9oRd+Ttej5afEbf3KMKM3qgeOG+vHjvsJXVFruqJQ9oz6x3hicA8aRurrTLPaVj142JiXWH38Ow==
+    vaBPZ4qDGpF6bZbPfr7FWccpEZqaZPFUSw1o930bk0p9ZlTDOjYN42vGju+75dtqGSG/Ue5dHpeakmFGzzpeCzfWjx33c7rnH1E9cd1SLnVqRoTXOi4et3Vix7FPR/yGPr9NLw==
+    0yn9l0frXFVHSW2Lbd6Bdfw+OuooWjeXlHtJVwbmdc6oTctzTNKTjtPcWIyejwN6mgK1UluRPio1eXZcyToHOmqkHKvzg+UMbRJmDlbE6KMxU/dmmVnaLD2PUp/fU/45qeVZkg==
+    +Rx5LDGl23q1anwmdzfvsbNzmH6h9uXbdCQc1ojUb7Ni7FY9SISnFjumn6m1PHLqSN5x4wzpKqJyO5dWncUzd3E9X8ejGh3X31xtResmXhOj475YnjOYDz2ib0+I4d3HOuudRA==
+    kMVLjJW7QTt6tV3ROEi5h1POgBXLinZmr4GZfXhapQ/kZ499BxdH8PxLavGPqI7fJTyZrbnuGC7rxRg1H2gRMYe9oe+40tF7sSJVS8uKsdczN0J4atb55/ijhD7HW1dXYjRljQ==
+    iWtfJ6z71Fpsv2fOHtHn15HWc8JUFb0cfFYG5/2w3Dm4so+XT08TVpH46ll/reySlT3totY7tkco3ignOq7R1+nKbJfVzuySBVe7qXHHuF7OKRtzl1h3PTM8RnDZVYxR97GfsA==
+    urxK+qpkBNV68Nl0B3pPzou2ipF+YMH+QFg8EVE3G2phpZqFaBVtFl31J8ICKdV4pFWRWT77wXLe+/HhGKMpaky9du5DWE8mLwo9P7tXqjsH5NPCjkHFyxxr+C3cbIblZ6YdrQ==
+    +X0PTi/vFb0+38uEPSXvln9zD4mXZC6O6llkO6216qPWHPGbj0/pp/QXe0vwTFwz5hGqqI3ZPAdHS+2dEx7ZaFu5ukRIZY1lTtU6dhsZceHXAfrpsX0cc/jqLK7A/V0l9OvPlw==
+    tmp8vuLo7G2GXXeGnNF5jCFbR2NW6Sa34+ul53JMmGuq07ybLI8Je0dRdHEVZx87Kxn2VTabY7kcKd3Wq1+nsdzdvM/X92Y7qh0hfD+FhasWj/npdrVcu0XPimUlO9PSKD3P3A==
+    Ry99c/RD2z7UHL73ElOw/NWnsTVOiGN7X2PmsafSJ5nx5udYHkdKY6+5xz/j1MuwfPoqvcs8Pl4RCvt5f+vGBHYMyl6m1DhdnOFphJx6T9ixomFl9hqHCWtNuL9rjRwsmevl+A==
+    6w6FKBL6cVbuZpWwHzfPGOZ1eb+fMJuR3c2q3M5lPb+7Zu7i2rqqDgmH2YLSx3mR0EvGytdJ08uJoLKrCNu8g7bO4uioo1HdoI7LfjPsTNTLWzWeMebFDkS93OKVexY1FHYa6g==
+    5Rav3JuoobCjUC+3eOUeRA2FnYN6ucUr9xpqKOwQ1MstXrmnUENh361ebvHKnboaCjtu9XKLV+7RLahNg8IV345+x5hWz2Pi2tdUDjzG3O1+IyuSdaysnv2Ioh+aaP8dTByh5Q==
+    P09oG/PI7iZhtcV62s/hq35cgfuz18jsWNaNrq4ByWtZlhXO0fkoiDpG8PzHsL32mNnylM/FPv2LWeLeA4/1mjKz18DoZ387BsIuSoxV9snfr42rMQaaESapfZTy6EMfmRQePg==
+    Qtk1s/jcTXXsvl07GPnVsZZDi3nsic9jjDGWB39GxM6I1IaG9H3Ea+JwabfaXpIX5aoyW1Mq10y5huy+9xy+uokraP5qO3627GPoe9RjTPXhM2na6NXX8Zosq9w9UuNqd4D4NQ==
+    PEZW3Qgrd5Nnfds+sizLChLpc6FfLMs0LtmD5gj0hWWZxiV7zRyB/q8s07hkT5kj0OeVZRqX7B1zBPq5skzjkj1ijkDfVpZpXLIXzBHoz8oyjUv2fPtVhXqfytKWz1slKxi89w==
+    jP0ZVh8khmtVR4y9j18TVtXzzqZT536L4eAjytj74DO08JufLz0yo/l71VorXPNn0DiCOfa4uzKr7cc9B9q8eNGs+yOQo62e9G+QW6isH2GTLuoMiFZTXhSqfvacWr3eI6iRug==
+    fvcUF9iHiD7JZrvjAfsTMX/WehhhsoMxk6Wf8dgzVDL0MxDFVj8xZumrv3JL/1DLjSLhKc4qHfFeu5Y1xsBFhGmkn8eC+XN/VOXOyzHuKZonfcYVbe9+WxhBtb5mW9YS431D6Q==
+    wEK06jaLVLaxntL/Q6He+yOEp+i1IBItz0/JjmPhZoZZ+voh5d1wWv3ZMeh6mTM61d0Y4+t6x1nnh3BX1lXwdl6pj0DLztIU8myhXiNeNCt52VLtp/QyvTDQdgxKXuaMTq3tMQ==
+    xtf1zluub60NlTtV49jcl48zW770mQGtZufw1V9c4bYeeT3O5s17tsZLbZvmj1Ta+3pt3JXleVzOalkZaMvyHSiRXjvCObXyvg3Zjdtur2yUrRtpx0oe3iSo2DpLNUL06hZLvA==
+    jdaUdYTXZseV7bcFrHMez5IOo2qe67wGV7+33nisdyAzPR3tTOh1H6vtfGasWpXRXkPLHqu1ax22qobS1HW2sYvolTVGa65mryRZk3z2WovVFl/P5K16dcnb6tJO49dcMH/1xw==
+    Msf2Z+LvqWesROUxVf7lNisGB15mXCf/hpsV83T47LWvk3/NzYp5Onxm29fB3LUd83T4rLelU1dj9XPUxnW9nmFOUz9fbXykGT1vNUM/d218pBk9hzVDP49tfKQZPZ9HqbyLqQ==
+    KdaortdmyzYi0g6UFgvzZbnVQR/Tb9mste8ci6yw51jf6o1Yd3HUr8bPr/3HHHKVmNPy1/PWYyw3nCmmX/qtdszSK5kzOt5RtmW+5i5HWM6Op10wvnplmtHXxnCeFw3v+9IVeA==
+    e5Cx3n2utwV5H451zPvbUcnv6cdU3gXXy4sHLcPiLvsnsge5Uu8hqp7HYinX2i51UerBj1dVm8HX7Pc/9Xp9jGvxzMgVoGPbt8Dwu0eX9FnzXXDte2KltvsV3frO1xgLrzPMtg==
+    L/jPbTV+2bWsmVnOIujWW4w96u50e29bfkrcdlAZ4prFta1aEJ5uZYkrP6MrK/86Z36jNobzXHDGXb3Erg8/K+5z7nppn/V1HDpCcDc6i69cx5xtFo6rnQWbzeDOYiq+U9ny9g==
+    vmScu9AYZjXr6D2GG3vwZoJkpj6fEsPpXuZnaPQZS4wBx5g8hhkzefr9daPrW5he32biT9n+PtOendrZGo+/9GvDHgXM4e2rb2acMWLQWgkbF/E02yJYI4oZdNzXbWuqjjjm8A==
+    cYfemCbGgNFH1B+wcW+Z2faVfxGgzR/1PaMZrce4itcSjO9y7BfB23k55rX1jxPe38MvSBQML4G6REmmJwn79vBrptgpV5F6OVitDMn9bDl6HBHHWhHw21m8dv3ayvXP1z7l2A==
+    D7jo/4PQXvofAAAA//8DAFBLAwQUAAYACAAAACEAk3bWSRgBAABAAgAAHQAAAHdvcmQvZ2xvc3Nhcnkvd2ViU2V0dGluZ3MueG1slNHBSgMxEAbgu+A7hNzbbIstsnRbEKl4EQ==
+    QX2ANJ1tg5lMyKRu69M7rlURL+0tk2Q+5mdmiz0G9QaZPcVGj4aVVhAdrX3cNPrleTm41oqLjWsbKEKjD8B6Mb+8mHV1B6snKEV+shIlco2u0dtSUm0Muy2g5SEliPLYUkZbpA==
+    zBuDNr/u0sARJlv8ygdfDmZcVVN9ZPIpCrWtd3BLbocQS99vMgQRKfLWJ/7WulO0jvI6ZXLALHkwfHloffxhRlf/IPQuE1NbhhLmOFFPSfuo6k8YfoHJecD4HzBlOI+YHAnDBw==
+    hL1W6Or7TaRsV0EkiaRkKtXDei4rpVQ8+ndYUr7J1DFk83ltQ6Du8eFOCvNn7/MPAAAA//8DAFBLAwQUAAYACAAAACEAS1ntXbgBAAA8BQAAGwAAAHdvcmQvZ2xvc3NhcnkvZg==
+    b250VGFibGUueG1s3JLfatswFMbvB3sHofvGshOnnalT1q6BwdjFaB9AUWRbVH+MjhI3b78j2cmgodDc7KI2GOn7pJ+OPp/bu1ejyV56UM7WNJ8xSqQVbqtsW9Pnp/XVDSUQuA==
+    3XLtrKzpQQK9W339cjtUjbMBCO63UBlR0y6EvsoyEJ00HGaulxbNxnnDA059mxnuX3b9lXCm50FtlFbhkBWMLemE8R+huKZRQv5wYmekDWl/5qVGorPQqR6OtOEjtMH5be+dkA==
+    AHhno0ee4cqeMPniDGSU8A5cE2Z4mamihMLtOUsjo/8ByssAxRlgCfIyRDkhMjgY+UqJEdXP1jrPNxpJeCWCVZEEpqvpZ5Khstyg/cC12niVjJ5bBzJHb891TVnB1qzEb3wXbA==
+    Hr80iwtFxz3ICBkXslFuuFH6cFRhUACj0asguqO+517F0kYLVIvGDjaspo+MseL7ek1HJcfqorK4vp+UIp6Vnm+TMj8pLCoicdI0HzkicU5r8MxsTOAsiSdlJJDfciB/nOH2nQ==
+    RAq2xCRKzCMmM78oEZ+4Fyfy+DaR65vyvyQy9Qb5pdouvNshsS8+aYdMA1j9BQAA//8DAFBLAwQUAAYACACEfTRJVhu9tukBAABhBAAAEAAIAWRvY1Byb3BzL2FwcC54bWwgog==
+    BAEooAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+    AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACdVMFu2zAM/RVD98ZOOxRFkLgY2sMOG1ogWXtmZToRakuCxBjJfg==
+    bYd90n5hlOS4yoJdlhP5+PT0KDL+/fPX8v7Qd8WAziujV2I+q0SBWppG6e1K7Km9uhOFJ9ANdEbjShzRi/t6CXbx7IxFRwp9wRraLwZaiR2RXZSllzvswc+YobnYGtcDceq2pQ==
+    aVsl8dHIfY+ayuuqui0bI4Oaf9kcLeuPemD/Vw8PhLrB5spOHkX0vMHedkBYrxUHqlXYFGvouIWTwKwxdFiWOTceNATdRvVYV6k45fEpYIt+rKQ4oK/GNb6e39xFPGUBf9iBAw==
+    Sfzm45EMCPXPlq1JIJ5I/U1JZ7xpqXiKfRZBJh7KWeEUN7BGuXeKjqNsjgTGV6UnlylO3h1sHdgdWx0bmIBQX0t+nwd+x7qFzmOkfGCB8QUhrMszqNDAQIsBJRlXvIHHMNCVGA==
+    wCnQxJukfnB6LRItoTHurCdXbxR1fMOUxzCn5bH6FAyn4JxYTh7qaPfcYJheuMc/tdwq/cNyNHAyPBeZyQt/2U1/CYfZmt6CPqbylKQJvPvvdmMew459vO05fr4vr4p2awsSLw==
+    NycrxalxARvegHxqExanxm26LlzGInqLTca8rI17+ZI+FPX8dlbx77SIJzjtz/Sfq/8AUEsBAi0AFAAGAAgAAAAhAPvrw2rZAQAAKwwAABMAAAAAAAAAAAAAAAAAAAAAAFtDbw==
+    bnRlbnRfVHlwZXNdLnhtbFBLAQItABQABgAIAAAAIQAekRq37wAAAE4CAAALAAAAAAAAAAAAAAAAABIEAABfcmVscy8ucmVsc1BLAQItABQABgAIAAAAIQBU+GRCYwEAAO4HAA==
+    ABwAAAAAAAAAAAAAAAAAMgcAAHdvcmQvX3JlbHMvZG9jdW1lbnQueG1sLnJlbHNQSwECLQAUAAYACACEfTRJuAVhjBkQAAAJ6AAAEQAAAAAAAAAAAAAAAADXCQAAd29yZC9kbw==
+    Y3VtZW50LnhtbFBLAQItABQABgAIAIR9NEnlrb1BpwcAAC0jAAAQAAAAAAAAAAAAAAAAAB8aAAB3b3JkL2hlYWRlcjIueG1sUEsBAi0AFAAGAAgAhH00SYCiQBdgAwAAOBAAAA==
+    EAAAAAAAAAAAAAAAAAD0IQAAd29yZC9mb290ZXIxLnhtbFBLAQItABQABgAIAIR9NElAE3ip+gUAAIAjAAAQAAAAAAAAAAAAAAAAAIIlAAB3b3JkL2hlYWRlcjEueG1sUEsBAg==
+    LQAUAAYACACEfTRJK49lvsIEAAD6HQAAEAAAAAAAAAAAAAAAAACqKwAAd29yZC9mb290ZXIyLnhtbFBLAQItABQABgAIAIR9NEm7M8neFwIAAFYIAAARAAAAAAAAAAAAAAAAAA==
+    mjAAAHdvcmQvZW5kbm90ZXMueG1sUEsBAi0AFAAGAAgAAAAhAKomDr68AAAAIQEAABsAAAAAAAAAAAAAAAAA4DIAAHdvcmQvX3JlbHMvaGVhZGVyMi54bWwucmVsc1BLAQItAA==
+    FAAGAAgAhH00SY8INLEYAgAAXAgAABIAAAAAAAAAAAAAAAAA1TMAAHdvcmQvZm9vdG5vdGVzLnhtbFBLAQItABQABgAIAAAAIQCqUiXfIwYAAIsaAAAVAAAAAAAAAAAAAAAAAA==
+    HTYAAHdvcmQvdGhlbWUvdGhlbWUxLnhtbFBLAQItAAoAAAAAAAAAIQBUAQa58gMAAPIDAAAVAAAAAAAAAAAAAAAAAHM8AAB3b3JkL21lZGlhL2ltYWdlMS5wbmdQSwECLQAUAA==
+    BgAIAAAAIQA3VGuX6QYAAOEuAAAaAAAAAAAAAAAAAAAAAJhAAAB3b3JkL2dsb3NzYXJ5L2RvY3VtZW50LnhtbFBLAQItABQABgAIAAAAIQDSdzsz9QAAAHUBAAAcAAAAAAAAAA==
+    AAAAAAAAuUcAAHdvcmQvX3JlbHMvc2V0dGluZ3MueG1sLnJlbHNQSwECLQAUAAYACAAAACEA5272kAcFAAADEQAAGgAAAAAAAAAAAAAAAADoSAAAd29yZC9nbG9zc2FyeS9zZQ==
+    dHRpbmdzLnhtbFBLAQItABQABgAIAAAAIQCD0LXl5gAAAK0CAAAlAAAAAAAAAAAAAAAAACdOAAB3b3JkL2dsb3NzYXJ5L19yZWxzL2RvY3VtZW50LnhtbC5yZWxzUEsBAi0AFA==
+    AAYACAAAACEAm9akZdELAABPMgAAEQAAAAAAAAAAAAAAAABQTwAAd29yZC9zZXR0aW5ncy54bWxQSwECLQAUAAYACAAAACEABr7rL+EAAABVAQAAGAAAAAAAAAAAAAAAAABQWw==
+    AABjdXN0b21YbWwvaXRlbVByb3BzMi54bWxQSwECLQAUAAYACAAAACEAP72VVQMBAABTAQAAGAAAAAAAAAAAAAAAAACPXAAAY3VzdG9tWG1sL2l0ZW1Qcm9wczEueG1sUEsBAg==
+    LQAUAAYACAAAACEAeqhydMUAAAAyAQAAEwAAAAAAAAAAAAAAAADwXQAAY3VzdG9tWG1sL2l0ZW0yLnhtbFBLAQItABQABgAIAAAAIQBcliciwgAAACgBAAAeAAAAAAAAAAAAAA==
+    AAAADl8AAGN1c3RvbVhtbC9fcmVscy9pdGVtMi54bWwucmVsc1BLAQItABQABgAIAAAAIQB0Pzl6wgAAACgBAAAeAAAAAAAAAAAAAAAAABRhAABjdXN0b21YbWwvX3JlbHMvaQ==
+    dGVtMS54bWwucmVsc1BLAQItABQABgAIAAAAIQCnjNgtSxAAABKLAAAYAAAAAAAAAAAAAAAAABpjAAB3b3JkL2dsb3NzYXJ5L3N0eWxlcy54bWxQSwECLQAUAAYACACEfTRJMA==
+    e0xvOgEAAEgCAAARAAAAAAAAAAAAAAAAAJtzAABkb2NQcm9wcy9jb3JlLnhtbFBLAQItABQABgAIAAAAIQClMNNKhQ8AAMaTAAAPAAAAAAAAAAAAAAAAAAx2AAB3b3JkL3N0eQ==
+    bGVzLnhtbFBLAQItABQABgAIAAAAIQDBI2AWoAEAAAoEAAAUAAAAAAAAAAAAAAAAAL6FAAB3b3JkL3dlYlNldHRpbmdzLnhtbFBLAQItABQABgAIAAAAIQBLWe1duAEAADwFAA==
+    ABIAAAAAAAAAAAAAAAAAkIcAAHdvcmQvZm9udFRhYmxlLnhtbFBLAQItABQABgAIAAAAIQBl+8TbPwwAAL5oAAATAAAAAAAAAAAAAAAAAHiJAABjdXN0b21YbWwvaXRlbTEueA==
+    bWxQSwECLQAUAAYACAAAACEAk3bWSRgBAABAAgAAHQAAAAAAAAAAAAAAAAAQlgAAd29yZC9nbG9zc2FyeS93ZWJTZXR0aW5ncy54bWxQSwECLQAUAAYACAAAACEAS1ntXbgBAA==
+    ADwFAAAbAAAAAAAAAAAAAAAAAGOXAAB3b3JkL2dsb3NzYXJ5L2ZvbnRUYWJsZS54bWxQSwECLQAUAAYACACEfTRJVhu9tukBAABhBAAAEAAAAAAAAAAAAAAAAABUmQAAZG9jUA==
+    cm9wcy9hcHAueG1sUEsFBgAAAAAgACAAcQgAAHOcAAAAAA==
+    END_OF_WORDLAYOUT
+  }
+}
+

@@ -1,0 +1,105 @@
+OBJECT Codeunit 5351 CRM Customer-Contact Link
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160734.867T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Job Queue Entry";
+    OnRun=VAR
+            IntegrationTableMapping@1001 : Record "Integration Table Mapping";
+            IntegrationTableSynch@1000 : Codeunit "Integration Table Synch.";
+            SynchActionType@1003 : 'None,Insert,Modify,ForceModify,IgnoreUnchanged,Fail,Skip,Delete';
+            Counter@1002 : Integer;
+          BEGIN
+            CODEUNIT.RUN(CODEUNIT::"CRM Integration Management");
+            COMMIT;
+
+            IntegrationTableMapping.GET("Record ID to Process");
+
+            IntegrationTableSynch.BeginIntegrationSynchJob(
+              TABLECONNECTIONTYPE::CRM,IntegrationTableMapping,IntegrationTableMapping."Table ID");
+
+            Counter := SyncPrimaryContactLink;
+            if Counter <> 0 then
+              IntegrationTableSynch.UpdateSynchJobCounters(SynchActionType::Modify,Counter);
+            IntegrationTableSynch.EndIntegrationSynchJobWithMsg(CustomerContactLinkTxt);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      CustomerContactLinkTxt@1000 : TextConst 'ENU=Customer-contact link.';
+
+    LOCAL PROCEDURE SyncPrimaryContactLink@4() FixedLinksQty : Integer;
+    VAR
+      Customer@1006 : Record Customer;
+      CRMAccount@1001 : Record "CRM Account";
+      NullGuid@1002 : GUID;
+    BEGIN
+      CLEAR(NullGuid);
+      CRMAccount.SETRANGE(PrimaryContactId,NullGuid);
+      if CRMAccount.FINDSET(true) then
+        repeat
+          if FindCustomerByAccountId(CRMAccount.AccountId,Customer) then
+            if Customer."Primary Contact No." <> '' then
+              if UpdateCRMAccountPrimaryContactId(CRMAccount,Customer."Primary Contact No.") then
+                FixedLinksQty += 1;
+        until CRMAccount.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE FindCustomerByAccountId@12(AccountId@1000 : GUID;VAR Customer@1001 : Record Customer) : Boolean;
+    VAR
+      CRMIntegrationRecord@1002 : Record "CRM Integration Record";
+      CustomerRecordID@1003 : RecordID;
+    BEGIN
+      if CRMIntegrationRecord.FindRecordIDFromID(AccountId,DATABASE::Customer,CustomerRecordID) then
+        exit(Customer.GET(CustomerRecordID));
+
+      exit(false);
+    END;
+
+    LOCAL PROCEDURE UpdateCRMAccountPrimaryContactId@16(VAR CRMAccount@1003 : Record "CRM Account";PrimaryContactNo@1000 : Code[20]) : Boolean;
+    VAR
+      Contact@1001 : Record Contact;
+      CRMIntegrationRecord@1002 : Record "CRM Integration Record";
+    BEGIN
+      Contact.GET(PrimaryContactNo);
+      if CRMIntegrationRecord.FindByRecordID(Contact.RECORDID) then begin
+        CRMAccount.PrimaryContactId := CRMIntegrationRecord."CRM ID";
+        CRMAccount.MODIFY(true);
+        exit(true);
+      end;
+
+      exit(false);
+    END;
+
+    PROCEDURE EnqueueJobQueueEntry@43(CodeunitId@1002 : Integer;IntegrationTableMapping@1001 : Record "Integration Table Mapping");
+    VAR
+      JobQueueEntry@1000 : Record "Job Queue Entry";
+    BEGIN
+      with JobQueueEntry do begin
+        "Object Type to Run" := "Object Type to Run"::Codeunit;
+        "Object ID to Run" := CodeunitId;
+        if IntegrationTableMapping."Parent Name" <> '' then
+          IntegrationTableMapping.GET(IntegrationTableMapping."Parent Name");
+        "Record ID to Process" := IntegrationTableMapping.RECORDID;
+        Priority := 1000;
+        Description := COPYSTR(CustomerContactLinkTxt,1,MAXSTRLEN(Description));
+        "Maximum No. of Attempts to Run" := 2;
+        Status := Status::Ready;
+        "Rerun Delay (sec.)" := 30;
+        CODEUNIT.RUN(CODEUNIT::"Job Queue - Enqueue",JobQueueEntry)
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

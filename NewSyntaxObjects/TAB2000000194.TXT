@@ -1,0 +1,38 @@
+OBJECT Table 2000000194 Webhook Notification
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.963T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;ID                  ;GUID           }
+    { 2   ;   ;Sequence Number     ;Integer        }
+    { 3   ;   ;Subscription ID     ;Text150        }
+    { 4   ;   ;Resource ID         ;Text250        }
+    { 5   ;   ;Change Type         ;Text50         }
+    { 6   ;   ;Resource Type Name  ;Text250        }
+    { 7   ;   ;Notification        ;BLOB          ;SubType=Json }
+  }
+  KEYS
+  {
+    {    ;ID,"Resource Type Name","Sequence Number","Subscription ID";
+                                                   Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

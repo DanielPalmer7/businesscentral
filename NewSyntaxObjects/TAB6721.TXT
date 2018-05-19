@@ -1,0 +1,34 @@
+OBJECT Table 6721 Booking Mgr. Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160216.463T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Booking Mgr. Setup;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary Key         ;Code10        ;CaptionML=ENU=Primary Key }
+    { 2   ;   ;Booking Mgr. Codeunit;Integer      ;InitValue=6722;
+                                                   CaptionML=ENU=Booking Mgr. Codeunit }
+  }
+  KEYS
+  {
+    {    ;"Primary Key"                           ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

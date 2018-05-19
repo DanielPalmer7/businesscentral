@@ -1,0 +1,62 @@
+OBJECT Table 1307 O365 Device Setup Instructions
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160126.717T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+    CaptionML=ENU=O365 Device Setup Instructions;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Key                 ;Code10        ;CaptionML=ENU=Key }
+    { 10  ;   ;Setup URL           ;Text250       ;ExtendedDatatype=URL;
+                                                   ObsoleteState=Pending;
+                                                   ObsoleteReason=This field is obsolete after refactoring.;
+                                                   CaptionML=ENU=Setup URL }
+    { 11  ;   ;QR Code             ;BLOB          ;CaptionML=ENU=QR Code;
+                                                   SubType=Bitmap }
+  }
+  KEYS
+  {
+    {    ;Key                                     ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      ClientTypeManagement@1077 : Codeunit ClientTypeManagement;
+
+    [Internal]
+    PROCEDURE GetActivationCode@1() : Text;
+    VAR
+      Url@1000 : Text;
+      AddressWithoutProtocol@1001 : Text;
+      ActivationCode@1003 : Text;
+      AllowedCharacters@1004 : Text;
+      I@1002 : Integer;
+    BEGIN
+      Url := GETURL(ClientTypeManagement.GetCurrentClientType);
+
+      AddressWithoutProtocol := COPYSTR(Url,STRPOS(Url,'://') + 3);
+      AllowedCharacters := 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      for I := 1 to STRLEN(AddressWithoutProtocol) do begin
+        if STRPOS(AllowedCharacters,UPPERCASE(FORMAT(AddressWithoutProtocol[I]))) > 0 then
+          ActivationCode += FORMAT(AddressWithoutProtocol[I])
+        else
+          exit(ActivationCode);
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

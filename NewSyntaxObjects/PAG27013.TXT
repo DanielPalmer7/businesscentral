@@ -1,0 +1,52 @@
+OBJECT Page 27013 SAT Item Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161725.793T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=SAT Item Subform;
+    SourceTable=Item;
+    PageType=ListPart;
+  }
+  CONTROLS
+  {
+    { 1020000;0;Container ;
+                Name=Control1020000;
+                ContainerType=ContentArea }
+
+    { 1020001;1;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1020002;2;Field     ;
+                Name="No.";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                ImplicitType=Code20 }
+
+    { 1020003;2;Field     ;
+                Name=Description;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+    { 1020004;2;Field     ;
+                Name="SAT Item Classification";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="SAT Item Classification";
+                ImplicitType=Code10 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

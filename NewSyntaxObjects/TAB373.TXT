@@ -1,0 +1,36 @@
+OBJECT Table 373 Dimension Entry Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160111.60T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Dimension Entry Buffer;
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=No. }
+    { 2   ;   ;Dimension Entry No. ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Dimension Entry No. }
+  }
+  KEYS
+  {
+    {    ;"No."                                   ;Clustered=true }
+    {    ;"Dimension Entry No."                    }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,307 @@
+OBJECT Page 9014 Job Resource Manager RC
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161633.807T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[@@@="{Dependency=Match,""ProfileDescription_RESOURCEMANAGER""}";
+               ENU=Resource Manager];
+    PageType=RoleCenter;
+    ActionList=ACTIONS
+    {
+      { 1900000006;0 ;ActionContainer;
+                      Name=ActionContainer1900000006;
+                      ActionContainerType=Reports }
+      { 7       ;1   ;Action    ;
+                      Name="Resource &Statistics";
+                      CaptionML=ENU=Resource &Statistics;
+                      ToolTipML=ENU=View detailed information about usage and sales of each resource. The Resource Statistics window shows both the units of measure and the corresponding amounts.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Resource Statistics";
+                      Image=Report }
+      { 8       ;1   ;Action    ;
+                      Name="Resource &Utilization";
+                      CaptionML=ENU=Resource &Utilization;
+                      ToolTipML=ENU="View statistical information about the usage of each resource. The resource's usage quantity is compared with its capacity and the remaining capacity (in the Balance field), according to this formula: Balance = Capacity - Usage (Qty.)";
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Resource Usage";
+                      Image=Report }
+      { 9       ;1   ;Action    ;
+                      Name="Resource List";
+                      CaptionML=ENU=Resource List;
+                      ToolTipML=ENU=View a list of unit prices for the resources. By default, a unit price is based on the price in the Resource Prices window. If there is no valid alternative price, then the unit price from the resource card is used. The report can be used by the company's salespeople or sent to customers.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Resource List" }
+      { 11      ;1   ;Action    ;
+                      Name="Cost &Breakdown";
+                      CaptionML=ENU=Cost &Breakdown;
+                      ToolTipML=ENU=View the direct unit costs and the total direct costs for each resource. Only usage postings are considered in this report. Resource usage can be posted in the resource journal or the job journal.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Cost Breakdown" }
+      { 1480000 ;1   ;Action    ;
+                      Name="Completed Jobs";
+                      CaptionML=ENU=Completed Jobs;
+                      ToolTipML=ENU=View of list of jobs that are fully processed.;
+                      RunObject=Report "Completed Jobs";
+                      Image=Report }
+      { 1480001 ;1   ;Action    ;
+                      Name="Job List";
+                      CaptionML=ENU=Job List;
+                      ToolTipML=ENU=View a list of your outstanding jobs. For each job, this report includes the customer number and name, and the budgeted price.;
+                      RunObject=Report "Job List";
+                      Image=Report }
+      { 1480002 ;1   ;Action    ;
+                      Name="Job Cost Transaction Detail";
+                      CaptionML=ENU=Job Cost Transaction Detail;
+                      ToolTipML=ENU=List the details of your job transactions. The report includes the job number and description followed by a list of the transactions that occurred in the period you specify.;
+                      RunObject=Report "Job Cost Transaction Detail";
+                      Image=Report }
+      { 1900000011;0 ;ActionContainer;
+                      Name=ActionContainer1900000011;
+                      ActionContainerType=HomeItems }
+      { 13      ;1   ;Action    ;
+                      Name=Resources;
+                      CaptionML=ENU=Resources;
+                      ToolTipML=ENU=Manage your resources' job activities by setting up their costs and prices. The job-related prices, discounts, and cost factor rules are set up on the respective job card. You can specify the costs and prices for individual resources, resource groups, or all available resources of the company. When resources are used or sold in a job, the specified prices and costs are recorded for the project.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Resource List" }
+      { 14      ;1   ;Action    ;
+                      Name=ResourcesPeople;
+                      CaptionML=ENU=People;
+                      ToolTipML=ENU=View the list of people that can be assigned to jobs.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Resource List";
+                      RunPageView=WHERE(Type=FILTER(Person)) }
+      { 15      ;1   ;Action    ;
+                      Name=ResourcesMachines;
+                      CaptionML=ENU=Machines;
+                      ToolTipML=ENU=View the list of machines that can be assigned to jobs.;
+                      ApplicationArea=#Manufacturing;
+                      RunObject=Page "Resource List";
+                      RunPageView=WHERE(Type=FILTER(Machine)) }
+      { 20      ;1   ;Action    ;
+                      Name="Resource Groups";
+                      CaptionML=ENU=Resource Groups;
+                      ToolTipML=ENU=View all resource groups.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Resource Groups" }
+      { 35      ;1   ;Action    ;
+                      Name=ResourceJournals;
+                      CaptionML=ENU=Resource Journals;
+                      ToolTipML=ENU=View all resource journals.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Resource Jnl. Batches";
+                      RunPageView=WHERE(Recurring=CONST(false)) }
+      { 36      ;1   ;Action    ;
+                      Name=RecurringResourceJournals;
+                      CaptionML=ENU=Recurring Resource Journals;
+                      ToolTipML=ENU=View all recurring resource journals.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Resource Jnl. Batches";
+                      RunPageView=WHERE(Recurring=CONST(true)) }
+      { 10      ;1   ;Action    ;
+                      Name=Jobs;
+                      CaptionML=ENU=Jobs;
+                      ToolTipML=ENU=Define a project activity by creating a job card with integrated job tasks and job planning lines, structured in two layers. The job task enables you to set up job planning lines and to post consumption to the job. The job planning lines specify the detailed use of resources, items, and various general ledger expenses.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Job List";
+                      Image=Job }
+      { 1       ;1   ;Action    ;
+                      Name="Time Sheets";
+                      CaptionML=ENU=Time Sheets;
+                      ToolTipML=ENU=Enable resources to register time. When approved, if approval is required, time sheet entries can be posted to the relevant job journal or resource journal as part of project progress reporting. To save setup time and to ensure data correctness, you can copy job planning lines into time sheets.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Time Sheet List" }
+      { 25      ;1   ;Action    ;
+                      Name=Page Time Sheet List Open;
+                      CaptionML=ENU=Open;
+                      ToolTipML=ENU=Open the card for the selected record.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Time Sheet List";
+                      RunPageView=WHERE("Open Exists"=CONST(true)) }
+      { 24      ;1   ;Action    ;
+                      Name=Page Time Sheet List Submitted;
+                      CaptionML=ENU=Submitted;
+                      ToolTipML=ENU=View submitted time sheets.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Time Sheet List";
+                      RunPageView=WHERE("Submitted Exists"=CONST(true)) }
+      { 23      ;1   ;Action    ;
+                      Name=Page Time Sheet List Rejected;
+                      CaptionML=ENU=Rejected;
+                      ToolTipML=ENU=View rejected time sheets.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Time Sheet List";
+                      RunPageView=WHERE("Rejected Exists"=CONST(true)) }
+      { 21      ;1   ;Action    ;
+                      Name=Page Time Sheet List Approved;
+                      CaptionML=ENU=Approved;
+                      ToolTipML=ENU=View approved time sheets.;
+                      ApplicationArea=#Suite;
+                      RunObject=Page "Time Sheet List";
+                      RunPageView=WHERE("Approved Exists"=CONST(true)) }
+      { 4       ;1   ;Action    ;
+                      Name="Manager Time Sheets";
+                      CaptionML=ENU=Manager Time Sheets;
+                      ToolTipML=ENU=Open the list of your time sheets.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Manager Time Sheet List" }
+      { 1900000012;0 ;ActionContainer;
+                      Name=ActionContainer1900000012;
+                      ActionContainerType=ActivityButtons }
+      { 61      ;1   ;ActionGroup;
+                      Name=Administration;
+                      CaptionML=ENU=Administration;
+                      Image=Administration }
+      { 29      ;2   ;Action    ;
+                      Name="Resource Costs";
+                      CaptionML=ENU=Resource Costs;
+                      ToolTipML=ENU=View or edit alternate costs for resources. Resource costs can apply to all resources, to resource groups or to individual resources. They can also be filtered so that they apply only to a specific work type code. For example, if an employee has a different hourly rate for overtime work, you can set up a resource cost for this work type.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Resource Costs" }
+      { 30      ;2   ;Action    ;
+                      Name="Resource Prices";
+                      CaptionML=ENU=Resource Prices;
+                      ToolTipML=ENU=View the prices of resources.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Resource Prices" }
+      { 32      ;2   ;Action    ;
+                      Name="Resource Service Zones";
+                      CaptionML=ENU=Resource Service Zones;
+                      ToolTipML=ENU=View the assignment of resources to service zones. When you allocate a resource to a service task that is to be performed at the customer site, you can select a resource that is located in the same service zone as the customer.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Resource Service Zones";
+                      Image=Resource }
+      { 33      ;2   ;Action    ;
+                      Name="Resource Locations";
+                      CaptionML=ENU=Resource Locations;
+                      ToolTipML=ENU=View where resources are located or assign resources to locations.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Resource Locations";
+                      Image=Resource }
+      { 34      ;2   ;Action    ;
+                      Name="Work Types";
+                      CaptionML=ENU=Work Types;
+                      ToolTipML=ENU=View or edit the list of work types that are used with the registration of both the usage and sales of resources in job journals, resource journals, sales invoices, and so on. Work types indicate the various kinds of work that a resource is capable of carrying out, such as overtime or transportation.;
+                      ApplicationArea=#Manufacturing;
+                      RunObject=Page "Work Types" }
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 17      ;1   ;Separator ;
+                      Name=Tasks;
+                      CaptionML=ENU=Tasks;
+                      IsHeader=true }
+      { 2       ;1   ;Action    ;
+                      Name="Adjust R&esource Costs/Prices";
+                      CaptionML=ENU=Adjust R&esource Costs/Prices;
+                      ToolTipML=ENU=Adjust one or more fields on the resource card. For example, you can change the direct unit cost by 10 percent on all resources from a specific resource group. The changes are processed immediately after the batch job is started. The fields on the resource card that are dependent on the adjusted field are also changed.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Adjust Resource Costs/Prices";
+                      Image=Report }
+      { 16      ;1   ;Action    ;
+                      Name="Resource P&rice Changes";
+                      CaptionML=ENU=Resource P&rice Changes;
+                      ToolTipML=ENU=Edit or update alternate resource prices, by running either the Suggest Res. Price Chg. (Res.) batch job or the Suggest Res. Price Chg. (Price) batch job.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Page "Resource Price Changes";
+                      Image=ResourcePrice }
+      { 3       ;1   ;Action    ;
+                      Name="Resource Pr&ice Chg from Resource";
+                      CaptionML=ENU=Resource Pr&ice Chg from Resource;
+                      ToolTipML=ENU=Update the alternate prices in the Resource Prices window with the ones in the Resource Price Change s window.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Suggest Res. Price Chg. (Res.)";
+                      Image=Report }
+      { 5       ;1   ;Action    ;
+                      Name="Resource Pri&ce Chg from Prices";
+                      CaptionML=ENU=Resource Pri&ce Chg from Prices;
+                      ToolTipML=ENU=Update the alternate prices in the Resource Prices window with the ones in the Resource Price Change s window.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Suggest Res. Price Chg.(Price)";
+                      Image=Report }
+      { 6       ;1   ;Action    ;
+                      Name="I&mplement Resource Price Changes";
+                      CaptionML=ENU=I&mplement Resource Price Changes;
+                      ToolTipML=ENU=Update the alternate prices in the Resource Prices window with the ones in the Resource Price Changes window. Price change suggestions can be created with the Suggest Res. Price Chg.(Price) or the Suggest Res. Price Chg. (Res.) batch job. You can also modify the price change suggestions in the Resource Price Changes window before you implement them.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Implement Res. Price Change";
+                      Image=ImplementPriceChange }
+      { 12      ;1   ;Action    ;
+                      Name="Create Time Sheets";
+                      CaptionML=ENU=Create Time Sheets;
+                      ToolTipML=ENU=Create new time sheets for resources.;
+                      ApplicationArea=#Advanced;
+                      RunObject=Report "Create Time Sheets";
+                      Image=NewTimesheet }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000008;0;Container;
+                Name=Control1900000008;
+                ContainerType=RoleCenterArea }
+
+    { 1900724808;1;Group  ;
+                Name=Control1900724808 }
+
+    { 1904257908;2;Part   ;
+                Name=Control1904257908;
+                ApplicationArea=#Advanced;
+                PagePartID="Resource Manager Activities";
+                PartType=Page }
+
+    { 1907692008;2;Part   ;
+                Name=Control1907692008;
+                ApplicationArea=#Advanced;
+                PagePartID="My Customers";
+                PartType=Page }
+
+    { 1900724708;1;Group  ;
+                Name=Control1900724708 }
+
+    { 19  ;2   ;Part      ;
+                Name=Control19;
+                ApplicationArea=#Advanced;
+                PagePartID="My Job Queue";
+                Visible=false;
+                PartType=Page }
+
+    { 18  ;2   ;Part      ;
+                Name=Control18;
+                ApplicationArea=#Advanced;
+                PagePartID="Time Sheet Chart";
+                PartType=Page }
+
+    { 22  ;2   ;Part      ;
+                Name=Control22;
+                ApplicationArea=#Advanced;
+                PagePartID="Report Inbox Part";
+                PartType=Page }
+
+    { 1903012608;2;Part   ;
+                Name=Control1903012608;
+                ApplicationArea=#Advanced;
+                PagePartID="Connect Online";
+                PartType=Page }
+
+    { 1901377608;2;Part   ;
+                Name=Control1901377608;
+                ApplicationArea=#Advanced;
+                PartType=System;
+                SystemPartID=MyNotes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

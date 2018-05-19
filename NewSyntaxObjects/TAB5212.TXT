@@ -1,0 +1,36 @@
+OBJECT Table 5212 Employee Statistics Group
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160141.7T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Employee Statistics Group;
+    LookupPageID="Employee Statistics Groups";
+    DrillDownPageID="Employee Statistics Groups";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

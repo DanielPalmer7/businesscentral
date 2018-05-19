@@ -1,0 +1,201 @@
+OBJECT Codeunit 2107 O365 Sales Management
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160713.977T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      AddCustomerNameNewInvoiceErr@1002 : TextConst 'ENU=Add a customer name first.';
+      ClientTypeManagement@1003 : Codeunit ClientTypeManagement;
+      CustomerHasBeenBlockedMsg@1000 : TextConst 'ENU=The customer has not been deleted as there are one or more documents for the customer. The customer has been blocked for further business.';
+
+    PROCEDURE BlockCustomerAndDeleteContact@5(VAR Customer@1001 : Record Customer);
+    VAR
+      CustContUpdate@1002 : Codeunit "CustCont-Update";
+    BEGIN
+      CustContUpdate.DeleteCustomerContacts(Customer);
+      if Customer.HasAnyOpenOrPostedDocuments then begin
+        Customer.VALIDATE(Blocked,Customer.Blocked::All);
+        Customer.MODIFY(true);
+        if GUIALLOWED then
+          MESSAGE(CustomerHasBeenBlockedMsg);
+      end else
+        Customer.DELETE(true);
+    END;
+
+    PROCEDURE OpenNewInvoiceForCustomer@1(Customer@1000 : Record Customer);
+    VAR
+      SalesHeader@1001 : Record "Sales Header";
+    BEGIN
+      if Customer.Name = '' then
+        ERROR(AddCustomerNameNewInvoiceErr);
+
+      SalesHeader.INIT;
+      SalesHeader.VALIDATE("Document Type",SalesHeader."Document Type"::Invoice);
+      SalesHeader.VALIDATE("Sell-to Customer No.",Customer."No.");
+      SalesHeader.SetDefaultPaymentServices;
+      SalesHeader.INSERT(true);
+      COMMIT;
+
+      if ClientTypeManagement.GetCurrentClientType in [CLIENTTYPE::Tablet,CLIENTTYPE::Web] then
+        PAGE.RUN(PAGE::"BC O365 Sales Invoice",SalesHeader)
+      else
+        PAGE.RUN(PAGE::"O365 Sales Invoice",SalesHeader);
+    END;
+
+    PROCEDURE OpenNewQuoteForCustomer@2(Customer@1000 : Record Customer);
+    VAR
+      SalesHeader@1001 : Record "Sales Header";
+    BEGIN
+      if Customer.Name = '' then
+        ERROR(AddCustomerNameNewInvoiceErr);
+
+      SalesHeader.INIT;
+      SalesHeader.VALIDATE("Document Type",SalesHeader."Document Type"::Quote);
+      SalesHeader.VALIDATE("Sell-to Customer No.",Customer."No.");
+      SalesHeader.SetDefaultPaymentServices;
+      SalesHeader.INSERT(true);
+      COMMIT;
+
+      if ClientTypeManagement.GetCurrentClientType in [CLIENTTYPE::Tablet,CLIENTTYPE::Web] then
+        PAGE.RUN(PAGE::"BC O365 Sales Quote",SalesHeader)
+      else
+        PAGE.RUN(PAGE::"O365 Sales Quote",SalesHeader);
+    END;
+
+    PROCEDURE SetItemDefaultValues@15(VAR Item@1006 : Record Item);
+    VAR
+      GenProductPostingGroup@1005 : Record "Gen. Product Posting Group";
+      VATProductPostingGroup@1004 : Record "VAT Product Posting Group";
+      TaxSetup@1001 : Record "Tax Setup";
+      TaxGroup@1003 : Record "Tax Group";
+    BEGIN
+      Item.Type := Item.Type::Service;
+      Item."Costing Method" := Item."Costing Method"::FIFO;
+
+      if TaxSetup.GET then begin
+        if TaxSetup."Non-Taxable Tax Group Code" <> '' then
+          TaxGroup.SETFILTER(Code,'<>%1',TaxSetup."Non-Taxable Tax Group Code");
+        if TaxGroup.FINDFIRST then
+          Item."Tax Group Code" := TaxGroup.Code;
+      end;
+
+      if Item."Gen. Prod. Posting Group" = '' then
+        if GenProductPostingGroup.FINDFIRST then
+          Item."Gen. Prod. Posting Group" := GenProductPostingGroup.Code;
+
+      if Item."VAT Prod. Posting Group" = '' then
+        if VATProductPostingGroup.FINDFIRST then
+          Item."VAT Prod. Posting Group" := VATProductPostingGroup.Code;
+
+      if Item.MODIFY then;
+    END;
+
+    PROCEDURE GetO365DocumentBrickStyle@3(O365SalesDocument@1002 : Record "O365 Sales Document";VAR OutStandingStatusStyle@1000 : Text;VAR TotalInvoicedStyle@1001 : Text);
+    BEGIN
+      with O365SalesDocument do begin
+        OutStandingStatusStyle := '';
+        TotalInvoicedStyle := '';
+        CALCFIELDS("Last Email Sent Time","Last Email Sent Status");
+
+        case true of
+          Canceled:
+            OutStandingStatusStyle := '';
+          Posted and ("Outstanding Amount" <= 0):
+            OutStandingStatusStyle := 'Favorable';
+          "Last Email Sent Status" = "Last Email Sent Status"::Error:
+            OutStandingStatusStyle := '';
+          IsOverduePostedInvoice:
+            OutStandingStatusStyle := 'Unfavorable';
+          ("Document Type" = "Document Type"::Quote) and "Quote Accepted":
+            OutStandingStatusStyle := 'Favorable';
+        end;
+
+        if (not Canceled) and
+           ("Last Email Sent Status" = "Last Email Sent Status"::Error) and
+           (("Outstanding Amount" > 0) or ("Sales Amount" = 0))
+        then
+          TotalInvoicedStyle := 'Unfavorable'
+        else
+          if ("Document Type" = "Document Type"::Quote) and ("Last Email Sent Status" = "Last Email Sent Status"::Error) then
+            TotalInvoicedStyle := 'Unfavorable'
+          else
+            if (("Document Type" = "Document Type"::Quote) and ("Document Status" = "Document Status"::"Draft Invoice")) or
+               (("Document Type" <> "Document Type"::Quote) and not Posted)
+            then
+              TotalInvoicedStyle := 'Ambiguous';
+      end;
+    END;
+
+    PROCEDURE InsertNewCountryCode@4(VAR O365CountryRegion@1000 : Record "O365 Country/Region") : Boolean;
+    VAR
+      CountryRegion@1001 : Record "Country/Region";
+    BEGIN
+      with O365CountryRegion do begin
+        if (Code = '') and (Name = '') then
+          exit(false);
+        if Name = '' then
+          VALIDATE(Name,COPYSTR(Code,1,MAXSTRLEN(Name)));
+        if Code = '' then
+          VALIDATE(Code,COPYSTR(Name,1,MAXSTRLEN(Code)));
+
+        CountryRegion.INIT;
+        CountryRegion.VALIDATE(Code,Code);
+        CountryRegion.VALIDATE(Name,Name);
+        CountryRegion.VALIDATE("VAT Scheme",
+          COPYSTR("VAT Scheme",1,MAXSTRLEN(CountryRegion."VAT Scheme"))
+          );
+
+        CountryRegion.INSERT(true); // Passing on the error if it fails
+        exit(true);
+      end;
+    END;
+
+    PROCEDURE ModifyCountryCode@22(xO365CountryRegion@1003 : Record "O365 Country/Region";O365CountryRegion@1000 : Record "O365 Country/Region") : Boolean;
+    VAR
+      CountryRegion@1001 : Record "Country/Region";
+    BEGIN
+      if not CountryRegion.GET(xO365CountryRegion.Code) then
+        exit(false);
+
+      CountryRegion.VALIDATE(Name,O365CountryRegion.Name);
+      CountryRegion.VALIDATE("VAT Scheme",
+        COPYSTR(O365CountryRegion."VAT Scheme",1,MAXSTRLEN(CountryRegion."VAT Scheme"))
+        );
+
+      CountryRegion.MODIFY(true); // Passing on the error if it fails
+      exit(true);
+    END;
+
+    PROCEDURE LookupCountryCodePhone@25() : Code[10];
+    VAR
+      O365CountryRegion@1001 : Record "O365 Country/Region";
+      O365CountryRegionList@1003 : Page "O365 Country/Region List";
+    BEGIN
+      O365CountryRegionList.LOOKUPMODE(true);
+      O365CountryRegionList.EDITABLE(false);
+
+      if O365CountryRegionList.RUNMODAL <> ACTION::LookupOK then
+        ERROR('');
+
+      O365CountryRegionList.GETRECORD(O365CountryRegion);
+
+      exit(O365CountryRegion.Code);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

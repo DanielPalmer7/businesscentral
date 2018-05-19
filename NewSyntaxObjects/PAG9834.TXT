@@ -1,0 +1,83 @@
+OBJECT Page 9834 User Group Permission Sets
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161711.310T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=User Group Permission Sets;
+    SourceTable="User Group Permission Set";
+    PageType=List;
+    OnAfterGetRecord=BEGIN
+                       if Scope = Scope::Tenant then begin
+                         if TenantPermissionSetRec.GET("App ID","Role ID") then
+                           AppRoleName := TenantPermissionSetRec.Name
+                       end else begin
+                         if PermissionSetRec.GET("Role ID") then
+                           AppRoleName := PermissionSetRec.Name
+                       end
+                     END;
+
+    OnInsertRecord=BEGIN
+                     exit("Role ID" <> '');
+                   END;
+
+    OnModifyRecord=BEGIN
+                     TESTFIELD("Role ID");
+                   END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="Role ID";
+                ToolTipML=ENU=Specifies a profile.;
+                ApplicationArea=#Basic,#Suite;
+                NotBlank=true;
+                SourceExpr="Role ID";
+                Editable=TRUE;
+                ImplicitType=Code20 }
+
+    { 8   ;2   ;Field     ;
+                Name=Role Name;
+                CaptionML=ENU=Role Name;
+                ToolTipML=ENU=Specifies the name of the profile.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=AppRoleName;
+                Editable=FALSE;
+                ImplicitType=Text30 }
+
+    { 4   ;2   ;Field     ;
+                Name=App Name;
+                CaptionML=ENU=Extension Name;
+                ToolTipML=ENU=Specifies the name of an extension.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Extension Name";
+                Editable=FALSE;
+                ImplicitType=Text30 }
+
+  }
+  CODE
+  {
+    VAR
+      PermissionSetRec@1002 : Record "Permission Set";
+      TenantPermissionSetRec@1003 : Record "Tenant Permission Set";
+      AppRoleName@1001 : Text[30];
+
+    BEGIN
+    END.
+  }
+}
+

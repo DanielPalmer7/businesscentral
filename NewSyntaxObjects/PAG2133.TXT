@@ -1,0 +1,90 @@
+OBJECT Page 2133 O365 Tax Payments Settings
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161402.437T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Tax & Payments;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable="O365 Settings Menu";
+    PageType=List;
+    SourceTableTemporary=true;
+    OnOpenPage=BEGIN
+                 InsertMenuItems;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 4       ;    ;ActionContainer;
+                      Name=ActionContainer4;
+                      ActionContainerType=ActionItems }
+      { 6       ;1   ;Action    ;
+                      Name=Open;
+                      ShortCutKey=Return;
+                      CaptionML=ENU=Open;
+                      ToolTipML=ENU=Open the card for the selected record.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      Image=DocumentEdit;
+                      Scope=Repeater;
+                      OnAction=BEGIN
+                                 OpenPage;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Control2;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=Title;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Title;
+                ImplicitType=Text30 }
+
+    { 5   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the tax payment setting.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Description;
+                ImplicitType=Text80 }
+
+  }
+  CODE
+  {
+    VAR
+      TaxTitleLbl@1020001 : TextConst 'ENU=Tax';
+      TaxDescriptionLbl@1020000 : TextConst 'ENU=Set up your tax information.';
+      PaymentTitleLbl@1003 : TextConst 'ENU=Payments';
+      PaymentnDescriptionLbl@1002 : TextConst 'ENU=Set up your payment method and terms.';
+      VATProdPostingGroupLbl@1004 : TextConst 'ENU=Tax Rates';
+      VATProdPostingGroupDescriptionLbl@1005 : TextConst 'ENU=Set up the tax rate and description.';
+      O365SalesInitialSetup@1010 : Record "O365 Sales Initial Setup";
+
+    LOCAL PROCEDURE InsertMenuItems@1();
+    BEGIN
+      InsertPageMenuItem(PAGE::"O365 Tax Settings List",TaxTitleLbl,TaxDescriptionLbl);
+      InsertPageMenuItem(PAGE::"O365 Payments Settings",PaymentTitleLbl,PaymentnDescriptionLbl);
+      if O365SalesInitialSetup.IsUsingVAT then
+        InsertPageMenuItem(PAGE::"O365 VAT Posting Setup List",VATProdPostingGroupLbl,VATProdPostingGroupDescriptionLbl);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,90 @@
+OBJECT Page 1798 Data Migration About
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161353.980T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=About Data Migration;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    LinksAllowed=false;
+    PageType=StandardDialog;
+    ShowFilter=false;
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Field     ;
+                Name=Line1;
+                CaptionML=ENU=We're migrating data to Dynamics 365. Depending on what was chosen, this can be customers, vendors, items, G/L accounts, or all of these entities, plus a history of transactions for them.;
+                ApplicationArea=#All;
+                MultiLine=true }
+
+    { 4   ;1   ;Field     ;
+                Name=Line2;
+                CaptionML=ENU=Migration will take a few minutes. We'll let you know when migration is complete.;
+                ApplicationArea=#All;
+                MultiLine=true }
+
+    { 3   ;1   ;Field     ;
+                Name=Line3;
+                CaptionML=ENU=In the meantime you can explore Dynamics 365, but do not add new customers, vendors, items, or G/L accounts.;
+                ApplicationArea=#All;
+                MultiLine=true }
+
+    { 5   ;1   ;Field     ;
+                Name=Line4;
+                CaptionML=ENU=To monitor progress, choose OK to go to the Data Migration Overview page.;
+                ApplicationArea=#All;
+                MultiLine=true }
+
+    { 6   ;1   ;Field     ;
+                Name=LearnMore;
+                Lookup=false;
+                DrillDown=true;
+                AssistEdit=false;
+                ApplicationArea=#All;
+                SourceExpr=LearnMoreLbl;
+                Editable=False;
+                Style=StandardAccent;
+                StyleExpr=TRUE;
+                OnDrillDown=VAR
+                              DataMigrationStatus@1001 : Record "Data Migration Status";
+                              Url@1000 : Text;
+                            BEGIN
+                              DataMigrationStatus.SETFILTER(Status,'%1|%2',
+                                DataMigrationStatus.Status::"In Progress",
+                                DataMigrationStatus.Status::Pending);
+                              if DataMigrationStatus.FINDFIRST then
+                                DataMigrationFacade.OnGetMigrationHelpTopicUrl(DataMigrationStatus."Migration Type",Url);
+                              if Url = '' then
+                                HYPERLINK(GeneralHelpTopicUrlTxt)
+                              else
+                                HYPERLINK(Url);
+                            END;
+
+                ShowCaption=false }
+
+  }
+  CODE
+  {
+    VAR
+      GeneralHelpTopicUrlTxt@1001 : TextConst '@@@={Locked};ENU="https://go.microsoft.com/fwlink/?linkid=859445"';
+      LearnMoreLbl@1002 : TextConst 'ENU=Learn more';
+      DataMigrationFacade@1000 : Codeunit "Data Migration Facade";
+
+    BEGIN
+    END.
+  }
+}
+

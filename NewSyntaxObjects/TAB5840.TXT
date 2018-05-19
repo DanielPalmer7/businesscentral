@@ -1,0 +1,42 @@
+OBJECT Table 5840 Standard Cost Worksheet Name
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160159.463T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnDelete=BEGIN
+               StdCostWksh.SETRANGE("Standard Cost Worksheet Name",Name);
+               StdCostWksh.DELETEALL(true);
+             END;
+
+    CaptionML=ENU=Standard Cost Worksheet Name;
+    LookupPageID="Standard Cost Worksheet Names";
+  }
+  FIELDS
+  {
+    { 2   ;   ;Name                ;Code10        ;CaptionML=ENU=Name;
+                                                   NotBlank=true }
+    { 3   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Name                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      StdCostWksh@1000 : Record "Standard Cost Worksheet";
+
+    BEGIN
+    END.
+  }
+}
+

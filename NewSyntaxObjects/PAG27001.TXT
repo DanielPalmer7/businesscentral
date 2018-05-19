@@ -1,0 +1,46 @@
+OBJECT Page 27001 SAT Account Codes
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161725.400T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=SAT Account Codes;
+    SourceTable="SAT Account Code";
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=Code;
+                ToolTipML=ENU=Specifies the SAT account.;
+                SourceExpr=Code;
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the SAT account.;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

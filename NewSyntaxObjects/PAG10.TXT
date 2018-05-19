@@ -1,0 +1,124 @@
+OBJECT Page 10 Countries/Regions
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161149.400T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Countries/Regions;
+    SourceTable="Country/Region";
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      Name=ActionContainer1900000003;
+                      ActionContainerType=RelatedInformation }
+      { 17      ;1   ;ActionGroup;
+                      Name="&Country/Region";
+                      CaptionML=ENU=&Country/Region;
+                      Image=CountryRegion }
+      { 18      ;2   ;Action    ;
+                      Name="Tax Reg. No. Formats";
+                      CaptionML=ENU=Tax Reg. No. Formats;
+                      ToolTipML=ENU=Specify that the tax registration number for an account, such as a customer, corresponds to the standard format for tax registration numbers in an account's country/region.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "VAT Registration No. Formats";
+                      RunPageLink="Country/Region Code"=FIELD(Code);
+                      Image=NumberSetup }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name=Code;
+                ToolTipML=ENU=Specifies the country/region of the address.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Code;
+                ImplicitType=Code10 }
+
+    { 4   ;2   ;Field     ;
+                Name=Name;
+                ToolTipML=ENU=Specifies the country/region of the address.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Name;
+                ImplicitType=Text50 }
+
+    { 6   ;2   ;Field     ;
+                Name="Address Format";
+                ToolTipML=ENU=Specifies the format of the address that is displayed on external-facing documents. You link an address format to a country/region code so that external-facing documents based on cards or documents with that country/region code use the specified address format. NOTE: If the State field is filled in, then the state will be printed above the country/region unless you select the City+State+ZIP Code option.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Address Format";
+                ImplicitType=Option }
+
+    { 15  ;2   ;Field     ;
+                Name="Contact Address Format";
+                ToolTipML=ENU=Specifies where you want the contact name to appear in mailing addresses.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Contact Address Format";
+                ImplicitType=Option }
+
+    { 11  ;2   ;Field     ;
+                Name="EU Country/Region Code";
+                ToolTipML=ENU=Specifies the EU code for the country/region you are doing business with.;
+                SourceExpr="EU Country/Region Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 13  ;2   ;Field     ;
+                Name="Intrastat Code";
+                ToolTipML=ENU=Specifies an INTRASTAT code for the country/region you are trading with.;
+                SourceExpr="Intrastat Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 3   ;2   ;Field     ;
+                Name="VAT Scheme";
+                ToolTipML=ENU=Specifies the national body that issues the Tax registration number for the country/region in connection with electronic document sending.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="VAT Scheme";
+                ImplicitType=Code10 }
+
+    { 1020000;2;Field     ;
+                Name="SAT Country Code";
+                ToolTipML=ENU=Specifies the country code required for reporting to the Mexican tax authorities (SAT);
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="SAT Country Code";
+                ImplicitType=Code10 }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Name=Control1900383207;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

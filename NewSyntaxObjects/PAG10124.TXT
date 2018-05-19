@@ -1,0 +1,116 @@
+OBJECT Page 10124 Bank Rec. List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161720.827T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Bank Rec. List;
+    SourceTable="Bank Rec. Header";
+    PageType=List;
+    CardPageID="Bank Rec. Worksheet";
+    ActionList=ACTIONS
+    {
+      { 1900000006;0 ;ActionContainer;
+                      Name=ActionContainer1900000006;
+                      ActionContainerType=Reports }
+      { 1907493906;1 ;Action    ;
+                      Name="Bank Account - Reconcile";
+                      CaptionML=ENU=Bank Account - Reconcile;
+                      ToolTipML=ENU=Reconcile bank transactions with bank account ledger entries to ensure that your bank account in Dynamics NAV reflects your actual liquidity.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Report "Bank Account - Reconcile";
+                      Promoted=false;
+                      Image=Report;
+                      PromotedCategory=Report }
+      { 1902208606;1 ;Action    ;
+                      Name="Bank Rec. Test Report";
+                      CaptionML=ENU=Bank Rec. Test Report;
+                      ToolTipML=ENU=View a preliminary draft of the bank reconciliation statement. You can preview, print, or save the bank reconciliation test statement in several file formats. This step in the bank reconciliation process allows you to test the bank reconciliation statement entries for accuracy prior to posting the bank reconciliation statement.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Report "Bank Rec. Test Report";
+                      Promoted=false;
+                      Image=Report;
+                      PromotedCategory=Report }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 1020000;2;Field     ;
+                Name="Bank Account No.";
+                ToolTipML=ENU=Specifies the code for the bank account the reconciliation applies to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Bank Account No.";
+                ImplicitType=Code20 }
+
+    { 1020002;2;Field     ;
+                Name="Statement No.";
+                ToolTipML=ENU=Specifies the statement number to be reconciled.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Statement No.";
+                ImplicitType=Code20 }
+
+    { 1020004;2;Field     ;
+                Name="Statement Date";
+                ToolTipML=ENU=Specifies the as-of date of the statement. All G/L balances will be calculated based upon this date.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Statement Date";
+                ImplicitType=Date }
+
+    { 1020006;2;Field     ;
+                Name="Statement Balance";
+                ToolTipML=ENU=Specifies the amount entered by the operator from the balance found on the bank statement.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Statement Balance";
+                ImplicitType=Decimal }
+
+    { 1020008;2;Field     ;
+                Name="Date Created";
+                ToolTipML=ENU=Specifies a date automatically populated when the record is created.;
+                SourceExpr="Date Created";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 1020010;2;Field     ;
+                Name="Time Created";
+                ToolTipML=ENU=Specifies the  time created, which is automatically populated when the record is created.;
+                SourceExpr="Time Created";
+                Visible=FALSE;
+                ImplicitType=Time }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1905344207;1;Part   ;
+                Name=Control1905344207;
+                ApplicationArea=#Basic,#Suite;
+                SubPageLink="Bank Account No."=FIELD("Bank Account No."),
+                            "Statement No."=FIELD("Statement No.");
+                PagePartID="Bank Rec Worksheet FactBox";
+                Visible=TRUE;
+                Editable=FALSE;
+                PartType=Page }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

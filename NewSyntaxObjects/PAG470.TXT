@@ -1,0 +1,80 @@
+OBJECT Page 470 VAT Business Posting Groups
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161246.390T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Tax Business Posting Groups;
+    SourceTable="VAT Business Posting Group";
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 8       ;1   ;Action    ;
+                      Name="&Setup";
+                      CaptionML=ENU=&Setup;
+                      ToolTipML=ENU=View or edit combinations of Tax business posting groups and Tax product posting groups. Fill in a line for each combination of Tax business posting group and Tax product posting group.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "VAT Posting Setup";
+                      RunPageLink="VAT Bus. Posting Group"=FIELD(Code);
+                      Promoted=true;
+                      Image=Setup;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name=Code;
+                ToolTipML=ENU=Specifies a code for the posting group that determines how to calculate and post tax for customers and vendors. The number of tax posting groups that you set up can depend on local legislation and whether you trade both domestically and internationally.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Code;
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the posting group that determines how to calculate and post tax for customers and vendors. The number of tax posting groups that you set up can depend on local legislation and whether you trade both domestically and internationally.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Name=Control1900383207;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

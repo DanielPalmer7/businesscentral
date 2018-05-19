@@ -1,0 +1,116 @@
+OBJECT Table 2170 O365 Default Email Message
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160131.587T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=O365 Default Email Message;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Document Type       ;Option        ;CaptionML=ENU=Document Type;
+                                                   OptionCaptionML=ENU=Quote,Invoice;
+                                                   OptionString=Quote,Invoice }
+    { 10  ;   ;Value               ;BLOB          ;CaptionML=ENU=Value }
+  }
+  KEYS
+  {
+    {    ;"Document Type"                         ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      GreetingTxt@1002 : TextConst '@@@=%1 - customer name;ENU=Hello <%1>,';
+      InvoiceEmailBodyTxt@1001 : TextConst 'ENU=Thank you for your business. Your invoice is attached to this message.';
+      QuoteEmailBodyTxt@1000 : TextConst 'ENU=As promised, here is our estimate. Please see the attached estimate for details.';
+      CustomerLbl@1003 : TextConst 'ENU=Customer';
+      TestInvoiceEmailBodyTxt@1004 : TextConst 'ENU=Thank you for your business. Your test invoice is attached to this message.';
+
+    LOCAL PROCEDURE CreateMissingDefaultMessages@2();
+    VAR
+      InvoiceO365DefaultEmailMsg@1001 : Record "O365 Default Email Message";
+      QuoteO365DefaultEmailMsg@1002 : Record "O365 Default Email Message";
+      CR@1000 : Text[1];
+    BEGIN
+      CR[1] := 10;
+
+      if not GET("Document Type"::Quote) then begin
+        // Create default estimate message
+        QuoteO365DefaultEmailMsg."Document Type" := "Document Type"::Quote;
+        QuoteO365DefaultEmailMsg.INSERT;
+        QuoteO365DefaultEmailMsg.SetMessage(STRSUBSTNO(GreetingTxt,CustomerLbl) + CR + CR + QuoteEmailBodyTxt)
+      end;
+
+      if not GET("Document Type"::Invoice) then begin
+        // Create default invoice message
+        InvoiceO365DefaultEmailMsg."Document Type" := "Document Type"::Invoice;
+        InvoiceO365DefaultEmailMsg.INSERT;
+        InvoiceO365DefaultEmailMsg.SetMessage(STRSUBSTNO(GreetingTxt,CustomerLbl) + CR + CR + InvoiceEmailBodyTxt)
+      end;
+    END;
+
+    PROCEDURE GetMessage@1(Type@1004 : Option) : Text;
+    VAR
+      TempBlob@1000 : Record TempBlob;
+      LineSeparator@1001 : Text;
+    BEGIN
+      SETFILTER("Document Type",'%1',Type);
+      if not FINDFIRST then begin
+        CreateMissingDefaultMessages;
+        SETFILTER("Document Type",'%1',Type);
+        FINDFIRST
+      end;
+      CALCFIELDS(Value);
+      TempBlob.Blob := Value;
+      LineSeparator[1] := 10;
+      exit(TempBlob.ReadAsText(LineSeparator,TEXTENCODING::Windows));
+    END;
+
+    PROCEDURE SetMessage@3(NewMessage@1000 : Text);
+    VAR
+      OutStr@1002 : OutStream;
+    BEGIN
+      CLEAR(Value);
+      Value.CREATEOUTSTREAM(OutStr,TEXTENCODING::Windows);
+      OutStr.WRITETEXT(NewMessage);
+      MODIFY(true);
+    END;
+
+    PROCEDURE ReportUsageToDocumentType@18(VAR DocumentType@1000 : Option;ReportUsage@1001 : Integer);
+    VAR
+      ReportSelections@1002 : Record "Report Selections";
+    BEGIN
+      case ReportUsage of
+        ReportSelections.Usage::"S.Invoice",ReportSelections.Usage::"S.Invoice Draft",ReportSelections.Usage::"P.Invoice":
+          DocumentType := "Document Type"::Invoice;
+        ReportSelections.Usage::"S.Quote",ReportSelections.Usage::"P.Quote":
+          DocumentType := "Document Type"::Quote;
+      end;
+    END;
+
+    PROCEDURE GetTestInvoiceMessage@10() : Text;
+    VAR
+      CR@1000 : Text[1];
+      EmailBodyTxt@1001 : Text;
+    BEGIN
+      CR[1] := 10;
+
+      // Create test invoice body message
+      EmailBodyTxt := STRSUBSTNO(GreetingTxt,CustomerLbl) + CR + CR + TestInvoiceEmailBodyTxt;
+
+      exit(EmailBodyTxt)
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

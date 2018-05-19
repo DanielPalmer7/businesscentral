@@ -1,0 +1,29 @@
+OBJECT Page 7172 Sales Lines Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161613.753T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Lines;
+    MultipleNewLines=true;
+    LinksAllowed=false;
+    SourceTable="Sales Line";
+    PageType=ListPart;
+  }
+  CONTROLS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

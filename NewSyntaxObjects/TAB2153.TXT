@@ -1,0 +1,73 @@
+OBJECT Table 2153 O365 Payment Terms
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160131.313T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=O365 Payment Terms;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Due Date Calculation;DateFormula   ;CaptionML=ENU=Due Date Calculation }
+    { 5   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;Brick               ;Code,Description,"Due Date Calculation"  }
+  }
+  CODE
+  {
+    VAR
+      OneMonthTxt@1000 : TextConst '@@@={Locked};ENU=1M(8D)';
+      CMTxt@1001 : TextConst '@@@={Locked};ENU=CM';
+
+    PROCEDURE ExcludedOneMonthPaymentTermCode@1() : Text[10];
+    BEGIN
+      exit(OneMonthTxt);
+    END;
+
+    PROCEDURE ExcludedCurrentMonthPaymentTermCode@4() : Text[10];
+    BEGIN
+      exit(CMTxt);
+    END;
+
+    PROCEDURE IncludePaymentTermCode@3(PaymentTermCode@1000 : Code[10]) : Boolean;
+    BEGIN
+      exit(not (PaymentTermCode in [OneMonthTxt,CMTxt]));
+    END;
+
+    PROCEDURE RefreshRecords@2();
+    VAR
+      PaymentTerms@1000 : Record "Payment Terms";
+      CurrentRecordCode@1001 : Code[10];
+    BEGIN
+      CurrentRecordCode := Code;
+      DELETEALL;
+      if PaymentTerms.FINDSET then
+        repeat
+          if IncludePaymentTermCode(PaymentTerms.Code) then begin
+            Code := PaymentTerms.Code;
+            Description := PaymentTerms.GetDescriptionInCurrentLanguage;
+            "Due Date Calculation" := PaymentTerms."Due Date Calculation";
+            if INSERT then;
+          end;
+        until PaymentTerms.NEXT = 0;
+      if GET(CurrentRecordCode) then;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

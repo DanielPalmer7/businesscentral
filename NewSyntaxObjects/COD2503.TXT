@@ -1,0 +1,52 @@
+OBJECT Codeunit 2503 NavExtensionOperationMgmt
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    SingleInstance=true;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      NavAppOperationInvoker@1001 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.Apps.ALNavAppOperationInvoker";
+      OperationInvokerHasBeenCreated@1000 : Boolean;
+
+    PROCEDURE DeployNavExtension@1(AppId@1001 : GUID;Lcid@1000 : Integer);
+    BEGIN
+      OperationInvokerIsInitialized;
+      NavAppOperationInvoker.DeployTarget(AppId,FORMAT(Lcid));
+    END;
+
+    PROCEDURE UploadNavExtension@12(PackageStream@1001 : InStream;NavAppDeploymentSchedule@1002 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.Apps.ALPackageDeploymentSchedule";Lcid@1000 : Integer);
+    BEGIN
+      OperationInvokerIsInitialized;
+      NavAppOperationInvoker.UploadPackage(PackageStream,NavAppDeploymentSchedule,FORMAT(Lcid));
+    END;
+
+    PROCEDURE RefreshStatus@4(OperationID@1000 : GUID);
+    BEGIN
+      OperationInvokerIsInitialized;
+      NavAppOperationInvoker.RefreshOperationStatus(OperationID);
+    END;
+
+    LOCAL PROCEDURE OperationInvokerIsInitialized@6();
+    BEGIN
+      if not OperationInvokerHasBeenCreated then begin
+        NavAppOperationInvoker := NavAppOperationInvoker.ALNavAppOperationInvoker;
+        OperationInvokerHasBeenCreated := true;
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

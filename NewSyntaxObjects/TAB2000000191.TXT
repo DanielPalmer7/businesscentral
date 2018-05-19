@@ -1,0 +1,47 @@
+OBJECT Table 2000000191 Entitlement
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.930T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entitlement Set ID  ;Code20        ;TableRelation="Entitlement Set".ID WHERE (ID=FIELD("Entitlement Set ID")) }
+    { 2   ;   ;Entitlement Set Name;Text250       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("Entitlement Set".Name WHERE (ID=FIELD("Entitlement Set ID"))) }
+    { 3   ;   ;Object Type         ;Option        ;OptionString="Table Data",Table,,Report,,Codeunit,XMLport,MenuSuite,Page,Query,System }
+    { 4   ;   ;Object ID Range Start;Integer       }
+    { 5   ;   ;Object ID Range End ;Integer        }
+    { 6   ;   ;Read Permission     ;Option        ;InitValue=Yes;
+                                                   OptionString=" ",Yes,Indirect }
+    { 7   ;   ;Insert Permission   ;Option        ;InitValue=Yes;
+                                                   OptionString=" ",Yes,Indirect }
+    { 8   ;   ;Modify Permission   ;Option        ;InitValue=Yes;
+                                                   OptionString=" ",Yes,Indirect }
+    { 9   ;   ;Delete Permission   ;Option        ;InitValue=Yes;
+                                                   OptionString=" ",Yes,Indirect }
+    { 10  ;   ;Execute Permission  ;Option        ;InitValue=Yes;
+                                                   OptionString=" ",Yes,Indirect }
+  }
+  KEYS
+  {
+    {    ;"Entitlement Set ID","Object Type","Object ID Range Start","Object ID Range End";
+                                                   Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

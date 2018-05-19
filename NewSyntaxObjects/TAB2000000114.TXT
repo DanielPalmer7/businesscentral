@@ -1,0 +1,38 @@
+OBJECT Table 2000000114 Document Service
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.807T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Service ID          ;Code30         }
+    { 3   ;   ;Description         ;Text80         }
+    { 5   ;   ;Location            ;Text250        }
+    { 7   ;   ;User Name           ;Text128        }
+    { 9   ;   ;Password            ;Text128        }
+    { 11  ;   ;Document Repository ;Text250        }
+    { 13  ;   ;Folder              ;Text250        }
+  }
+  KEYS
+  {
+    {    ;"Service ID"                            ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;"Service ID",Description                 }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

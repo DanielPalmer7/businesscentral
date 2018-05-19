@@ -1,0 +1,41 @@
+OBJECT Table 9176 Experience Tier Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160234.480T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+    CaptionML=ENU=Experience Tier Setup;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Company Name        ;Text30        ;TableRelation=Company;
+                                                   CaptionML=ENU=Company Name }
+    { 40  ;   ;Invoicing           ;Boolean       ;CaptionML=ENU=Invoicing }
+    { 100 ;   ;Basic               ;Boolean       ;CaptionML=ENU=Basic }
+    { 200 ;   ;Essential           ;Boolean       ;CaptionML=ENU=Essential }
+    { 225 ;   ;Premium             ;Boolean       ;CaptionML=ENU=Premium }
+    { 250 ;   ;Preview             ;Boolean       ;CaptionML=ENU=Preview }
+    { 300 ;   ;Advanced            ;Boolean       ;CaptionML=ENU=Advanced }
+    { 400 ;   ;Custom              ;Boolean       ;CaptionML=ENU=Custom }
+  }
+  KEYS
+  {
+    {    ;"Company Name"                          ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

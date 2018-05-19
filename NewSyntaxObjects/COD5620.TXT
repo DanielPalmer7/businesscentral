@@ -1,0 +1,27 @@
+OBJECT Codeunit 5620 FA Reg.-FALedger
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="FA Register";
+    OnRun=BEGIN
+            FALedgEntry.SETRANGE("Entry No.","From Entry No.","To Entry No.");
+            PAGE.RUN(PAGE::"FA Ledger Entries",FALedgEntry);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      FALedgEntry@1000 : Record "FA Ledger Entry";
+
+    BEGIN
+    END.
+  }
+}
+

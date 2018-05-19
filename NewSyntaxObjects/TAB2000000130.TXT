@@ -1,0 +1,34 @@
+OBJECT Table 2000000130 Device
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.807T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;MAC Address         ;Code20         }
+    { 2   ;   ;Name                ;Text80         }
+    { 3   ;   ;Device Type         ;Option        ;OptionString=Full,Limited,ISV,"ISV Functional" }
+    { 4   ;   ;Enabled             ;Boolean        }
+  }
+  KEYS
+  {
+    {    ;"MAC Address"                           ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

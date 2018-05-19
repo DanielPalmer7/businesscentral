@@ -1,0 +1,42 @@
+OBJECT Table 1662 Payroll Import Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160129.243T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Payroll Import Buffer;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;AutoIncrement=true;
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Entry No. }
+    { 10  ;   ;Transaction date    ;Date          ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Transaction date }
+    { 11  ;   ;Account No.         ;Code20        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Account No. }
+    { 12  ;   ;Amount              ;Decimal       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Amount }
+    { 13  ;   ;Description         ;Text50        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;"Entry No."                             ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

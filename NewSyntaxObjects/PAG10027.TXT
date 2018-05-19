@@ -1,0 +1,610 @@
+OBJECT Page 10027 Sales Order Shipment Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161714.143T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Lines;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="Sales Line";
+    DelayedInsert=true;
+    SourceTableView=WHERE("Document Type"=FILTER(Order),
+                          "Outstanding Quantity"=FILTER(<>0));
+    PageType=ListPart;
+    AutoSplitKey=true;
+    OnInit=BEGIN
+             "Appl.-to Item EntryEditable" := true;
+             "Appl.-from Item EntryEditable" := true;
+             "FA Posting DateEditable" := true;
+             "Shipping TimeEditable" := true;
+             ShippingAgentServiceCodeEditab := true;
+             "Shipping Agent CodeEditable" := true;
+             "Shipment DateEditable" := true;
+             "Planned Shipment DateEditable" := true;
+             "Planned Delivery DateEditable" := true;
+             "Promised Delivery DateEditable" := true;
+             AllowItemChargeAssignmentEdita := true;
+             "Qty. to ShipEditable" := true;
+             "Package Tracking No.Editable" := true;
+           END;
+
+    OnAfterGetRecord=BEGIN
+                       ShowShortcutDimCode(ShortcutDimCode);
+                     END;
+
+    OnNewRecord=BEGIN
+                  Type := xRec.Type;
+                  CLEAR(ShortcutDimCode);
+                END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 1906587504;1 ;ActionGroup;
+                      Name="F&unctions";
+                      CaptionML=ENU=F&unctions;
+                      Image=Action }
+      { 1906533504;2 ;ActionGroup;
+                      Name="Drop Shipment";
+                      CaptionML=ENU=Drop Shipment;
+                      Image=Delivery }
+      { 1902139404;3 ;Action    ;
+                      Name="Purchase &Order";
+                      CaptionML=ENU=Purchase &Order;
+                      ToolTipML=ENU=Purchase goods or services from a vendor.;
+                      Image=Document;
+                      OnAction=BEGIN
+                                 OpenPurchOrderForm;
+                               END;
+                                }
+      { 1906474904;2 ;ActionGroup;
+                      Name="Special Order";
+                      CaptionML=ENU=Special Order;
+                      Image=SpecialOrder }
+      { 1902080804;3 ;Action    ;
+                      Name=Action1902080804;
+                      CaptionML=ENU=Purchase &Order;
+                      ToolTipML=ENU=Purchase goods or services from a vendor.;
+                      Image=Document;
+                      OnAction=BEGIN
+                                 OpenPurchOrderForm;
+                               END;
+                                }
+      { 1907935204;1 ;ActionGroup;
+                      Name="&Line";
+                      CaptionML=ENU=&Line;
+                      Image=Line }
+      { 1902085804;2 ;Action    ;
+                      Name=Dimensions;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=ENU=Dimensions;
+                      ToolTipML=ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                      Image=Dimensions;
+                      OnAction=BEGIN
+                                 ShowDimensions;
+                               END;
+                                }
+      { 1907184504;2 ;Action    ;
+                      Name="Item Charge &Assignment";
+                      CaptionML=ENU=Item Charge &Assignment;
+                      ToolTipML=ENU=Assign additional direct costs, for example for freight, to the item on the line.;
+                      OnAction=BEGIN
+                                 ItemChargeAssgnt;
+                               END;
+                                }
+      { 1900722704;2 ;Action    ;
+                      Name="Item &Tracking Lines";
+                      CaptionML=ENU=Item &Tracking Lines;
+                      ToolTipML=ENU=View or edit serial numbers and lot numbers that are assigned to the item on the document or journal line.;
+                      Image=ItemTrackingLines;
+                      OnAction=BEGIN
+                                 OpenItemTrackingLines;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name=Type;
+                ToolTipML=ENU="Specifies the type of the record on the document line. ";
+                SourceExpr=Type;
+                Editable=FALSE;
+                ImplicitType=Option }
+
+    { 4   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the record.;
+                SourceExpr="No.";
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             ShowShortcutDimCode(ShortcutDimCode);
+                             NoOnAfterValidate;
+                           END;
+
+                ImplicitType=Code20 }
+
+    { 68  ;2   ;Field     ;
+                Name="Cross-Reference No.";
+                ToolTipML=ENU=Specifies the cross-reference number of the item specified on the line.;
+                SourceExpr="Cross-Reference No.";
+                Visible=FALSE;
+                Editable=FALSE;
+                OnLookup=BEGIN
+                           // Item Cross Ref - start
+                           if Type = Type::Item then begin
+                             SalesHeader.GET("Document Type","Document No.");
+                             ItemCrossReference.RESET;
+                             ItemCrossReference.SETCURRENTKEY("Cross-Reference Type","Cross-Reference Type No.");
+                             ItemCrossReference.SETRANGE("Cross-Reference Type",ItemCrossReference."Cross-Reference Type"::Customer);
+                             ItemCrossReference.SETRANGE("Cross-Reference Type No.",SalesHeader."Sell-to Customer No.");
+                             if PAGE.RUNMODAL(PAGE::"Cross Reference List",ItemCrossReference) = ACTION::LookupOK then begin
+                               VALIDATE("Cross-Reference No.",ItemCrossReference."Cross-Reference No.");
+                               InsertExtendedText(false);
+                             end;
+                           end;
+                           // Item Cross Ref - end
+                         END;
+
+                ImplicitType=Code20 }
+
+    { 30  ;2   ;Field     ;
+                Name="Variant Code";
+                ToolTipML=ENU=Specifies the variant number of the items sold.;
+                SourceExpr="Variant Code";
+                Visible=FALSE;
+                Editable="Variant CodeEditable";
+                ImplicitType=Code10 }
+
+    { 104 ;2   ;Field     ;
+                Name="Substitution Available";
+                ToolTipML=ENU=Specifies that a substitute is available for the item on the sales line.;
+                SourceExpr="Substitution Available";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Boolean }
+
+    { 74  ;2   ;Field     ;
+                Name="Purchasing Code";
+                ToolTipML=ENU="Specifies a purchasing code that indicates actions that need to be taken to purchase this item. ";
+                SourceExpr="Purchasing Code";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code10 }
+
+    { 70  ;2   ;Field     ;
+                Name=Nonstock;
+                ToolTipML=ENU=Specifies that the item on the sales line is a nonstock item (an item not normally kept in inventory).;
+                SourceExpr=Nonstock;
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Boolean }
+
+    { 6   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the shipment line.;
+                SourceExpr=Description;
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 26  ;2   ;Field     ;
+                Name="Drop Shipment";
+                ToolTipML=ENU=Specifies whether to ship the items on the line directly to your customer.;
+                SourceExpr="Drop Shipment";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Boolean }
+
+    { 106 ;2   ;Field     ;
+                Name="Special Order";
+                ToolTipML=ENU=Specifies that the item on the sales line is a special-order item.;
+                SourceExpr="Special Order";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Boolean }
+
+    { 1020000;2;Field     ;
+                Name="Package Tracking No.";
+                ToolTipML=ENU=Specifies the shipping agent's package number.;
+                SourceExpr="Package Tracking No.";
+                Visible=FALSE;
+                Editable="Package Tracking No.Editable";
+                ImplicitType=Text30 }
+
+    { 42  ;2   ;Field     ;
+                Name="Location Code";
+                ToolTipML=ENU=Specifies the location from where inventory items are to be shipped by default, to the customer on the sales document.;
+                SourceExpr="Location Code";
+                Editable=FALSE;
+                ImplicitType=Code10 }
+
+    { 1020002;2;Field     ;
+                Name="Bin Code";
+                ToolTipML=ENU=Specifies the bin from where items on the sales order line are taken from when they are shipped.;
+                SourceExpr="Bin Code";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 8   ;2   ;Field     ;
+                Name=Quantity;
+                ToolTipML=ENU=Specifies the quantity of items on document line.;
+                BlankZero=true;
+                SourceExpr=Quantity;
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             QuantityOnAfterValidate;
+                           END;
+
+                ImplicitType=Decimal }
+
+    { 48  ;2   ;Field     ;
+                Name="Reserved Quantity";
+                ToolTipML=ENU=Specifies how many of the units in the Quantity field are reserved.;
+                BlankZero=true;
+                SourceExpr="Reserved Quantity";
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+    { 44  ;2   ;Field     ;
+                Name="Unit of Measure Code";
+                ToolTipML=ENU="Specifies the item's unit of measure. ";
+                SourceExpr="Unit of Measure Code";
+                Editable=FALSE;
+                OnValidate=BEGIN
+                             UnitofMeasureCodeOnAfterValida;
+                           END;
+
+                ImplicitType=Code10 }
+
+    { 10  ;2   ;Field     ;
+                Name="Unit of Measure";
+                ToolTipML=ENU="Specifies the item's unit of measure. ";
+                SourceExpr="Unit of Measure";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Text10 }
+
+    { 18  ;2   ;Field     ;
+                Name="Qty. to Ship";
+                ToolTipML=ENU="Specifies how many of the units in the Quantity field to post as shipped. ";
+                BlankZero=true;
+                SourceExpr="Qty. to Ship";
+                Editable="Qty. to ShipEditable";
+                ImplicitType=Decimal }
+
+    { 20  ;2   ;Field     ;
+                Name="Quantity Shipped";
+                ToolTipML=ENU=Specifies how many of the units in the Quantity field have been posted as shipped.;
+                BlankZero=true;
+                SourceExpr="Quantity Shipped";
+                ImplicitType=Decimal }
+
+    { 1020004;2;Field     ;
+                Name="Allow Item Charge Assignment";
+                ToolTipML=ENU=Specifies that you can assign item charges to this line.;
+                SourceExpr="Allow Item Charge Assignment";
+                Visible=FALSE;
+                Editable=AllowItemChargeAssignmentEdita;
+                ImplicitType=Boolean }
+
+    { 1020006;2;Field     ;
+                Name="Qty. to Assign";
+                ToolTipML=ENU=Specifies how many of the units in the Quantity field to assign.;
+                SourceExpr="Qty. to Assign";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 1020008;2;Field     ;
+                Name="Qty. Assigned";
+                ToolTipML=ENU=Specifies how many of the units in the Quantity field have been assigned.;
+                SourceExpr="Qty. Assigned";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 82  ;2   ;Field     ;
+                Name="Requested Delivery Date";
+                ToolTipML=ENU=Specifies the requested delivery date for the sales order shipment.;
+                SourceExpr="Requested Delivery Date";
+                Visible=FALSE;
+                Editable=FALSE;
+                ImplicitType=Date }
+
+    { 84  ;2   ;Field     ;
+                Name="Promised Delivery Date";
+                ToolTipML=ENU=Specifies the promised delivery date for the sales order shipment.;
+                SourceExpr="Promised Delivery Date";
+                Visible=FALSE;
+                Editable="Promised Delivery DateEditable";
+                ImplicitType=Date }
+
+    { 86  ;2   ;Field     ;
+                Name="Planned Delivery Date";
+                ToolTipML=ENU=Specifies the planned date that the shipment will be delivered at the customer's address.;
+                SourceExpr="Planned Delivery Date";
+                Editable="Planned Delivery DateEditable";
+                ImplicitType=Date }
+
+    { 88  ;2   ;Field     ;
+                Name="Planned Shipment Date";
+                ToolTipML=ENU=Specifies the date that the shipment should ship from the warehouse.;
+                SourceExpr="Planned Shipment Date";
+                Editable="Planned Shipment DateEditable";
+                ImplicitType=Date }
+
+    { 100 ;2   ;Field     ;
+                Name="Shipment Date";
+                ToolTipML=ENU=Specifies the date that the items on the line are in inventory and available to be picked. The shipment date is the date you expect to ship the items on the line.;
+                SourceExpr="Shipment Date";
+                Editable="Shipment DateEditable";
+                ImplicitType=Date }
+
+    { 92  ;2   ;Field     ;
+                Name="Shipping Agent Code";
+                ToolTipML=ENU=Specifies which shipping company will be used when you ship items to the customer.;
+                SourceExpr="Shipping Agent Code";
+                Visible=FALSE;
+                Editable="Shipping Agent CodeEditable";
+                ImplicitType=Code10 }
+
+    { 94  ;2   ;Field     ;
+                Name="Shipping Agent Service Code";
+                ToolTipML=ENU=Specifies the code for the shipping agent service to use for this customer.;
+                SourceExpr="Shipping Agent Service Code";
+                Visible=FALSE;
+                Editable=ShippingAgentServiceCodeEditab;
+                ImplicitType=Code10 }
+
+    { 96  ;2   ;Field     ;
+                Name="Shipping Time";
+                ToolTipML=ENU=Specifies the shipping time for the order. This is the time it takes from when the order is shipped from the warehouse, to when the order is delivered to the customer's address.;
+                SourceExpr="Shipping Time";
+                Visible=FALSE;
+                Editable="Shipping TimeEditable";
+                ImplicitType=DateFormula }
+
+    { 58  ;2   ;Field     ;
+                Name="Whse. Outstanding Qty. (Base)";
+                ToolTipML=ENU=Specifies the variant number of the items sold.;
+                SourceExpr="Whse. Outstanding Qty. (Base)";
+                Visible=FALSE;
+                ImplicitType=Decimal }
+
+    { 98  ;2   ;Field     ;
+                Name="Outbound Whse. Handling Time";
+                ToolTipML=ENU=Specifies the outbound warehouse handling time, which is used to calculate the planned shipment date.;
+                SourceExpr="Outbound Whse. Handling Time";
+                Visible=FALSE;
+                ImplicitType=DateFormula }
+
+    { 14  ;2   ;Field     ;
+                Name="FA Posting Date";
+                ToolTipML=ENU=Specifies the posting date for the fixed asset.;
+                SourceExpr="FA Posting Date";
+                Visible=FALSE;
+                Editable="FA Posting DateEditable";
+                ImplicitType=Date }
+
+    { 108 ;2   ;Field     ;
+                Name="Appl.-from Item Entry";
+                ToolTipML=ENU=Specifies the number of the item ledger entry that the sales credit memo line is applied from. This means that the inventory increase from this sales credit memo line is linked to the inventory decrease in the item ledger entry that you indicate in this field.;
+                SourceExpr="Appl.-from Item Entry";
+                Visible=FALSE;
+                Editable="Appl.-from Item EntryEditable";
+                ImplicitType=Integer }
+
+    { 60  ;2   ;Field     ;
+                Name="Appl.-to Item Entry";
+                ToolTipML=ENU=Specifies the number of a particular item ledger entry that the line should be applied to. This means that the inventory decrease from this sales line will be taken from the inventory increase in the item ledger entry that you select in this field. This creates a link so that the cost of the applied-to item ledger entry is carried over to this line.;
+                SourceExpr="Appl.-to Item Entry";
+                Visible=FALSE;
+                Editable="Appl.-to Item EntryEditable";
+                ImplicitType=Integer }
+
+  }
+  CODE
+  {
+    VAR
+      SalesHeader@1000 : Record "Sales Header";
+      ItemCrossReference@1001 : Record "Item Cross Reference";
+      TransferExtendedText@1002 : Codeunit "Transfer Extended Text";
+      ShortcutDimCode@1003 : ARRAY [8] OF Code[20];
+      "Variant CodeEditable"@19003611 : Boolean INDATASET;
+      "Package Tracking No.Editable"@19044372 : Boolean INDATASET;
+      "Qty. to ShipEditable"@19045867 : Boolean INDATASET;
+      AllowItemChargeAssignmentEdita@19072926 : Boolean INDATASET;
+      "Promised Delivery DateEditable"@19056991 : Boolean INDATASET;
+      "Planned Delivery DateEditable"@19056471 : Boolean INDATASET;
+      "Planned Shipment DateEditable"@19054193 : Boolean INDATASET;
+      "Shipment DateEditable"@19046400 : Boolean INDATASET;
+      "Shipping Agent CodeEditable"@19058680 : Boolean INDATASET;
+      ShippingAgentServiceCodeEditab@19027973 : Boolean INDATASET;
+      "Shipping TimeEditable"@19051550 : Boolean INDATASET;
+      "FA Posting DateEditable"@19009871 : Boolean INDATASET;
+      "Appl.-from Item EntryEditable"@19050177 : Boolean INDATASET;
+      "Appl.-to Item EntryEditable"@19008187 : Boolean INDATASET;
+
+    [External]
+    PROCEDURE ApproveCalcInvDisc@1();
+    BEGIN
+      CODEUNIT.RUN(CODEUNIT::"Sales-Disc. (Yes/No)",Rec);
+    END;
+
+    [External]
+    PROCEDURE CalcInvDisc@6();
+    BEGIN
+      CODEUNIT.RUN(CODEUNIT::"Sales-Calc. Discount",Rec);
+    END;
+
+    [External]
+    PROCEDURE ExplodeBOM@3();
+    BEGIN
+      CODEUNIT.RUN(CODEUNIT::"Sales-Explode BOM",Rec);
+    END;
+
+    [External]
+    PROCEDURE OpenPurchOrderForm@4();
+    VAR
+      PurchHeader@1000 : Record "Purchase Header";
+      PurchOrder@1001 : Page "Purchase Order";
+    BEGIN
+      PurchHeader.SETRANGE("No.","Purchase Order No.");
+      PurchOrder.SETTABLEVIEW(PurchHeader);
+      PurchOrder.EDITABLE := false;
+      PurchOrder.RUN;
+    END;
+
+    [External]
+    PROCEDURE OpenSpecialPurchOrderForm@14();
+    VAR
+      PurchHeader@1001 : Record "Purchase Header";
+      PurchOrder@1000 : Page "Purchase Order";
+    BEGIN
+      PurchHeader.SETRANGE("No.","Special Order Purchase No.");
+      PurchOrder.SETTABLEVIEW(PurchHeader);
+      PurchOrder.EDITABLE := false;
+      PurchOrder.RUN;
+    END;
+
+    [External]
+    PROCEDURE InsertExtendedText@5(Unconditionally@1000 : Boolean);
+    BEGIN
+      if TransferExtendedText.SalesCheckIfAnyExtText(Rec,Unconditionally) then begin
+        CurrPage.SAVERECORD;
+        TransferExtendedText.InsertSalesExtText(Rec);
+      end;
+      if TransferExtendedText.MakeUpdate then
+        UpdateForm(true);
+    END;
+
+    [External]
+    PROCEDURE ShowReservation@2();
+    BEGIN
+      FIND;
+      ShowReservation;
+    END;
+
+    [External]
+    PROCEDURE ItemAvailability@7(AvailabilityType@1000 : 'Date,Variant,Location,Bin');
+    BEGIN
+      ItemAvailability(AvailabilityType);
+    END;
+
+    [External]
+    PROCEDURE ShowReservationEntries@9();
+    BEGIN
+      ShowReservationEntries(true);
+    END;
+
+    [External]
+    PROCEDURE ShowDimensions@8();
+    BEGIN
+      ShowDimensions;
+    END;
+
+    [External]
+    PROCEDURE ShowItemSub@10();
+    BEGIN
+      ShowItemSub;
+    END;
+
+    [External]
+    PROCEDURE ShowNonstockItems@11();
+    BEGIN
+      ShowNonstock;
+    END;
+
+    [External]
+    PROCEDURE OpenItemTrackingLines@6500();
+    BEGIN
+      OpenItemTrackingLines;
+    END;
+
+    [External]
+    PROCEDURE ShowTracking@13();
+    VAR
+      TrackingForm@1000 : Page "Order Tracking";
+    BEGIN
+      TrackingForm.SetSalesLine(Rec);
+      TrackingForm.RUNMODAL;
+    END;
+
+    [External]
+    PROCEDURE ItemChargeAssgnt@5800();
+    BEGIN
+      ShowItemChargeAssgnt;
+    END;
+
+    [External]
+    PROCEDURE UpdateForm@12(SetSaveRecord@1000 : Boolean);
+    BEGIN
+      CurrPage.UPDATE(SetSaveRecord);
+    END;
+
+    [External]
+    PROCEDURE OrderOnHold@1000(OnHold@1020000 : Boolean);
+    BEGIN
+      "Variant CodeEditable" := not OnHold;
+      "Package Tracking No.Editable" := not OnHold;
+      "Qty. to ShipEditable" := not OnHold;
+      AllowItemChargeAssignmentEdita := not OnHold;
+      "Promised Delivery DateEditable" := not OnHold;
+      "Planned Delivery DateEditable" := not OnHold;
+      "Planned Shipment DateEditable" := not OnHold;
+      "Shipment DateEditable" := not OnHold;
+      "Shipping Agent CodeEditable" := not OnHold;
+      ShippingAgentServiceCodeEditab := not OnHold;
+      "Shipping TimeEditable" := not OnHold;
+      "FA Posting DateEditable" := not OnHold;
+      "Appl.-from Item EntryEditable" := not OnHold;
+      "Appl.-to Item EntryEditable" := not OnHold;
+    END;
+
+    LOCAL PROCEDURE NoOnAfterValidate@19066594();
+    BEGIN
+      InsertExtendedText(false);
+      if (Type = Type::"Charge (Item)") and ("No." <> xRec."No.") and
+         (xRec."No." <> '')
+      then
+        CurrPage.SAVERECORD;
+    END;
+
+    LOCAL PROCEDURE QuantityOnAfterValidate@19032465();
+    BEGIN
+      if Reserve = Reserve::Always then begin
+        CurrPage.SAVERECORD;
+        AutoReserve;
+        CurrPage.UPDATE(false);
+      end;
+    END;
+
+    LOCAL PROCEDURE UnitofMeasureCodeOnAfterValida@19057939();
+    BEGIN
+      if Reserve = Reserve::Always then begin
+        CurrPage.SAVERECORD;
+        AutoReserve;
+        CurrPage.UPDATE(false);
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

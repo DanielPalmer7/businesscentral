@@ -1,0 +1,79 @@
+OBJECT Query 60 Power BI Sales Hdr. Cust.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161751.417T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Power BI Sales Hdr. Cust.;
+  }
+  ELEMENTS
+  {
+    { 1   ;    ;DataItem;Sales_Header        ;
+               DataItemTable="Sales Header" }
+
+    { 2   ;1   ;Column  ;No                  ;
+               DataSource=No. }
+
+    { 3   ;1   ;DataItem;Sales_Line          ;
+               DataItemTable="Sales Line";
+               DataItemTableFilter=Type=CONST(Item);
+               DataItemLink="Document Type"=Sales_Header."Document Type","Document No."=Sales_Header."No." }
+
+    { 4   ;2   ;Column  ;Item_No             ;
+               DataSource=No. }
+
+    { 6   ;2   ;Column  ;Quantity            ;
+               DataSource=Quantity }
+
+    { 13  ;2   ;Column  ;Qty_Invoiced_Base   ;
+               DataSource=Qty. Invoiced (Base) }
+
+    { 14  ;2   ;Column  ;Qty_Shipped_Base    ;
+               DataSource=Qty. Shipped (Base) }
+
+    { 11  ;2   ;DataItem;Item                ;
+               DataItemTable=Item;
+               DataItemLink="No."=Sales_Line."No." }
+
+    { 7   ;3   ;Column  ;Base_Unit_of_Measure;
+               DataSource=Base Unit of Measure }
+
+    { 5   ;3   ;Column  ;Description         ;
+               DataSource=Description }
+
+    { 12  ;3   ;Column  ;Inventory           ;
+               DataSource=Inventory }
+
+    { 17  ;3   ;Column  ;Unit_Price          ;
+               DataSource=Unit Price }
+
+    { 8   ;3   ;DataItem;Customer            ;
+               DataItemTable=Customer;
+               DataItemLink="No."=Sales_Line."Sell-to Customer No." }
+
+    { 10  ;4   ;Column  ;Customer_No         ;
+               DataSource=No. }
+
+    { 9   ;4   ;Column  ;Name                ;
+               DataSource=Name }
+
+    { 16  ;4   ;Column  ;Balance             ;
+               DataSource=Balance }
+
+    { 15  ;4   ;Column  ;Country_Region_Code ;
+               DataSource=Country/Region Code }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

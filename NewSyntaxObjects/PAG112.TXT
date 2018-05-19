@@ -1,0 +1,90 @@
+OBJECT Page 112 Inventory Posting Groups
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161205.553T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Inventory Posting Groups;
+    SourceTable="Inventory Posting Group";
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1900000004;0 ;ActionContainer;
+                      Name=ActionContainer1900000004;
+                      ActionContainerType=ActionItems }
+      { 9       ;1   ;Action    ;
+                      Name="&Setup";
+                      CaptionML=ENU=&Setup;
+                      ToolTipML=ENU=Specify the locations for the inventory posting group that you can link to general ledger accounts. Posting groups create links between application areas and the General Ledger application area.;
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Page "Inventory Posting Setup";
+                      RunPageLink="Invt. Posting Group Code"=FIELD(Code);
+                      Promoted=true;
+                      Image=Setup;
+                      PromotedCategory=Process }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name=Code;
+                ToolTipML=ENU=Specifies the identifier for the inventory posting group.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Code;
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the inventory posting group.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Name=Control1900383207;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+
+    [External]
+    PROCEDURE GetSelectionFilter@3() : Text;
+    VAR
+      InvtPostingGr@1004 : Record "Inventory Posting Group";
+      SelectionFilterManagement@1001 : Codeunit SelectionFilterManagement;
+    BEGIN
+      CurrPage.SETSELECTIONFILTER(InvtPostingGr);
+      exit(SelectionFilterManagement.GetSelectionFilterForInventoryPostingGroup(InvtPostingGr));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

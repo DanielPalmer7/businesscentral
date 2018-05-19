@@ -1,0 +1,35 @@
+OBJECT Table 27000 SAT Account Code
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160238.310T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=SAT Account Code;
+    LookupPageID="SAT Account Codes";
+    DrillDownPageID="SAT Account Codes";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20        ;CaptionML=ENU=Code }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

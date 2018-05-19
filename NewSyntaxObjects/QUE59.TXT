@@ -1,0 +1,51 @@
+OBJECT Query 59 Power BI Top Cust. Overview
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161751.187T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Power BI Top Cust. Overview;
+  }
+  ELEMENTS
+  {
+    { 2   ;0   ;DataItem;Cust_Ledger_Entry   ;
+               DataItemTable="Cust. Ledger Entry" }
+
+    { 7   ;1   ;Column  ;Entry_No            ;
+               CaptionML=ENU=Entry No.;
+               DataSource=Entry No. }
+
+    { 6   ;1   ;Column  ;Posting_Date        ;
+               CaptionML=ENU=Posting Date;
+               DataSource=Posting Date }
+
+    { 4   ;1   ;Column  ;Customer_No         ;
+               CaptionML=ENU=Customer No.;
+               DataSource=Customer No. }
+
+    { 5   ;1   ;Column  ;Sales_LCY           ;
+               CaptionML=ENU=Sales ($);
+               DataSource=Sales (LCY) }
+
+    { 1   ;1   ;DataItem;Customer            ;
+               DataItemTable=Customer;
+               DataItemLink="No."=Cust_Ledger_Entry."Customer No." }
+
+    { 3   ;2   ;Column  ;Name                ;
+               CaptionML=ENU=Name;
+               DataSource=Name }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

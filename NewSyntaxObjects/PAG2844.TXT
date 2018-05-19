@@ -1,0 +1,58 @@
+OBJECT Page 2844 Native - QBO Sync Auth
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161414.897T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData "Webhook Subscription"=rimd;
+    Editable=false;
+    CaptionML=[@@@={Locked};
+               ENU=nativeQBOAuth];
+    SourceTable="O365 Settings Menu";
+    PageType=List;
+    SourceTableTemporary=true;
+    OnOpenPage=BEGIN
+                 INSERT;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       QBOSyncProxy.GetQBOAuthURL(AuthorizationURL);
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name=authorizationUrl;
+                CaptionML=[@@@={Locked};
+                           ENU=authorizationUrl];
+                ToolTipML=ENU=Specifies QuickBooks Online Sync authorization url.;
+                ApplicationArea=#All;
+                SourceExpr=AuthorizationURL;
+                ImplicitType=Text }
+
+  }
+  CODE
+  {
+    VAR
+      QBOSyncProxy@1001 : Codeunit "QBO Sync Proxy";
+      AuthorizationURL@1000 : Text;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,88 @@
+OBJECT Page 1754 Data Subject
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161353.857T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Data Subject;
+    DeleteAllowed=false;
+    LinksAllowed=false;
+    SourceTable="Data Privacy Entities";
+    PageType=List;
+    SourceTableTemporary=true;
+    ShowFilter=false;
+    OnInit=VAR
+             DataClassificationMgt@1000 : Codeunit "Data Classification Mgt.";
+           BEGIN
+             DataClassificationMgt.OnGetPrivacyMasterTables(Rec);
+           END;
+
+    ActionList=ACTIONS
+    {
+      { 10      ;    ;ActionContainer;
+                      Name=ActionContainer10;
+                      ActionContainerType=ActionItems }
+      { 6       ;1   ;Action    ;
+                      Name=Data Privacy Setup;
+                      CaptionML=ENU=Data Privacy Utility;
+                      ToolTipML=ENU=Open the Data Privacy Setup page.;
+                      ApplicationArea=#All;
+                      Promoted=true;
+                      Image=Setup;
+                      OnAction=VAR
+                                 DataPrivacyWizard@1000 : Page "Data Privacy Wizard";
+                               BEGIN
+                                 if "Table Caption" <> '' then begin
+                                   DataPrivacyWizard.SetEntitityType("Table Caption");
+                                   DataPrivacyWizard.RUNMODAL;
+                                 end;
+                               END;
+                                }
+      { 5       ;1   ;Action    ;
+                      Name=Data Privacy Activity;
+                      CaptionML=ENU=Data Privacy Activity;
+                      ToolTipML=ENU=Open the Data Privacy Activity log.;
+                      ApplicationArea=#All;
+                      RunObject=Codeunit "Data Privacy Mgmt";
+                      Promoted=true;
+                      Image=Log }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="Table Caption";
+                ApplicationArea=#All;
+                SourceExpr="Table Caption";
+                Style=StandardAccent;
+                StyleExpr=TRUE;
+                OnDrillDown=BEGIN
+                              PAGE.RUN("Page No.");
+                            END;
+
+                ImplicitType=Text80;
+                ShowCaption=false }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,368 @@
+OBJECT Page 404 Check Preview
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161240.630T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Check Preview;
+    LinksAllowed=false;
+    SourceTable="Gen. Journal Line";
+    DataCaptionExpr="Document No." + ' ' + CheckToAddr[1];
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 CompanyInfo.GET;
+                 FormatAddr.Company(CompanyAddr,CompanyInfo);
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       CalcCheck;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 11  ;1   ;Group     ;
+                Name=Payer;
+                CaptionML=ENU=Payer }
+
+    { 15  ;2   ;Field     ;
+                Name="CompanyAddr[1]";
+                CaptionML=ENU=Company Name;
+                ToolTipML=ENU=Specifies the company name that will appear on the check.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CompanyAddr[1] }
+
+    { 16  ;2   ;Field     ;
+                Name="CompanyAddr[2]";
+                CaptionML=ENU=Company Address;
+                ToolTipML=ENU=Specifies the company address that will appear on the check.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CompanyAddr[2] }
+
+    { 17  ;2   ;Field     ;
+                Name="CompanyAddr[3]";
+                CaptionML=ENU=Company Address 2;
+                ToolTipML=ENU=Specifies the extended company address that will appear on the check.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CompanyAddr[3] }
+
+    { 18  ;2   ;Field     ;
+                Name="CompanyAddr[4]";
+                CaptionML=ENU=Company ZIP Code/City;
+                ToolTipML=ENU=Specifies the company ZIP code and city that will appear on the check.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CompanyAddr[4] }
+
+    { 5   ;2   ;Field     ;
+                Name="Document No.";
+                ToolTipML=ENU=Specifies a document number for the journal line.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document No.";
+                ImplicitType=Code20 }
+
+    { 19  ;2   ;Field     ;
+                Name=CheckStatusText;
+                CaptionML=ENU=Status;
+                ToolTipML=ENU=Specifies if the check is printed.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CheckStatusText;
+                ImplicitType=Text30 }
+
+    { 20  ;1   ;Group     ;
+                Name=Amount;
+                CaptionML=ENU=Amount }
+
+    { 30  ;2   ;Group     ;
+                Name=Control30 }
+
+    { 13  ;3   ;Field     ;
+                Name=AmountText;
+                CaptionML=ENU=Amount Text;
+                ToolTipML=ENU=Specifies the amount in letters that will appear on the check.;
+                ApplicationArea=#Basic,#Suite;
+                CaptionClass=FORMAT(NumberText[1]) }
+
+    { 14  ;3   ;Field     ;
+                Name="Amount Text 2";
+                CaptionML=ENU=Amount Text 2;
+                ToolTipML=ENU=Specifies an additional part of the amount in letters that will appear on the check.;
+                ApplicationArea=#Basic,#Suite;
+                CaptionClass=FORMAT(NumberText[2]) }
+
+    { 23  ;1   ;Group     ;
+                Name=Payee;
+                CaptionML=ENU=Payee }
+
+    { 1902115401;2;Group  ;
+                Name=Control1902115401;
+                GroupType=FixedLayout }
+
+    { 1900724701;3;Group  ;
+                Name="Pay to the order of";
+                CaptionML=ENU=Pay to the order of }
+
+    { 2   ;4   ;Field     ;
+                Name="CheckToAddr[1]";
+                CaptionML=ENU=Name;
+                ToolTipML=ENU=Specifies the name of the payee that will appear on the check.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CheckToAddr[1] }
+
+    { 1020000;4;Field     ;
+                Name=Address;
+                CaptionML=ENU=Address;
+                ToolTipML=ENU=Specifies the issuers address.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=ConcAddr(CheckToAddr) }
+
+    { 1900724501;3;Group  ;
+                Name=Date;
+                CaptionML=ENU=Date }
+
+    { 6   ;4   ;Field     ;
+                Name=CheckDateText;
+                ToolTipML=ENU=Specifies the posting date for the entry.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CheckDateText;
+                ImplicitType=Text30 }
+
+    { 24  ;4   ;Field     ;
+                Name=Text002;
+                ApplicationArea=#Advanced;
+                SourceExpr=Text002;
+                Visible=FALSE;
+                ImplicitType=TextConst }
+
+    { 26  ;4   ;Field     ;
+                Name=Control26;
+                ApplicationArea=#Advanced;
+                SourceExpr=Text002;
+                Visible=FALSE;
+                ImplicitType=TextConst }
+
+    { 28  ;4   ;Field     ;
+                Name=Control28;
+                ApplicationArea=#Advanced;
+                SourceExpr=Text002;
+                Visible=FALSE;
+                ImplicitType=TextConst }
+
+    { 1900724401;3;Group  ;
+                Name=Control1900724401;
+                CaptionML=ENU=Amount }
+
+    { 7   ;4   ;Field     ;
+                Name=CheckAmount;
+                ToolTipML=ENU=Specifies the amount that will appear on the check.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CheckAmount;
+                AutoFormatType=1;
+                AutoFormatExpr="Currency Code";
+                ImplicitType=Decimal;
+                ShowCaption=false }
+
+    { 25  ;4   ;Field     ;
+                Name=Control25;
+                ApplicationArea=#Advanced;
+                SourceExpr=Text002;
+                Visible=FALSE;
+                ImplicitType=TextConst }
+
+    { 27  ;4   ;Field     ;
+                Name=Control27;
+                ApplicationArea=#Advanced;
+                SourceExpr=Text002;
+                Visible=FALSE;
+                ImplicitType=TextConst }
+
+    { 29  ;4   ;Field     ;
+                Name=Control29;
+                ApplicationArea=#Advanced;
+                SourceExpr=Text002;
+                Visible=FALSE;
+                ImplicitType=TextConst }
+
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'ENU=Printed Check';
+      Text001@1001 : TextConst 'ENU=Not Printed Check';
+      GenJnlLine@1002 : Record "Gen. Journal Line";
+      Cust@1003 : Record Customer;
+      Vend@1004 : Record Vendor;
+      BankAcc@1005 : Record "Bank Account";
+      CompanyInfo@1006 : Record "Company Information";
+      BankAcc2@1480006 : Record "Bank Account";
+      Employee@1020001 : Record Employee;
+      FormatAddr@1008 : Codeunit "Format Address";
+      ChkTransMgt@1480003 : Report "Check Translation Management";
+      CheckToAddr@1009 : ARRAY [8] OF Text[50];
+      CompanyAddr@1010 : ARRAY [8] OF Text[50];
+      NumberText@1011 : ARRAY [2] OF Text[80];
+      CheckStatusText@1012 : Text[30];
+      CheckAmount@1013 : Decimal;
+      Text002@1014 : TextConst 'ENU=Placeholder';
+      CheckDateFormat@1480002 : '" ","MM DD YYYY","DD MM YYYY","YYYY MM DD"';
+      CheckLanguage@1480001 : Integer;
+      DateSeparator@1480000 : '" ","-",".","/"';
+      CheckStyle@1020000 : ',US,CA';
+      DateIndicator@1480007 : Text[10];
+      CheckDateText@1480008 : Text[30];
+
+    LOCAL PROCEDURE CalcCheck@1();
+    BEGIN
+      if ("Bal. Account Type" <> "Bal. Account Type"::"Bank Account") or
+         not BankAcc2.GET("Bal. Account No.")
+      then
+        CLEAR(BankAcc2);
+      if "Check Printed" then begin
+        GenJnlLine.RESET;
+        GenJnlLine.SETCURRENTKEY("Journal Template Name","Journal Batch Name","Posting Date","Document No.");
+        GenJnlLine.SETRANGE("Journal Template Name","Journal Template Name");
+        GenJnlLine.SETRANGE("Journal Batch Name","Journal Batch Name");
+        GenJnlLine.SETRANGE("Posting Date","Posting Date");
+        GenJnlLine.SETRANGE("Document No.","Document No.");
+        if "Bal. Account No." = '' then
+          GenJnlLine.SETRANGE("Bank Payment Type","Bank Payment Type"::" ")
+        else
+          GenJnlLine.SETRANGE("Bank Payment Type","Bank Payment Type"::"Computer Check");
+        GenJnlLine.SETRANGE("Check Printed",true);
+        CheckStatusText := Text000;
+      end else begin
+        GenJnlLine.RESET;
+        GenJnlLine.SETCURRENTKEY("Journal Template Name","Journal Batch Name","Posting Date","Document No.");
+        GenJnlLine.SETRANGE("Journal Template Name","Journal Template Name");
+        GenJnlLine.SETRANGE("Journal Batch Name","Journal Batch Name");
+        GenJnlLine.SETRANGE("Posting Date","Posting Date");
+        GenJnlLine.SETRANGE("Document No.","Document No.");
+        GenJnlLine.SETRANGE("Account Type","Account Type");
+        GenJnlLine.SETRANGE("Account No.","Account No.");
+        GenJnlLine.SETRANGE("Bal. Account Type","Bal. Account Type");
+        GenJnlLine.SETRANGE("Bal. Account No.","Bal. Account No.");
+        GenJnlLine.SETRANGE("Bank Payment Type","Bank Payment Type");
+        CheckStatusText := Text001;
+      end;
+
+      CheckAmount := 0;
+      if GenJnlLine.FIND('-') then
+        repeat
+          CheckAmount := CheckAmount + GenJnlLine.Amount;
+        until GenJnlLine.NEXT = 0;
+
+      if CheckAmount < 0 then
+        CheckAmount := 0;
+
+      case GenJnlLine."Account Type" of
+        GenJnlLine."Account Type"::"G/L Account":
+          begin
+            CLEAR(CheckToAddr);
+            CheckToAddr[1] := GenJnlLine.Description;
+            ChkTransMgt.SetCheckPrintParams(
+              BankAcc2."Check Date Format",
+              BankAcc2."Check Date Separator",
+              BankAcc2."Country/Region Code",
+              BankAcc2."Bank Communication",
+              CheckToAddr[1],
+              CheckDateFormat,
+              DateSeparator,
+              CheckLanguage,
+              CheckStyle);
+          end;
+        GenJnlLine."Account Type"::Customer:
+          begin
+            Cust.GET(GenJnlLine."Account No.");
+            Cust.Contact := '';
+            FormatAddr.Customer(CheckToAddr,Cust);
+            ChkTransMgt.SetCheckPrintParams(
+              Cust."Check Date Format",
+              Cust."Check Date Separator",
+              BankAcc2."Country/Region Code",
+              Cust."Bank Communication",
+              CheckToAddr[1],
+              CheckDateFormat,
+              DateSeparator,
+              CheckLanguage,
+              CheckStyle);
+          end;
+        GenJnlLine."Account Type"::Vendor:
+          begin
+            Vend.GET(GenJnlLine."Account No.");
+            Vend.Contact := '';
+            FormatAddr.Vendor(CheckToAddr,Vend);
+            ChkTransMgt.SetCheckPrintParams(
+              Vend."Check Date Format",
+              Vend."Check Date Separator",
+              BankAcc2."Country/Region Code",
+              Vend."Bank Communication",
+              CheckToAddr[1],
+              CheckDateFormat,
+              DateSeparator,
+              CheckLanguage,
+              CheckStyle);
+          end;
+        GenJnlLine."Account Type"::"Bank Account":
+          begin
+            BankAcc.GET(GenJnlLine."Account No.");
+            BankAcc.Contact := '';
+            FormatAddr.BankAcc(CheckToAddr,BankAcc);
+            ChkTransMgt.SetCheckPrintParams(
+              BankAcc."Check Date Format",
+              BankAcc."Check Date Separator",
+              BankAcc2."Country/Region Code",
+              BankAcc."Bank Communication",
+              CheckToAddr[1],
+              CheckDateFormat,
+              DateSeparator,
+              CheckLanguage,
+              CheckStyle);
+          end;
+        GenJnlLine."Account Type"::"Fixed Asset":
+          GenJnlLine.FIELDERROR("Account Type");
+        GenJnlLine."Account Type"::Employee:
+          begin
+            Employee.GET(GenJnlLine."Account No.");
+            FormatAddr.Employee(CheckToAddr,Employee);
+            ChkTransMgt.SetCheckPrintParams(
+              BankAcc2."Check Date Format",
+              BankAcc2."Check Date Separator",
+              BankAcc2."Country/Region Code",
+              BankAcc2."Bank Communication",
+              CheckToAddr[1],
+              CheckDateFormat,
+              DateSeparator,
+              CheckLanguage,
+              CheckStyle);
+          end
+      end;
+
+      if not ChkTransMgt.FormatNoText(NumberText,CheckAmount,CheckLanguage,GenJnlLine."Currency Code") then
+        ERROR(NumberText[1]);
+      CheckDateText := ChkTransMgt.FormatDate("Document Date",CheckDateFormat,DateSeparator,CheckLanguage,DateIndicator);
+    END;
+
+    LOCAL PROCEDURE ConcAddr@1020000(Addr@1020000 : ARRAY [8] OF Text[100]) Str : Text;
+    VAR
+      i@1020001 : Integer;
+    BEGIN
+      for i := 2 to ARRAYLEN(Addr) do
+        if Addr[i] <> '' then
+          Str := Str + Addr[i] + ', ';
+      Str := DELCHR(Str,'<>',', ');
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

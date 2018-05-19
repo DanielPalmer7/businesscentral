@@ -1,0 +1,85 @@
+OBJECT Page 2503 Extension Installation
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161411.100T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Extension Installation;
+    SourceTable="NAV App";
+    PageType=Card;
+    SourceTableTemporary=true;
+    OnOpenPage=VAR
+                 MarketplaceExtnDeployment@1003 : Page "Marketplace Extn. Deployment";
+               BEGIN
+                 GetDetailsFromFilters;
+                 ExtensionAppId := ID;
+                 TelemetryUrl := responseUrl;
+
+                 MarketplaceExtnDeployment.SetAppIDAndTelemetryUrl(ExtensionAppId,TelemetryUrl);
+                 MarketplaceExtnDeployment.RUN;
+               END;
+
+    OnFindRecord=BEGIN
+                   CurrPage.CLOSE;
+                 END;
+
+    ActionList=ACTIONS
+    {
+      { 10      ;    ;ActionContainer;
+                      Name=ActionContainer10;
+                      ActionContainerType=ActionItems }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Container;
+                ContainerType=ContentArea }
+
+  }
+  CODE
+  {
+    VAR
+      ExtensionAppId@1000 : Text;
+      TelemetryUrl@1010 : Text;
+
+    LOCAL PROCEDURE GetDetailsFromFilters@1();
+    VAR
+      RecRef@1001 : RecordRef;
+      i@1000 : Integer;
+    BEGIN
+      RecRef.GETTABLE(Rec);
+      for i := 1 to RecRef.FIELDCOUNT do
+        ParseFilter(RecRef.FIELDINDEX(i));
+      RecRef.SETTABLE(Rec);
+    END;
+
+    LOCAL PROCEDURE ParseFilter@2(FieldRef@1003 : FieldRef);
+    VAR
+      FilterPrefixRegEx@1002 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.RegularExpressions.Regex";
+      SingleQuoteRegEx@1001 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.RegularExpressions.Regex";
+      EscapedEqualityRegEx@1004 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.RegularExpressions.Regex";
+      Filter@1000 : Text;
+    BEGIN
+      FilterPrefixRegEx := FilterPrefixRegEx.Regex('^@\*([^\\]+)\*$');
+      SingleQuoteRegEx := SingleQuoteRegEx.Regex('^''([^\\]+)''$');
+      EscapedEqualityRegEx := EscapedEqualityRegEx.Regex('~');
+      Filter := FieldRef.GETFILTER;
+      Filter := FilterPrefixRegEx.Replace(Filter,'$1');
+      Filter := SingleQuoteRegEx.Replace(Filter,'$1');
+      Filter := EscapedEqualityRegEx.Replace(Filter,'=');
+
+      if Filter <> '' then
+        FieldRef.VALUE(Filter);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

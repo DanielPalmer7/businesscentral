@@ -1,0 +1,40 @@
+OBJECT Codeunit 2502 Extension License Mgmt
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    SingleInstance=true;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    [External]
+    PROCEDURE LicenseCount@1(ProductId@1000 : Text;SkuId@1001 : Text) : Integer;
+    BEGIN
+      exit(GetIsvLicenseCount(ProductId,SkuId,''));
+    END;
+
+    [External]
+    PROCEDURE GetIsvLicenseCount@3(ProductId@1000 : Text;SkuId@1001 : Text;IsvPrefix@1003 : Text) : Integer;
+    VAR
+      ExtensionLicenseInformationProvider@1002 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.ExtensionLicenseInformationProvider";
+    BEGIN
+      if (ProductId = '') or (SkuId = '') then
+        exit(-1);
+
+      exit(ExtensionLicenseInformationProvider.ALLicenseCount(ProductId,SkuId,IsvPrefix));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

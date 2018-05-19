@@ -1,0 +1,141 @@
+OBJECT Page 9072 IT Operations Activities
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161636.110T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Activities;
+    SourceTable="Administration Cue";
+    PageType=CardPart;
+    RefreshOnActivate=true;
+    OnOpenPage=VAR
+                 DataSensitivity@1000 : Record "Data Sensitivity";
+                 DataClassificationMgt@1001 : Codeunit "Data Classification Mgt.";
+               BEGIN
+                 RESET;
+                 if not GET then begin
+                   INIT;
+                   INSERT;
+                 end;
+
+                 DataClassificationMgt.ShowNotifications;
+
+                 DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+                 DataSensitivity.SETRANGE("Data Sensitivity",DataSensitivity."Data Sensitivity"::Unclassified);
+                 UnclassifiedFields := DataSensitivity.COUNT;
+
+                 SETFILTER("Date Filter2",'<=%1',CREATEDATETIME(TODAY,0T));
+                 SETFILTER("Date Filter3",'>%1',CREATEDATETIME(TODAY,0T));
+                 SETFILTER("User ID Filter",USERID);
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Administration;
+                CaptionML=ENU=Administration;
+                GroupType=CueGroup;
+                ActionList=ACTIONS
+                {
+                  { 12      ;0   ;Action    ;
+                                  Name="Edit Job Queue Entry Card";
+                                  CaptionML=ENU=Edit Job Queue Entry Card;
+                                  ToolTipML=ENU=Change the settings for the job queue entry.;
+                                  ApplicationArea=#Advanced;
+                                  RunObject=Page "Job Queue Entry Card" }
+                  { 13      ;0   ;Action    ;
+                                  Name="Edit User Setup";
+                                  CaptionML=ENU=Edit User Setup;
+                                  ToolTipML=ENU=Manage users and their permissions.;
+                                  ApplicationArea=#Advanced;
+                                  RunObject=Page "User Setup" }
+                  { 14      ;0   ;Action    ;
+                                  Name="Edit Migration Overview";
+                                  CaptionML=ENU=Edit Migration Overview;
+                                  ToolTipML=ENU=Get an overview of data migration tasks.;
+                                  ApplicationArea=#Advanced;
+                                  RunObject=Page "Config. Package Card" }
+                }
+                 }
+
+    { 6   ;2   ;Field     ;
+                Name="Job Queue Entries Until Today";
+                ToolTipML=ENU=Specifies the number of job queue entries that are displayed in the Administration Cue on the Role Center. The documents are filtered by today's date.;
+                ApplicationArea=#Advanced;
+                SourceExpr="Job Queue Entries Until Today";
+                DrillDownPageID="Job Queue Entries";
+                ImplicitType=Integer }
+
+    { 8   ;2   ;Field     ;
+                Name="User Posting Period";
+                ToolTipML=ENU=Specifies the period number of the documents that are displayed in the Administration Cue on the Role Center.;
+                ApplicationArea=#Advanced;
+                SourceExpr="User Posting Period";
+                DrillDownPageID="User Setup";
+                ImplicitType=Integer }
+
+    { 10  ;2   ;Field     ;
+                Name="No. Series Period";
+                ToolTipML=ENU=Specifies the period number of the number series for the documents that are displayed in the Administration Cue on the Role Center. The documents are filtered by today's date.;
+                ApplicationArea=#Advanced;
+                SourceExpr="No. Series Period";
+                DrillDownPageID="No. Series Lines";
+                ImplicitType=Integer }
+
+    { 3   ;1   ;Group     ;
+                Name="My User Tasks";
+                CaptionML=ENU=My User Tasks;
+                GroupType=CueGroup }
+
+    { 2   ;2   ;Field     ;
+                Name="Pending Tasks";
+                CaptionML=ENU=Pending User Tasks;
+                ToolTipML=ENU=Specifies the number of pending tasks that are assigned to you.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Pending Tasks";
+                DrillDownPageID="User Task List";
+                ImplicitType=Integer;
+                Image=Checklist }
+
+    { 4   ;1   ;Group     ;
+                Name="Data Privacy";
+                CaptionML=ENU=Data Privacy;
+                GroupType=CueGroup }
+
+    { 5   ;2   ;Field     ;
+                Name=UnclassifiedFields;
+                CaptionML=ENU=Fields Missing Data Sensitivity;
+                ToolTipML=ENU=Specifies the number fields with Data Sensitivity set to unclassified.;
+                ApplicationArea=#All;
+                SourceExpr=UnclassifiedFields;
+                OnDrillDown=VAR
+                              DataSensitivity@1000 : Record "Data Sensitivity";
+                            BEGIN
+                              DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+                              DataSensitivity.SETRANGE("Data Sensitivity",DataSensitivity."Data Sensitivity"::Unclassified);
+                              PAGE.RUN(PAGE::"Data Classification Worksheet",DataSensitivity);
+                            END;
+
+                ImplicitType=Integer }
+
+  }
+  CODE
+  {
+    VAR
+      UnclassifiedFields@1000 : Integer;
+
+    BEGIN
+    END.
+  }
+}
+

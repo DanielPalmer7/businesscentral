@@ -1,0 +1,68 @@
+OBJECT Table 2000000160 NAV App
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.813T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Package ID          ;GUID           }
+    { 2   ;   ;ID                  ;GUID           }
+    { 3   ;   ;Name                ;Text250        }
+    { 4   ;   ;Publisher           ;Text250        }
+    { 5   ;   ;Version Major       ;Integer        }
+    { 6   ;   ;Version Minor       ;Integer        }
+    { 7   ;   ;Version Build       ;Integer        }
+    { 8   ;   ;Version Revision    ;Integer        }
+    { 9   ;   ;Compatibility Major ;Integer        }
+    { 10  ;   ;Compatibility Minor ;Integer        }
+    { 11  ;   ;Compatibility Build ;Integer        }
+    { 12  ;   ;Compatibility Revision;Integer      }
+    { 13  ;   ;Brief               ;Text250        }
+    { 14  ;   ;Description         ;BLOB           }
+    { 15  ;   ;Privacy Statement   ;Text250        }
+    { 16  ;   ;EULA                ;Text250        }
+    { 17  ;   ;Url                 ;Text250        }
+    { 18  ;   ;Help                ;Text250        }
+    { 19  ;   ;Logo                ;Media          }
+    { 20  ;   ;Screenshots         ;MediaSet       }
+    { 21  ;   ;Blob                ;BLOB           }
+    { 22  ;   ;responseUrl         ;Text250       ;FieldClass=FlowField }
+    { 23  ;   ;requestId           ;Text250       ;FieldClass=FlowField }
+    { 24  ;   ;Installed           ;Boolean       ;FieldClass=FlowField;
+                                                   CalcFormula=Exist("NAV App Installed App" WHERE ("Package ID"=FIELD("Package ID"))) }
+    { 25  ;   ;Package Type        ;Integer        }
+    { 26  ;   ;Symbols             ;BLOB           }
+    { 27  ;   ;Content Hash        ;Text250        }
+    { 28  ;   ;Tenant ID           ;Text128        }
+    { 29  ;   ;Show My Code        ;Boolean        }
+    { 30  ;   ;Scope               ;Integer        }
+    { 31  ;   ;Tenant Visible      ;Boolean       ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("NAV App Extra"."Tenant Visible" WHERE ("Package ID"=FIELD("Package ID"))) }
+    { 32  ;   ;PerTenant Or Installed;Boolean     ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup("NAV App Extra"."PerTenant Or Installed" WHERE ("Package ID"=FIELD("Package ID"))) }
+  }
+  KEYS
+  {
+    {    ;"Package ID"                            ;Clustered=true }
+    {    ;Name                                     }
+    {    ;Publisher                                }
+    {    ;Name,"Version Major","Version Minor","Version Build","Version Revision" }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

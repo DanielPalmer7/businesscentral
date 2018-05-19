@@ -1,0 +1,420 @@
+OBJECT Page 9176 My Settings
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161642.317T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=My Settings;
+    PageType=StandardDialog;
+    OnInit=BEGIN
+             NotRunningOnSaaS := not PermissionManager.SoftwareAsAService;
+             IsNotOnMobile := ClientTypeManagement.GetCurrentClientType <> CLIENTTYPE::Phone;
+             ShowRoleCenterOverviewEnabledField := false;
+           END;
+
+    OnOpenPage=VAR
+                 UserPersonalization@1000 : Record "User Personalization";
+                 RoleCenterNotificationMgt@1001 : Codeunit "Role Center Notification Mgt.";
+                 RolecenterSelectorMgt@1002 : Codeunit "Rolecenter Selector Mgt.";
+               BEGIN
+                 with UserPersonalization do begin
+                   GET(USERSECURITYID);
+                   ProfileID := "Profile ID";
+                   ProfileAppID := "App ID";
+                   ProfileScope := Scope;
+                   LanguageID := "Language ID";
+                   LocaleID := "Locale ID";
+                   TimeZoneID := "Time Zone";
+                   if COMPANYNAME <> Company then begin
+                     VarCompany := COMPANYNAME;
+                     // Mark that the company is changed
+                     IsCompanyChanged := true
+                   end else
+                     VarCompany := Company;
+                   NewWorkdate := WORKDATE;
+                   SetCompanyDisplayName;
+                 end;
+                 if RoleCenterNotificationMgt.IsEvaluationNotificationClicked then begin
+                   // change notification state from Clicked to Enabled in order to avoid appearing a new notification
+                   // on this page after decline of terms & conditions in the 30 days trial wizard
+                   RoleCenterNotificationMgt.EnableEvaluationNotification;
+                   COMMIT;
+                 end;
+                 RoleCenterOverviewEnabled := RolecenterSelectorMgt.GetShowStateFromUserPreference(USERID);
+               END;
+
+    OnQueryClosePage=VAR
+                       UserPersonalization@1002 : Record "User Personalization";
+                       sessionSetting@1004 : SessionSettings;
+                       AnythingUpdated@1003 : Boolean;
+                       WasEvaluation@1001 : Boolean;
+                     BEGIN
+                       if CloseAction <> ACTION::Cancel then begin
+                         with UserPersonalization do begin
+                           GET(USERSECURITYID);
+
+                           if ("Language ID" <> LanguageID) or
+                              ("Locale ID" <> LocaleID) or
+                              ("Time Zone" <> TimeZoneID) or
+                              (Company <> VarCompany) or IsCompanyChanged or
+                              ("Profile ID" <> ProfileID)
+                           then begin
+                             AnythingUpdated := true;
+                             sessionSetting.INIT;
+
+                             if Company <> VarCompany then begin
+                               WasEvaluation := IsEvaluation;
+                               sessionSetting.COMPANY := VarCompany;
+                             end;
+
+                             if "Profile ID" <> ProfileID then begin
+                               sessionSetting.PROFILEID := ProfileID;
+                               sessionSetting.PROFILEAPPID := ProfileAppID;
+                               sessionSetting.PROFILESYSTEMSCOPE := ProfileScope = ProfileScope::System;
+                             end;
+
+                             if "Language ID" <> LanguageID then
+                               sessionSetting.LANGUAGEID := LanguageID;
+
+                             if "Locale ID" <> LocaleID then
+                               sessionSetting.LOCALEID := LocaleID;
+
+                             if "Time Zone" <> TimeZoneID then
+                               sessionSetting.TIMEZONE := TimeZoneID;
+                           end;
+                         end;
+
+                         if WasEvaluation and IsTrial then
+                           MESSAGE(STRSUBSTNO(TrialStartMsg,PRODUCTNAME.MARKETING));
+
+                         OnQueryClosePageEvent(LanguageID,LocaleID,TimeZoneID,VarCompany,ProfileID);
+
+                         if AnythingUpdated then
+                           sessionSetting.REQUESTSESSIONUPDATE(true);
+                       end;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 14  ;1   ;Group     ;
+                Name=Control14;
+                GroupType=Group }
+
+    { 13  ;2   ;Field     ;
+                Name=UserRoleCenter;
+                AssistEdit=true;
+                CaptionML=ENU=Role Center;
+                ToolTipML=ENU=Specifies the Role Center that is associated with the current user.;
+                ApplicationArea=#All;
+                SourceExpr=GetProfileName;
+                Importance=Promoted;
+                Editable=FALSE;
+                OnAssistEdit=VAR
+                               AllProfile@1001 : Record "All Profile";
+                               RolecenterSelectorMgt@1002 : Codeunit "Rolecenter Selector Mgt.";
+                               RoleCenterOverview@1003 : Page "Role Center Overview";
+                               UserPersonalizationCard@1000 : Page "User Personalization Card";
+                               ZeroGUID@1006 : GUID;
+                             BEGIN
+                               if RolecenterSelectorMgt.IsRolecenterSelectorEnabled(USERID) then begin
+                                 RoleCenterOverview.SetSelectedProfileID(ProfileID);
+                                 RoleCenterOverview.DelaySessionUpdateRequest;
+                                 if RoleCenterOverview.RUNMODAL = ACTION::OK then begin
+                                   ProfileID := RoleCenterOverview.GetSelectedProfileID;
+                                   ProfileAppID := ZeroGUID;
+                                   ProfileScope := AllProfile.Scope::System;
+                                 end;
+                               end else
+                                 if PAGE.RUNMODAL(PAGE::"Available Role Centers",AllProfile) = ACTION::LookupOK then begin
+                                   ProfileID := AllProfile."Profile ID";
+                                   ProfileAppID := AllProfile."App ID";
+                                   ProfileScope := AllProfile.Scope;
+                                 end;
+
+                               OnUserRoleCenterChange(ProfileID);
+                               UserPersonalizationCard.SetExperienceToEssential(ProfileID);
+                             END;
+                              }
+
+    { 6   ;2   ;Field     ;
+                Name=Company;
+                CaptionML=ENU=Company;
+                ToolTipML=ENU=Specifies the database company that you work in. You must sign out and then sign in again for the change to take effect.;
+                ApplicationArea=#All;
+                SourceExpr=CompanyDisplayName;
+                Editable=FALSE;
+                OnAssistEdit=VAR
+                               SelectedCompany@1001 : Record Company;
+                               AllowedCompanies@1000 : Page "Allowed Companies";
+                               IsSetupInProgress@1002 : Boolean;
+                             BEGIN
+                               AllowedCompanies.Initialize;
+
+                               if SelectedCompany.GET(COMPANYNAME) then
+                                 AllowedCompanies.SETRECORD(SelectedCompany);
+
+                               AllowedCompanies.LOOKUPMODE(true);
+
+                               if AllowedCompanies.RUNMODAL = ACTION::LookupOK then begin
+                                 AllowedCompanies.GETRECORD(SelectedCompany);
+                                 OnCompanyChange(SelectedCompany.Name,IsSetupInProgress);
+                                 if IsSetupInProgress then begin
+                                   VarCompany := COMPANYNAME;
+                                   MESSAGE(STRSUBSTNO(CompanySetUpInProgressMsg,SelectedCompany.Name,PRODUCTNAME.SHORT));
+                                 end else
+                                   VarCompany := SelectedCompany.Name;
+                                 SetCompanyDisplayName;
+                               end;
+                             END;
+                              }
+
+    { 7   ;2   ;Field     ;
+                Name=NewWorkdate;
+                CaptionML=ENU=Work Date;
+                ToolTipML=ENU=Specifies the date that will be entered on transactions, typically today's date. This change only affects the date on new transactions.;
+                ApplicationArea=#All;
+                SourceExpr=NewWorkdate;
+                OnValidate=BEGIN
+                             WORKDATE := NewWorkdate;
+                           END;
+                            }
+
+    { 9   ;2   ;Field     ;
+                Name=Locale2;
+                CaptionML=ENU=Region;
+                ToolTipML=ENU=Specifies the regional settings, such as date and numeric format, on all devices. You must sign out and then sign in again for the change to take effect.;
+                ApplicationArea=#All;
+                SourceExpr=GetLocale;
+                Visible=NOT NotRunningOnSaaS;
+                OnAssistEdit=VAR
+                               LanguageManagement@1000 : Codeunit LanguageManagement;
+                             BEGIN
+                               if PermissionManager.SoftwareAsAService then
+                                 LanguageManagement.LookupWindowsLocale(LocaleID);
+                             END;
+                              }
+
+    { 8   ;2   ;Field     ;
+                Name=Language2;
+                CaptionML=ENU=Language;
+                ToolTipML=ENU=Specifies the display language, on all devices. You must sign out and then sign in again for the change to take effect.;
+                ApplicationArea=#All;
+                SourceExpr=GetLanguage;
+                Importance=Promoted;
+                Editable=FALSE;
+                OnAssistEdit=VAR
+                               LanguageManagement@1001 : Codeunit LanguageManagement;
+                             BEGIN
+                               LanguageManagement.LookupApplicationLanguage(LanguageID);
+                             END;
+                              }
+
+    { 2   ;2   ;Group     ;
+                Name="Region & Language";
+                CaptionML=ENU=Region & Language;
+                Visible=NotRunningOnSaaS;
+                GroupType=Group }
+
+    { 4   ;3   ;Field     ;
+                Name=Locale;
+                CaptionML=ENU=Region;
+                ToolTipML=ENU=Specifies the regional settings, such as date and numeric format, on all devices. You must sign out and then sign in again for the change to take effect.;
+                ApplicationArea=#All;
+                SourceExpr=GetLocale;
+                Visible=NotRunningOnSaaS;
+                OnAssistEdit=VAR
+                               LanguageManagement@1000 : Codeunit LanguageManagement;
+                             BEGIN
+                               if not PermissionManager.SoftwareAsAService then
+                                 LanguageManagement.LookupWindowsLocale(LocaleID);
+                             END;
+                              }
+
+    { 3   ;3   ;Field     ;
+                Name=Language;
+                CaptionML=ENU=Language;
+                ToolTipML=ENU=Specifies the display language, on all devices. You must sign out and then sign in again for the change to take effect.;
+                ApplicationArea=#All;
+                SourceExpr=GetLanguage;
+                Importance=Promoted;
+                Visible=NotRunningOnSaaS;
+                Editable=FALSE;
+                OnAssistEdit=VAR
+                               LanguageManagement@1001 : Codeunit LanguageManagement;
+                             BEGIN
+                               if not PermissionManager.SoftwareAsAService then
+                                 LanguageManagement.LookupApplicationLanguage(LanguageID);
+                             END;
+                              }
+
+    { 5   ;3   ;Field     ;
+                Name=TimeZone;
+                CaptionML=ENU=Time Zone;
+                ToolTipML=ENU=Specifies the time zone that you work in. You must sign out and then sign in again for the change to take effect.;
+                ApplicationArea=#All;
+                SourceExpr=GetTimeZone;
+                Visible=NotRunningOnSaaS;
+                OnAssistEdit=VAR
+                               ConfPersonalizationMgt@1001 : Codeunit "Conf./Personalization Mgt.";
+                             BEGIN
+                               if not PermissionManager.SoftwareAsAService then
+                                 ConfPersonalizationMgt.LookupTimeZone(TimeZoneID);
+                             END;
+                              }
+
+    { 10  ;2   ;Field     ;
+                Name=RoleCenterOverviewEnabled;
+                CaptionML=ENU=Enable Role Center Overview;
+                ApplicationArea=#All;
+                SourceExpr=RoleCenterOverviewEnabled;
+                Visible=IsNotOnMobile AND ShowRoleCenterOverviewEnabledField;
+                OnValidate=VAR
+                             RolecenterSelectorMgt@1000 : Codeunit "Rolecenter Selector Mgt.";
+                           BEGIN
+                             RolecenterSelectorMgt.SetShowStateFromUserPreference(USERID,RoleCenterOverviewEnabled);
+                           END;
+                            }
+
+    { 11  ;2   ;Field     ;
+                Name=MyNotificationsLbl;
+                ApplicationArea=#All;
+                SourceExpr=MyNotificationsLbl;
+                Visible=IsNotOnMobile;
+                Editable=FALSE;
+                OnDrillDown=BEGIN
+                              PAGE.RUNMODAL(PAGE::"My Notifications");
+                            END;
+                             }
+
+  }
+  CODE
+  {
+    VAR
+      PermissionManager@1008 : Codeunit "Permission Manager";
+      ClientTypeManagement@1077 : Codeunit ClientTypeManagement;
+      LanguageID@1001 : Integer;
+      LocaleID@1000 : Integer;
+      TimeZoneID@1002 : Text[180];
+      VarCompany@1003 : Text;
+      NewWorkdate@1005 : Date;
+      ProfileID@1007 : Code[30];
+      NotRunningOnSaaS@1012 : Boolean;
+      MyNotificationsLbl@1013 : TextConst 'ENU=Change when I receive notifications.';
+      IsNotOnMobile@1006 : Boolean;
+      CompanyDisplayName@1010 : Text[250];
+      ProfileAppID@1011 : GUID;
+      ProfileScope@1014 : 'System,Tenant';
+      CompanySetUpInProgressMsg@1015 : TextConst '@@@=%1 - a company name,%2 - our product name;ENU=Company %1 was just created, and we are still setting it up for you.\This may take up to 10 minutes, so take a short break before you begin to use %2.';
+      TrialStartMsg@1004 : TextConst '@@@=%1 - our product name;ENU=We''re glad you''ve chosen to explore %1!\\Your session will restart to activate the new settings.';
+      IsCompanyChanged@1009 : Boolean;
+      RoleCenterOverviewEnabled@1017 : Boolean INDATASET;
+      ShowRoleCenterOverviewEnabledField@1018 : Boolean;
+
+    LOCAL PROCEDURE GetLanguage@20() : Text;
+    BEGIN
+      exit(GetWindowsLanguageNameFromID(LanguageID));
+    END;
+
+    LOCAL PROCEDURE GetWindowsLanguageNameFromID@12(ID@1000 : Integer) : Text;
+    VAR
+      WindowsLanguage@1001 : Record "Windows Language";
+    BEGIN
+      if WindowsLanguage.GET(ID) then
+        exit(WindowsLanguage.Name);
+    END;
+
+    LOCAL PROCEDURE GetLocale@1() : Text;
+    BEGIN
+      exit(GetWindowsLanguageNameFromID(LocaleID));
+    END;
+
+    LOCAL PROCEDURE GetTimeZone@2() : Text;
+    VAR
+      TimeZone@1000 : Record "Time Zone";
+    BEGIN
+      TimeZone.SETRANGE(ID,TimeZoneID);
+      if TimeZone.FINDFIRST then
+        exit(TimeZone."Display Name");
+    END;
+
+    LOCAL PROCEDURE GetProfileName@5() : Text;
+    VAR
+      Profile@1000 : Record "All Profile";
+    BEGIN
+      if not Profile.GET(ProfileScope,ProfileAppID,ProfileID) then begin
+        Profile.SETRANGE("Default Role Center",true);
+        if not Profile.FINDFIRST then
+          exit('');
+      end;
+      exit(Profile.Description);
+    END;
+
+    LOCAL PROCEDURE GetLicenseState@6() : Integer;
+    VAR
+      TenantLicenseState@1000 : Record "Tenant License State";
+    BEGIN
+      if TenantLicenseState.FINDLAST then
+        exit(TenantLicenseState.State);
+      exit(TenantLicenseState.State::Evaluation);
+    END;
+
+    LOCAL PROCEDURE IsEvaluation@7() : Boolean;
+    VAR
+      TenantLicenseState@1000 : Record "Tenant License State";
+    BEGIN
+      exit(GetLicenseState = TenantLicenseState.State::Evaluation);
+    END;
+
+    LOCAL PROCEDURE IsTrial@8() : Boolean;
+    VAR
+      TenantLicenseState@1000 : Record "Tenant License State";
+    BEGIN
+      exit(GetLicenseState = TenantLicenseState.State::Trial);
+    END;
+
+    [Integration]
+    [External]
+    LOCAL PROCEDURE OnCompanyChange@3(NewCompanyName@1000 : Text;VAR IsSetupInProgress@1001 : Boolean);
+    BEGIN
+    END;
+
+    [Integration]
+    [External]
+    LOCAL PROCEDURE OnUserRoleCenterChange@4(NewRoleCenter@1000 : Code[30]);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnQueryClosePageEvent@21(NewLanguageID@1000 : Integer;NewLocaleID@1001 : Integer;NewTimeZoneID@1002 : Text[180];NewCompany@1003 : Text;NewProfileID@1004 : Code[30]);
+    BEGIN
+    END;
+
+    LOCAL PROCEDURE SetCompanyDisplayName@13();
+    VAR
+      SelectedCompany@1001 : Record Company;
+      AllowedCompanies@1002 : Page "Allowed Companies";
+    BEGIN
+      if SelectedCompany.GET(VarCompany) then
+        CompanyDisplayName := AllowedCompanies.GetCompanyDisplayNameDefaulted(SelectedCompany)
+    END;
+
+    BEGIN
+    {
+      Contains various system-wide settings which are personal to an individual user.
+      Styled as a StandardDialog which is ideal for presenting a single field. Once more fields are added,
+      this page should be converted to a Card page.
+    }
+    END.
+  }
+}
+

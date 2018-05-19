@@ -1,0 +1,34 @@
+OBJECT Table 9008 User Login
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160233.647T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=User Login;
+  }
+  FIELDS
+  {
+    { 1   ;   ;User SID            ;GUID          ;DataClassification=EndUserPseudonymousIdentifiers;
+                                                   CaptionML=ENU=User SID }
+    { 2   ;   ;First Login Date    ;Date          ;CaptionML=ENU=First Login Date }
+  }
+  KEYS
+  {
+    {    ;"User SID"                              ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

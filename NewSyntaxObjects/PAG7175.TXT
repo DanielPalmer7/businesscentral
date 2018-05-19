@@ -1,0 +1,28 @@
+OBJECT Page 7175 Credit Memo Lines Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161613.920T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Lines;
+    LinksAllowed=false;
+    SourceTable="Sales Cr.Memo Line";
+    PageType=ListPart;
+  }
+  CONTROLS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

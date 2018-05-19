@@ -1,0 +1,245 @@
+OBJECT Codeunit 1802 Data Migration Notifier
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160711.623T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      ListEmptyMsg@1000 : TextConst 'ENU=Want to import entries?';
+      OpenDataMigrationTxt@1001 : TextConst 'ENU=Open Data Migration';
+      DataTypeManagement@1003 : Codeunit "Data Type Management";
+      ListSuggestCreateContactsCustomersMsg@1002 : TextConst 'ENU=You can create contacts automatically from newly created customers.';
+      ListSuggestCreateContactsVendorsMsg@1005 : TextConst 'ENU=You can create contacts automatically from newly created vendors.';
+      OpenCreateContactsFromCustomersTxt@1004 : TextConst 'ENU=Create contacts from customers';
+      OpenCreateContactsFromVendorsTxt@1006 : TextConst 'ENU=Create contacts from vendors';
+      DataMigrationMgt@1007 : Codeunit "Data Migration Mgt.";
+      DisableNotificationTxt@1008 : TextConst 'ENU=Disable notification';
+
+    [EventSubscriber(Page,22,OnOpenPageEvent)]
+    LOCAL PROCEDURE OnCustomerListOpen@1(VAR Rec@1000 : Record Customer);
+    BEGIN
+      ShowListEmptyNotification(Rec);
+    END;
+
+    [EventSubscriber(Page,27,OnOpenPageEvent)]
+    LOCAL PROCEDURE OnVendorListOpen@6(VAR Rec@1000 : Record Vendor);
+    BEGIN
+      ShowListEmptyNotification(Rec);
+    END;
+
+    [EventSubscriber(Page,31,OnOpenPageEvent)]
+    LOCAL PROCEDURE OnItemListOpen@7(VAR Rec@1000 : Record Item);
+    BEGIN
+      ShowListEmptyNotification(Rec);
+    END;
+
+    LOCAL PROCEDURE ShowListEmptyNotification@3(RecordVariant@1001 : Variant);
+    VAR
+      RecRef@1002 : RecordRef;
+      NullGUID@1000 : GUID;
+    BEGIN
+      DataTypeManagement.GetRecordRef(RecordVariant,RecRef);
+
+      RecRef.RESET;
+
+      if not RecRef.ISEMPTY then
+        exit;
+      CreateNotification(NullGUID,ListEmptyMsg,NOTIFICATIONSCOPE::LocalScope,OpenDataMigrationTxt,'OpenDataMigrationWizard','');
+    END;
+
+    [External]
+    PROCEDURE OpenDataMigrationWizard@5(ListEmptyNotification@1000 : Notification);
+    BEGIN
+      PAGE.RUN(PAGE::"Data Migration Wizard");
+    END;
+
+    [EventSubscriber(Table,1800,OnGetInstructions,"",Skip,Skip)]
+    LOCAL PROCEDURE OnGetInstructionsSubscriber@2(VAR Sender@1000 : Record "Data Migrator Registration";VAR Instructions@1001 : Text;VAR Handled@1002 : Boolean);
+    BEGIN
+      SENDTRACETAG('00001DB','AL ' + Sender.TABLENAME,VERBOSITY::Normal,Sender.Description,DATACLASSIFICATION::SystemMetadata);
+    END;
+
+    [External]
+    PROCEDURE RunCreateContactsFromCustomersReport@14(ListEmptyNotification@1000 : Notification);
+    BEGIN
+      REPORT.RUN(REPORT::"Create Conts. from Customers");
+    END;
+
+    [External]
+    PROCEDURE RunCreateContactsFromVendorsReport@11(ListEmptyNotification@1000 : Notification);
+    BEGIN
+      REPORT.RUN(REPORT::"Create Conts. from Vendors");
+    END;
+
+    PROCEDURE RemoveCustomerContactNotification@9(ListEmptyNotification@1000 : Notification);
+    VAR
+      MyNotifications@1001 : Record "My Notifications";
+    BEGIN
+      if not MyNotifications.Disable(DataMigrationMgt.GetCustomerContactNotificationId) then
+        DataMigrationMgt.InsertDefaultCustomerContactNotification(false);
+    END;
+
+    PROCEDURE RemoveVendorContactNotification@16(ListEmptyNotification@1000 : Notification);
+    VAR
+      MyNotifications@1001 : Record "My Notifications";
+    BEGIN
+      if not MyNotifications.Disable(DataMigrationMgt.GetVendorContactNotificationId) then
+        DataMigrationMgt.InsertDefaultVendorContactNotification(false);
+    END;
+
+    LOCAL PROCEDURE CreateNotification@4(NotificationGUID@1005 : GUID;MessageText@1000 : Text;NotificaitonScope@1001 : NotificationScope;ActionText@1002 : Text;ActionFunction@1003 : Text;RemoveNotificationFunction@1006 : Text);
+    VAR
+      Notification@1004 : Notification;
+    BEGIN
+      Notification.ID := NotificationGUID;
+      Notification.MESSAGE := MessageText;
+      Notification.SCOPE := NotificaitonScope;
+      Notification.ADDACTION(ActionText,CODEUNIT::"Data Migration Notifier",ActionFunction);
+      if RemoveNotificationFunction <> '' then
+        Notification.ADDACTION(DisableNotificationTxt,CODEUNIT::"Data Migration Notifier",RemoveNotificationFunction);
+      Notification.SEND;
+    END;
+
+    LOCAL PROCEDURE ShowCustomerContactCreationNotification@10(SourceNo@1000 : Code[20];SourceTableID@1005 : Integer);
+    VAR
+      ContactBusinessRelation@1003 : Record "Contact Business Relation";
+      NotificationID@1001 : GUID;
+      SkipNotification@1004 : Boolean;
+    BEGIN
+      SkipShowingCustomerContactCreationNotification(SkipNotification);
+      if SkipNotification then
+        exit;
+
+      NotificationID := CheckCustVendNotificationIdEnabled(SourceTableID);
+      if ISNULLGUID(NotificationID) then
+        exit;
+      case SourceTableID of
+        DATABASE::Customer:
+          if not ContactBusinessRelation.FindByRelation(ContactBusinessRelation."Link to Table"::Customer,SourceNo) then
+            CreateNotification(
+              NotificationID,
+              ListSuggestCreateContactsCustomersMsg,NOTIFICATIONSCOPE::LocalScope,
+              OpenCreateContactsFromCustomersTxt,'RunCreateContactsFromCustomersReport',
+              'RemoveCustomerContactNotification')
+          else
+            RecallNotification(NotificationID);
+        DATABASE::Vendor:
+          if not ContactBusinessRelation.FindByRelation(ContactBusinessRelation."Link to Table"::Vendor,SourceNo) then
+            CreateNotification(
+              NotificationID,
+              ListSuggestCreateContactsVendorsMsg,NOTIFICATIONSCOPE::LocalScope,
+              OpenCreateContactsFromVendorsTxt,'RunCreateContactsFromVendorsReport',
+              'RemoveVendorContactNotification')
+          else
+            RecallNotification(NotificationID);
+      end;
+    END;
+
+    PROCEDURE CheckCustVendNotificationIdEnabled@20(SourceTableID@1000 : Integer) NotificationID : GUID;
+    VAR
+      MyNotifications@1001 : Record "My Notifications";
+    BEGIN
+      case SourceTableID of
+        DATABASE::Customer:
+          NotificationID := DataMigrationMgt.GetCustomerContactNotificationId;
+        DATABASE::Vendor:
+          NotificationID := DataMigrationMgt.GetVendorContactNotificationId;
+        else
+          exit;
+      end;
+      if not MyNotifications.IsEnabled(NotificationID) then
+        CLEAR(NotificationID);
+    END;
+
+    LOCAL PROCEDURE RecallNotification@28(NotificationID@1000 : GUID);
+    VAR
+      Notification@1001 : Notification;
+    BEGIN
+      Notification.ID := NotificationID;
+      if Notification.RECALL then;
+    END;
+
+    PROCEDURE ShowContactNotificationIfCustWithoutContExist@49();
+    VAR
+      Customer@1000 : Record Customer;
+      ContactBusinessRelation@1003 : Record "Contact Business Relation";
+    BEGIN
+      if  not ISNULLGUID(CheckCustVendNotificationIdEnabled(DATABASE::Customer)) then
+        if Customer.FINDSET then
+          repeat
+            if not ContactBusinessRelation.FindByRelation(ContactBusinessRelation."Link to Table"::Customer,Customer."No.") then begin
+              OnCustomerListGetCurrRec(Customer);
+              exit;
+            end;
+          until Customer.NEXT = 0;
+    END;
+
+    PROCEDURE ShowContactNotificationIfVendWithoutContExist@33();
+    VAR
+      Vendor@1002 : Record Vendor;
+      ContactBusinessRelation@1003 : Record "Contact Business Relation";
+    BEGIN
+      if not ISNULLGUID(CheckCustVendNotificationIdEnabled(DATABASE::Vendor)) then
+        if Vendor.FINDSET then
+          repeat
+            if not ContactBusinessRelation.FindByRelation(ContactBusinessRelation."Link to Table"::Vendor,Vendor."No.") then begin
+              OnVendorListGetCurrRec(Vendor);
+              exit;
+            end;
+          until Vendor.NEXT = 0;
+    END;
+
+    [EventSubscriber(Page,9076,OnOpenPageEvent)]
+    LOCAL PROCEDURE OnOpenSalesRelationshipMgrActPage@35(VAR Rec@1000 : Record "Relationship Mgmt. Cue");
+    BEGIN
+      ShowContactNotificationIfCustWithoutContExist;
+      ShowContactNotificationIfVendWithoutContExist;
+    END;
+
+    [EventSubscriber(Page,22,OnAfterGetCurrRecordEvent)]
+    PROCEDURE OnCustomerListGetCurrRec@8(VAR Rec@1000 : Record Customer);
+    BEGIN
+      ShowCustomerContactCreationNotification(Rec."No.",DATABASE::Customer);
+    END;
+
+    [EventSubscriber(Page,21,OnAfterGetCurrRecordEvent)]
+    PROCEDURE OnCustomerCardGetCurrRec@15(VAR Rec@1000 : Record Customer);
+    BEGIN
+      if Rec.FIND then
+        ShowCustomerContactCreationNotification(Rec."No.",DATABASE::Customer);
+    END;
+
+    [EventSubscriber(Page,27,OnAfterGetCurrRecordEvent)]
+    PROCEDURE OnVendorListGetCurrRec@18(VAR Rec@1000 : Record Vendor);
+    BEGIN
+      ShowCustomerContactCreationNotification(Rec."No.",DATABASE::Vendor);
+    END;
+
+    [EventSubscriber(Page,26,OnAfterGetCurrRecordEvent)]
+    PROCEDURE OnVendorCardGetCurrRec@19(VAR Rec@1000 : Record Vendor);
+    BEGIN
+      if Rec.FIND then
+        ShowCustomerContactCreationNotification(Rec."No.",DATABASE::Vendor);
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE SkipShowingCustomerContactCreationNotification@21(VAR SkipNotification@1000 : Boolean);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,49 @@
+OBJECT Page 745 VAT Report Error Log
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161312.653T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Tax Report Error Log;
+    SourceTable="VAT Report Error Log";
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name="Entry No.";
+                ToolTipML=ENU=Specifies the number of the entry, as assigned from the specified number series when the entry was created.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Entry No.";
+                ImplicitType=Integer }
+
+    { 4   ;2   ;Field     ;
+                Name="Error Message";
+                ToolTipML=ENU=Specifies the error message that is the result of validating a tax report.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Error Message";
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,64 @@
+OBJECT Codeunit 6310 PBI Top Opportunities Calc.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    PROCEDURE GetValues@3(VAR TempPowerBIChartBuffer@1001 : TEMPORARY Record "Power BI Chart Buffer");
+    VAR
+      TempOpportunity@1000 : TEMPORARY Record Opportunity;
+    BEGIN
+      CalcTopFiveOpportunities(TempOpportunity);
+      TempOpportunity.SETAUTOCALCFIELDS("Estimated Value (LCY)");
+      if TempOpportunity.FINDSET then
+        repeat
+          InsertToBuffer(TempPowerBIChartBuffer,TempOpportunity);
+        until TempOpportunity.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE CalcTopFiveOpportunities@2(VAR TempOpportunity@1004 : TEMPORARY Record Opportunity);
+    VAR
+      Opportunity@1002 : Record Opportunity;
+    BEGIN
+      TempOpportunity.DELETEALL;
+      Opportunity.SETAUTOCALCFIELDS("Estimated Value (LCY)");
+      Opportunity.SETRANGE(Closed,false);
+      Opportunity.SETCURRENTKEY("Estimated Value (LCY)");
+      Opportunity.ASCENDING(false);
+      if Opportunity.FINDSET then
+        repeat
+          TempOpportunity := Opportunity;
+          TempOpportunity.INSERT;
+        until Opportunity.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE InsertToBuffer@16(VAR TempPowerBIChartBuffer@1002 : TEMPORARY Record "Power BI Chart Buffer";TempOpportunity@1000 : TEMPORARY Record Opportunity);
+    BEGIN
+      with TempPowerBIChartBuffer do begin
+        if FINDLAST then
+          ID += 1
+        else
+          ID := 1;
+        Value := TempOpportunity."Estimated Value (LCY)";
+        "Measure Name" := TempOpportunity.Description;
+        "Measure No." := TempOpportunity."No.";
+        INSERT;
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

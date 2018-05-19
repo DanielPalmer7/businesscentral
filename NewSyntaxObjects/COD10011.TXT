@@ -1,0 +1,45 @@
+OBJECT Codeunit 10011 Ship-Post (Yes/No)
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160926.490T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Sales Header";
+    OnRun=BEGIN
+            SalesHeader.COPY(Rec);
+            Code;
+            Rec := SalesHeader;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      Text1020001@1020001 : TextConst 'ENU=Do you want to ship the %1?';
+      SalesHeader@1020003 : Record "Sales Header";
+      SalesPost@1020004 : Codeunit "Sales-Post";
+
+    LOCAL PROCEDURE Code@1();
+    BEGIN
+      with SalesHeader do
+        if "Document Type" = "Document Type"::Order then begin
+          if not CONFIRM(Text1020001,false,"Document Type") then begin
+            "Shipping No." := '-1';
+            exit;
+          end;
+          Ship := true;
+          Invoice := false;
+          SalesPost.RUN(SalesHeader);
+        end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

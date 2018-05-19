@@ -1,0 +1,381 @@
+OBJECT Table 483 Change Global Dim. Log Entry
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160114.113T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData "G/L Entry"=rm,
+                TableData "Cust. Ledger Entry"=rm,
+                TableData "Vendor Ledger Entry"=rm,
+                TableData "Item Ledger Entry"=rm,
+                TableData "Sales Shipment Header"=rm,
+                TableData "Sales Shipment Line"=rm,
+                TableData "Sales Invoice Header"=rm,
+                TableData "Sales Invoice Line"=rm,
+                TableData "Sales Cr.Memo Header"=rm,
+                TableData "Sales Cr.Memo Line"=rm,
+                TableData "Purch. Rcpt. Header"=rm,
+                TableData "Purch. Rcpt. Line"=rm,
+                TableData "Purch. Inv. Header"=rm,
+                TableData "Purch. Inv. Line"=rm,
+                TableData "Purch. Cr. Memo Hdr."=rm,
+                TableData "Purch. Cr. Memo Line"=rm,
+                TableData "Job Ledger Entry"=rm,
+                TableData "Res. Ledger Entry"=rm,
+                TableData "Bank Account Ledger Entry"=rm,
+                TableData "Phys. Inventory Ledger Entry"=rm,
+                TableData "Issued Reminder Header"=rm,
+                TableData "Issued Fin. Charge Memo Header"=rm,
+                TableData "Detailed Cust. Ledg. Entry"=rm,
+                TableData "Detailed Vendor Ledg. Entry"=rm,
+                TableData "Job WIP G/L Entry"=rm,
+                TableData "Employee Ledger Entry"=rm,
+                TableData "Detailed Employee Ledger Entry"=rm,
+                TableData "Production Order"=rm,
+                TableData "Prod. Order Line"=rm,
+                TableData "Prod. Order Component"=rm,
+                TableData "Prod. Order Routing Line"=rm,
+                TableData "Prod. Order Capacity Need"=rm,
+                TableData "Prod. Order Routing Tool"=rm,
+                TableData "Prod. Order Routing Personnel"=rm,
+                TableData "Prod. Order Rtng Qlty Meas."=rm,
+                TableData "Prod. Order Comment Line"=rm,
+                TableData "Prod. Order Rtng Comment Line"=rm,
+                TableData "Prod. Order Comp. Cmt Line"=rm,
+                TableData "FA Ledger Entry"=rm,
+                TableData "Maintenance Ledger Entry"=rm,
+                TableData "Ins. Coverage Ledger Entry"=rm,
+                TableData "Value Entry"=rm,
+                TableData "Capacity Ledger Entry"=rm,
+                TableData "Service Header"=rm,
+                TableData "Service Item Line"=rm,
+                TableData "Service Line"=rm,
+                TableData "Service Ledger Entry"=rm,
+                TableData "Service Contract Header"=rm,
+                TableData "Filed Service Contract Header"=rm,
+                TableData "Return Shipment Header"=rm,
+                TableData "Return Shipment Line"=rm,
+                TableData "Return Receipt Header"=rm,
+                TableData "Return Receipt Line"=rm;
+    CaptionML=ENU=Change Global Dim. Log Entry;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Table ID            ;Integer       ;CaptionML=ENU=Table ID }
+    { 2   ;   ;Table Name          ;Text30        ;CaptionML=ENU=Table Name }
+    { 3   ;   ;Total Records       ;Integer       ;CaptionML=ENU=Total Records }
+    { 4   ;   ;Completed Records   ;Integer       ;OnValidate=BEGIN
+                                                                CalcProgress;
+                                                              END;
+
+                                                   CaptionML=ENU=Completed Records }
+    { 5   ;   ;Progress            ;Decimal       ;ExtendedDatatype=Ratio;
+                                                   CaptionML=ENU=Progress }
+    { 6   ;   ;Status              ;Option        ;CaptionML=ENU=Status;
+                                                   OptionCaptionML=ENU=" ,Scheduled,In Progress,Completed,Incomplete";
+                                                   OptionString=" ",Scheduled,"In Progress",Completed,Incomplete }
+    { 7   ;   ;Task ID             ;GUID          ;CaptionML=ENU=Task ID }
+    { 8   ;   ;Session ID          ;Integer       ;CaptionML=ENU=Session ID }
+    { 9   ;   ;Change Type 1       ;Option        ;CaptionML=ENU=Change Type 1;
+                                                   OptionCaptionML=ENU=None,Blank,Replace,New;
+                                                   OptionString=None,Blank,Replace,New }
+    { 10  ;   ;Change Type 2       ;Option        ;CaptionML=ENU=Change Type 2;
+                                                   OptionCaptionML=ENU=None,Blank,Replace,New;
+                                                   OptionString=None,Blank,Replace,New }
+    { 11  ;   ;Global Dim.1 Field No.;Integer     ;CaptionML=ENU=Global Dim.1 Field No. }
+    { 12  ;   ;Global Dim.2 Field No.;Integer     ;CaptionML=ENU=Global Dim.2 Field No. }
+    { 13  ;   ;Dim. Set ID Field No.;Integer      ;CaptionML=ENU=Dim. Set ID Field No. }
+    { 14  ;   ;Primary Key Field No.;Integer      ;CaptionML=ENU=Primary Key Field No. }
+    { 15  ;   ;Parent Table ID     ;Integer       ;CaptionML=ENU=Parent Table ID }
+    { 16  ;   ;Is Parent Table     ;Boolean       ;CaptionML=ENU=Is Parent Table }
+    { 17  ;   ;Earliest Start Date/Time;DateTime  ;CaptionML=ENU=Earliest Start Date/Time }
+    { 18  ;   ;Remaining Duration  ;Duration      ;CaptionML=ENU=Remaining Duration }
+  }
+  KEYS
+  {
+    {    ;"Table ID"                              ;Clustered=true }
+    {    ;Progress                                 }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    LOCAL PROCEDURE CalcProgress@1();
+    BEGIN
+      Progress := 10000;
+      if ("Total Records" <> 0) and ("Completed Records" <= "Total Records") then
+        Progress := "Completed Records" / "Total Records" * 10000;
+    END;
+
+    PROCEDURE Update@37(CurrentRecNo@1000 : Integer;StartedFromRecord@1001 : Integer) : Boolean;
+    BEGIN
+      if "Completed Records" <> CurrentRecNo then begin
+        "Remaining Duration" :=
+          ROUND(
+            ("Total Records" - CurrentRecNo) / (CurrentRecNo - StartedFromRecord) *
+            (CURRENTDATETIME - "Earliest Start Date/Time"),1);
+        VALIDATE("Completed Records",CurrentRecNo);
+        if "Completed Records" = "Total Records" then
+          UpdateStatus;
+        exit(MODIFY);
+      end;
+      exit(false);
+    END;
+
+    PROCEDURE UpdateWithCommit@28(CurrentRecNo@1000 : Integer;StartedFromRecord@1001 : Integer) Completed : Boolean;
+    BEGIN
+      if Update(CurrentRecNo,StartedFromRecord) then
+        COMMIT;
+      Completed := Status = Status::Completed;
+    END;
+
+    PROCEDURE ChangeDimOnRecord@22(VAR RecRef@1000 : RecordRef;DimNo@1001 : Integer;GlobalDimFieldRef@1003 : FieldRef;OldDimValueCode@1004 : Code[20]);
+    VAR
+      NewValue@1002 : Code[20];
+    BEGIN
+      case GetChangeType(DimNo) of
+        "Change Type 1"::New:
+          NewValue := FindDimensionValueCode(RecRef,DimNo);
+        "Change Type 1"::Blank:
+          NewValue := '';
+        "Change Type 1"::Replace:
+          NewValue := OldDimValueCode;
+        "Change Type 1"::None:
+          exit;
+      end;
+      GlobalDimFieldRef.VALUE(NewValue);
+    END;
+
+    PROCEDURE GetFieldRefValues@32(RecRef@1002 : RecordRef;VAR GlobalDimFieldRef@1001 : ARRAY [2] OF FieldRef;VAR DimValueCode@1000 : ARRAY [2] OF Code[20]);
+    BEGIN
+      GlobalDimFieldRef[1] := RecRef.FIELD("Global Dim.1 Field No.");
+      DimValueCode[1] := GlobalDimFieldRef[1].VALUE;
+      GlobalDimFieldRef[2] := RecRef.FIELD("Global Dim.2 Field No.");
+      DimValueCode[2] := GlobalDimFieldRef[2].VALUE;
+    END;
+
+    PROCEDURE FindDependentTableNo@23(ParentChangeGlobalDimLogEntry@1000 : Record "Change Global Dim. Log Entry";VAR DependentRecRef@1001 : RecordRef) : Boolean;
+    BEGIN
+      if ParentChangeGlobalDimLogEntry."Is Parent Table" then begin
+        SETRANGE("Parent Table ID",ParentChangeGlobalDimLogEntry."Table ID");
+        if FINDFIRST then begin
+          DependentRecRef.OPEN("Table ID");
+          DependentRecRef.LOCKTABLE(true);
+          "Total Records" := DependentRecRef.COUNT;
+          "Session ID" := SESSIONID;
+          exit("Total Records" > 0);
+        end;
+      end;
+    END;
+
+    PROCEDURE FindDimensionSetIDField@27(RecRef@1000 : RecordRef) : Boolean;
+    VAR
+      Field@1001 : Record Field;
+    BEGIN
+      if RecRef.FIELDEXIST(480) then begin // W1 "Dimension Set ID" fields must have ID = 480
+        "Dim. Set ID Field No." := 480;
+        exit(true);
+      end;
+      Field.SETRANGE(TableNo,RecRef.NUMBER);
+      Field.SETRANGE(RelationTableNo,DATABASE::"Dimension Set Entry");
+      Field.SETRANGE(FieldName,'Dimension Set ID');
+      if Field.FINDFIRST then begin
+        "Dim. Set ID Field No." := Field."No.";
+        exit(true);
+      end;
+    END;
+
+    [Internal]
+    PROCEDURE FindDimensionValueCode@5(RecRef@1003 : RecordRef;DimNo@1000 : Integer) : Code[20];
+    VAR
+      GeneralLedgerSetup@1001 : Record "General Ledger Setup";
+      DimensionCode@1002 : Code[20];
+    BEGIN
+      GeneralLedgerSetup.GET;
+      case DimNo of
+        1:
+          DimensionCode := GeneralLedgerSetup."Global Dimension 1 Code";
+        2:
+          DimensionCode := GeneralLedgerSetup."Global Dimension 2 Code";
+      end;
+      if "Dim. Set ID Field No." = 0 then begin
+        if RecRef.NUMBER = DATABASE::"Job Task" then
+          exit(FindJobTaskDimensionValueCode(RecRef,DimensionCode));
+        exit(FindDefaultDimensionValueCode(RecRef,DimensionCode));
+      end;
+      exit(FindDimSetDimensionValueCode(RecRef,DimensionCode));
+    END;
+
+    LOCAL PROCEDURE FindDefaultDimensionValueCode@9(RecRef@1002 : RecordRef;DimensionCode@1001 : Code[20]) : Code[20];
+    VAR
+      DefaultDimension@1000 : Record "Default Dimension";
+      PKFieldRef@1003 : FieldRef;
+    BEGIN
+      PKFieldRef := RecRef.FIELD("Primary Key Field No.");
+      if DefaultDimension.GET(RecRef.NUMBER,PKFieldRef.VALUE,DimensionCode) then
+        exit(DefaultDimension."Dimension Value Code");
+      exit('');
+    END;
+
+    LOCAL PROCEDURE FindDimSetDimensionValueCode@11(RecRef@1000 : RecordRef;DimensionCode@1001 : Code[20]) : Code[20];
+    VAR
+      DimensionSetEntry@1004 : Record "Dimension Set Entry";
+      DimSetIDFieldRef@1003 : FieldRef;
+    BEGIN
+      DimSetIDFieldRef := RecRef.FIELD("Dim. Set ID Field No.");
+      if DimensionSetEntry.GET(DimSetIDFieldRef.VALUE,DimensionCode) then
+        exit(DimensionSetEntry."Dimension Value Code");
+      exit('');
+    END;
+
+    LOCAL PROCEDURE FindJobTaskDimensionValueCode@12(RecRef@1001 : RecordRef;DimensionCode@1000 : Code[20]) : Code[20];
+    VAR
+      JobTask@1002 : Record "Job Task";
+      JobTaskDimension@1003 : Record "Job Task Dimension";
+    BEGIN
+      RecRef.SETTABLE(JobTask);
+      if JobTaskDimension.GET(JobTask."Job No.",JobTask."Job Task No.",DimensionCode) then
+        exit(JobTaskDimension."Dimension Value Code");
+      exit('');
+    END;
+
+    LOCAL PROCEDURE FindParentTable@14(RecRef@1000 : RecordRef) : Integer;
+    VAR
+      ParentKeyFieldRef@1001 : FieldRef;
+    BEGIN
+      if RecRef.FIELDEXIST(2) then begin // typical for Detailed Ledger Entry tables
+        ParentKeyFieldRef := RecRef.FIELD(2);
+        if FORMAT(ParentKeyFieldRef.TYPE) = 'Integer' then
+          exit(ParentKeyFieldRef.RELATION);
+      end;
+    END;
+
+    PROCEDURE FillData@10(RecRef@1001 : RecordRef);
+    VAR
+      PKeyFieldRef@1002 : FieldRef;
+    BEGIN
+      "Total Records" := RecRef.COUNT;
+      if not FindDimensionSetIDField(RecRef) then begin
+        GetPrimaryKeyFieldRef(RecRef,PKeyFieldRef);
+        if FORMAT(PKeyFieldRef.TYPE) = 'Code' then
+          "Primary Key Field No." := PKeyFieldRef.NUMBER
+        else
+          "Parent Table ID" := FindParentTable(RecRef);
+      end;
+      FindFieldIDs;
+    END;
+
+    LOCAL PROCEDURE FindFieldIDs@2();
+    VAR
+      Field@1000 : Record Field;
+      DimensionManagement@1001 : Codeunit DimensionManagement;
+    BEGIN
+      if DimensionManagement.FindDimFieldInTable("Table ID",'Dimension 1 Code*|*Global Dim. 1',Field) then
+        "Global Dim.1 Field No." := Field."No.";
+      if DimensionManagement.FindDimFieldInTable("Table ID",'Dimension 2 Code*|*Global Dim. 2',Field) then
+        "Global Dim.2 Field No." := Field."No.";
+    END;
+
+    LOCAL PROCEDURE GetChangeType@16(DimNo@1000 : Integer) : Integer;
+    BEGIN
+      if DimNo = 1 then
+        exit("Change Type 1");
+      exit("Change Type 2");
+    END;
+
+    PROCEDURE GetPrimaryKeyFieldRef@19(RecRef@1000 : RecordRef;VAR PKeyFieldRef@1001 : FieldRef);
+    VAR
+      PKeyRef@1002 : KeyRef;
+    BEGIN
+      PKeyRef := RecRef.KEYINDEX(1);
+      PKeyFieldRef := PKeyRef.FIELDINDEX(1);
+    END;
+
+    PROCEDURE Rerun@18();
+    VAR
+      ChangeGlobalDimensions@1000 : Codeunit "Change Global Dimensions";
+    BEGIN
+      UpdateStatus;
+      ChangeGlobalDimensions.Rerun(Rec);
+    END;
+
+    PROCEDURE RunTask@7() Completed : Boolean;
+    VAR
+      ChangeGlobalDimensions@1000 : Codeunit "Change Global Dimensions";
+    BEGIN
+      SetSessionInProgress;
+      COMMIT;
+      Completed := ChangeGlobalDimensions.ChangeDimsOnTable(Rec);
+    END;
+
+    PROCEDURE SetSessionInProgress@6();
+    BEGIN
+      "Session ID" := SESSIONID;
+      Status := Status::"In Progress";
+      MODIFY;
+    END;
+
+    PROCEDURE UpdateStatus@4() OldStatus : Integer;
+    VAR
+      ActiveSession@1000 : Record "Active Session";
+    BEGIN
+      OldStatus := Status;
+      if ISNULLGUID("Task ID") then
+        Status := Status::" "
+      else
+        if "Completed Records" = "Total Records" then begin
+          "Session ID" := -1; // to avoid match to real user sessions
+          Status := Status::Completed
+        end else
+          if "Session ID" = 0 then begin
+            if IsTaskScheduled then
+              Status := Status::Scheduled
+            else
+              Status := Status::Incomplete;
+          end else
+            if ActiveSession.GET(SERVICEINSTANCEID,"Session ID") then
+              Status := Status::"In Progress"
+            else begin
+              Status := Status::Incomplete;
+              "Session ID" := -1;
+            end;
+    END;
+
+    PROCEDURE ShowError@3();
+    VAR
+      JobQueueLogEntry@1000 : Record "Job Queue Log Entry";
+    BEGIN
+      if ISNULLGUID("Task ID") then begin
+        JobQueueLogEntry.SETRANGE("Object Type to Run",JobQueueLogEntry."Object Type to Run"::Codeunit);
+        JobQueueLogEntry.SETRANGE("Object ID to Run",CODEUNIT::"Change Global Dim Err. Handler");
+        JobQueueLogEntry.SETRANGE(Description,"Table Name");
+      end else
+        JobQueueLogEntry.SETRANGE(ID,"Task ID");
+      JobQueueLogEntry.SETRANGE(Status,JobQueueLogEntry.Status::Error);
+      PAGE.RUNMODAL(PAGE::"Job Queue Log Entries",JobQueueLogEntry);
+    END;
+
+    LOCAL PROCEDURE IsTaskScheduled@17() TaskExists : Boolean;
+    BEGIN
+      OnFindingScheduledTask("Task ID",TaskExists);
+      if not TaskExists then
+        exit(TASKSCHEDULER.TASKEXISTS("Task ID"));
+    END;
+
+    [Business]
+    LOCAL PROCEDURE OnFindingScheduledTask@15(TaskID@1001 : GUID;VAR IsTaskExist@1000 : Boolean);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

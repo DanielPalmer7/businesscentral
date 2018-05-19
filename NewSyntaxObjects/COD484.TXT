@@ -1,0 +1,156 @@
+OBJECT Codeunit 484 Block Table Ops Subscriber
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160620.490T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    EventSubscriberInstance=Manual;
+    SingleInstance=true;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      TempBlockAllObjWithCaption@1000 : TEMPORARY Record AllObjWithCaption;
+      BlockNotificationIDTok@1002 : TextConst '@@@={Locked};ENU=9A731292-B261-456D-9807-1EB40EB81AC1';
+      BlockNotificationTxt@1001 : TextConst '@@@=%1 - a table name;ENU=The global dimension codes are being changed in the table %1.';
+      DetailsMsg@1003 : TextConst 'ENU=Details.';
+
+    [External]
+    PROCEDURE ClearState@30();
+    BEGIN
+      TempBlockAllObjWithCaption.RESET;
+      TempBlockAllObjWithCaption.DELETEALL;
+    END;
+
+    [External]
+    PROCEDURE IsClear@3() : Boolean;
+    BEGIN
+      exit(TempBlockAllObjWithCaption.ISEMPTY);
+    END;
+
+    [External]
+    PROCEDURE IsSubscribed@37() : Boolean;
+    VAR
+      EventSubscription@1000 : Record "Event Subscription";
+    BEGIN
+      with EventSubscription do begin
+        SETRANGE("Subscriber Codeunit ID",CODEUNIT::"Block Table Ops Subscriber");
+        SETFILTER("Subscriber Function",'OnBeforeOnDatabase*');
+        SETRANGE("Publisher Object Type","Publisher Object Type"::Codeunit);
+        SETRANGE("Publisher Object ID",CODEUNIT::ApplicationManagement);
+        SETRANGE("Subscriber Instance",'Manual');
+        SETRANGE("Active Manual Instances",1);
+        SETRANGE(Active,true);
+        exit(COUNT = 4);
+      end;
+    END;
+
+    LOCAL PROCEDURE BlockOperationIfChangeInProgress@24(RecRef@1000 : RecordRef);
+    VAR
+      ChangeGlobalDimLogEntry@1001 : Record "Change Global Dim. Log Entry";
+      DataUpgradeMgt@1002 : Codeunit "Data Upgrade Mgt.";
+    BEGIN
+      if DataUpgradeMgt.IsUpgradeInProgress then
+        exit;
+      // look into TempBlockAllObjWithCaption first to avoid reading ChangeGlobalDimLogEntry for performance reason
+      if TempBlockAllObjWithCaption.GET(TempBlockAllObjWithCaption."Object Type"::Table,RecRef.NUMBER) then
+        if not ChangeGlobalDimLogEntry.ISEMPTY then
+          if ChangeGlobalDimLogEntry.GET(RecRef.NUMBER) then
+            if ChangeGlobalDimLogEntry."Session ID" <> SESSIONID then begin
+              SendBlockNotification(RecRef);
+              StopTransaction(RecRef.NAME);
+            end;
+    END;
+
+    PROCEDURE FindTablesToBlock@38() : Boolean;
+    VAR
+      ChangeGlobalDimLogEntry@1000 : Record "Change Global Dim. Log Entry";
+    BEGIN
+      if ChangeGlobalDimLogEntry.ISEMPTY then
+        exit(false);
+      TempBlockAllObjWithCaption."Object Type" := TempBlockAllObjWithCaption."Object Type"::Table;
+      ChangeGlobalDimLogEntry.FINDSET;
+      repeat
+        TempBlockAllObjWithCaption."Object ID" := ChangeGlobalDimLogEntry."Table ID";
+        TempBlockAllObjWithCaption.INSERT;
+      until ChangeGlobalDimLogEntry.NEXT = 0;
+      exit(not TempBlockAllObjWithCaption.ISEMPTY);
+    END;
+
+    PROCEDURE GetBlockNotificationID@29() Id : GUID;
+    BEGIN
+      EVALUATE(Id,BlockNotificationIDTok);
+    END;
+
+    LOCAL PROCEDURE SendBlockNotification@22(RecRef@1001 : RecordRef);
+    VAR
+      BlockNotification@1000 : Notification;
+    BEGIN
+      BlockNotification.ID(GetBlockNotificationID);
+      BlockNotification.RECALL;
+      BlockNotification.MESSAGE(STRSUBSTNO(BlockNotificationTxt,RecRef.NAME));
+      BlockNotification.SCOPE(NOTIFICATIONSCOPE::LocalScope);
+      BlockNotification.ADDACTION(DetailsMsg,CODEUNIT::"Block Table Ops Subscriber",'OpenPage');
+      BlockNotification.SEND;
+    END;
+
+    LOCAL PROCEDURE StopTransaction@2(TableName@1000 : Text);
+    BEGIN
+      if GUIALLOWED then
+        ERROR('');
+      ERROR(BlockNotificationTxt,TableName);
+    END;
+
+    PROCEDURE OpenPage@23(Notification@1000 : Notification);
+    BEGIN
+      PAGE.RUN(PAGE::"Change Global Dimensions");
+    END;
+
+    [EventSubscriber(Codeunit,1,OnBeforeOnDatabaseDelete)]
+    LOCAL PROCEDURE OnBeforeOnDatabaseDeleteHandler@40(RecRef@1000 : RecordRef);
+    BEGIN
+      BlockOperationIfChangeInProgress(RecRef);
+    END;
+
+    [EventSubscriber(Codeunit,1,OnBeforeOnDatabaseInsert)]
+    LOCAL PROCEDURE OnBeforeOnDatabaseInsertHandler@39(RecRef@1000 : RecordRef);
+    BEGIN
+      BlockOperationIfChangeInProgress(RecRef);
+    END;
+
+    [EventSubscriber(Codeunit,1,OnBeforeOnDatabaseModify)]
+    LOCAL PROCEDURE OnBeforeOnDatabaseModifyHandler@41(RecRef@1000 : RecordRef);
+    BEGIN
+      BlockOperationIfChangeInProgress(RecRef);
+    END;
+
+    [EventSubscriber(Codeunit,1,OnBeforeOnDatabaseRename)]
+    LOCAL PROCEDURE OnBeforeOnDatabaseRenameHandler@42(RecRef@1000 : RecordRef;xRecRef@1001 : RecordRef);
+    BEGIN
+      BlockOperationIfChangeInProgress(RecRef);
+    END;
+
+    [EventSubscriber(Codeunit,1,OnAfterGetDatabaseTableTriggerSetup)]
+    LOCAL PROCEDURE OnAfterGetDatabaseTableTriggerSetupHandler@1(TableId@1000 : Integer;VAR OnDatabaseInsert@1001 : Boolean;VAR OnDatabaseModify@1002 : Boolean;VAR OnDatabaseDelete@1003 : Boolean;VAR OnDatabaseRename@1004 : Boolean);
+    BEGIN
+      if TempBlockAllObjWithCaption.GET(TempBlockAllObjWithCaption."Object Type"::Table,TableId) then begin
+        OnDatabaseInsert := true;
+        OnDatabaseModify := true;
+        OnDatabaseRename := true;
+        OnDatabaseDelete := true;
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,152 @@
+OBJECT Page 10147 Posted Deposit List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161723.217T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Posted Deposit List;
+    SourceTable="Posted Deposit Header";
+    PageType=List;
+    CardPageID="Posted Deposit";
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      Name=ActionContainer1900000003;
+                      ActionContainerType=RelatedInformation }
+      { 1020000 ;1   ;ActionGroup;
+                      Name="&Deposit";
+                      CaptionML=ENU=&Deposit }
+      { 1020003 ;2   ;Action    ;
+                      Name=Comments;
+                      CaptionML=ENU=Comments;
+                      ToolTipML=ENU=View a list of deposit comments.;
+                      RunObject=Page "Bank Comment Sheet";
+                      RunPageView=WHERE("Table Name"=CONST("Posted Deposit"));
+                      RunPageLink="Bank Account No."=FIELD("Bank Account No."),
+                                  "No."=FIELD("No.");
+                      Image=ViewComments }
+      { 1020004 ;2   ;Action    ;
+                      Name=Dimensions;
+                      CaptionML=ENU=Dimensions;
+                      ToolTipML=ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                      ApplicationArea=#Suite;
+                      Image=Dimensions;
+                      OnAction=BEGIN
+                                 ShowDocDim;
+                               END;
+                                }
+      { 1900000006;0 ;ActionContainer;
+                      Name=ActionContainer1900000006;
+                      ActionContainerType=Reports }
+      { 1907613506;1 ;Action    ;
+                      Name=Deposit;
+                      CaptionML=ENU=Deposit;
+                      ToolTipML=ENU="Create a new deposit. ";
+                      ApplicationArea=#Basic,#Suite;
+                      RunObject=Report Deposit;
+                      Promoted=false;
+                      Image=Document;
+                      PromotedCategory=Report }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the document number of the deposit document.;
+                ApplicationArea=#All;
+                SourceExpr="No.";
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name="Bank Account No.";
+                ToolTipML=ENU=Specifies the number of the bank account to which the deposit was made.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Bank Account No.";
+                ImplicitType=Code20 }
+
+    { 6   ;2   ;Field     ;
+                Name="Posting Date";
+                ToolTipML=ENU=Specifies the date the deposit was posted.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Posting Date";
+                ImplicitType=Date }
+
+    { 8   ;2   ;Field     ;
+                Name="Total Deposit Amount";
+                ToolTipML=ENU=Specifies the total amount deposited to the bank account.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Total Deposit Amount";
+                ImplicitType=Decimal }
+
+    { 10  ;2   ;Field     ;
+                Name="Document Date";
+                ToolTipML=ENU=Specifies the date of the deposit document.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document Date";
+                Visible=FALSE;
+                ImplicitType=Date }
+
+    { 12  ;2   ;Field     ;
+                Name="Shortcut Dimension 1 Code";
+                ToolTipML=ENU=Specifies the value assigned to this dimension for this deposit.;
+                ApplicationArea=#Suite;
+                SourceExpr="Shortcut Dimension 1 Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 14  ;2   ;Field     ;
+                Name="Shortcut Dimension 2 Code";
+                ToolTipML=ENU=Specifies the value assigned to this dimension for this deposit.;
+                ApplicationArea=#Suite;
+                SourceExpr="Shortcut Dimension 2 Code";
+                Visible=FALSE;
+                ImplicitType=Code20 }
+
+    { 16  ;2   ;Field     ;
+                Name="Posting Description";
+                ToolTipML=ENU=Specifies the posting description of the deposit.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Posting Description";
+                Visible=FALSE;
+                ImplicitType=Text50 }
+
+    { 18  ;2   ;Field     ;
+                Name="Currency Code";
+                ToolTipML=ENU=Specifies the currency code of the bank account that the deposit was deposited in.;
+                ApplicationArea=#Suite;
+                SourceExpr="Currency Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 20  ;2   ;Field     ;
+                Name="Language Code";
+                ToolTipML=ENU=Specifies the language code of the bank account that the deposit was deposited into.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Language Code";
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

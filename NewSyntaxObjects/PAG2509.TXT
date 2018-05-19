@@ -1,0 +1,130 @@
+OBJECT Page 2509 Extn. Deployment Status Detail
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161411.367T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Extn. Deployment Status Detail;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable="NAV App Tenant Operation";
+    DataCaptionExpr=Description;
+    DelayedInsert=false;
+    PageType=Card;
+    SourceTableTemporary=true;
+    RefreshOnActivate=true;
+    ShowFilter=false;
+    OnOpenPage=VAR
+                 NavExtensionOperationMgmt@1000 : Codeunit NavExtensionOperationMgmt;
+               BEGIN
+                 NavAppTenantOperationTable.SETFILTER("Operation ID",'%1',"Operation ID");
+                 if not NavAppTenantOperationTable.FINDFIRST then
+                   CurrPage.CLOSE;
+
+                 NavExtensionOperationMgmt.RefreshStatus("Operation ID");
+
+                 SetOperationRecord;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 5       ;    ;ActionContainer;
+                      Name=ActionContainer5;
+                      ActionContainerType=ActionItems }
+      { 8       ;1   ;Action    ;
+                      Name=Refresh;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Refresh;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 NavExtensionOperationMgmt@1001 : Codeunit NavExtensionOperationMgmt;
+                                 DetailsStream@1000 : InStream;
+                               BEGIN
+                                 NavExtensionOperationMgmt.RefreshStatus("Operation ID");
+                                 NavAppTenantOperationTable.SETFILTER("Operation ID",'%1',"Operation ID");
+                                 if not NavAppTenantOperationTable.FINDFIRST then
+                                   CurrPage.CLOSE;
+
+                                 Status := NavAppTenantOperationTable.Status;
+                                 NavAppTenantOperationTable.CALCFIELDS(Details);
+                                 NavAppTenantOperationTable.Details.CREATEINSTREAM(DetailsStream,TEXTENCODING::UTF8);
+                                 OpDetails.READ(DetailsStream);
+                                 MODIFY;
+
+                                 CurrPage.UPDATE;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=General;
+                GroupType=Group }
+
+    { 11  ;2   ;Field     ;
+                Name=Description;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=Text250 }
+
+    { 4   ;2   ;Field     ;
+                Name="Started On";
+                CaptionML=ENU=Started Date;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Started On";
+                ImplicitType=DateTime }
+
+    { 6   ;2   ;Field     ;
+                Name=Status;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Status;
+                ImplicitType=Option }
+
+    { 7   ;2   ;Field     ;
+                Name=OpDetails;
+                CaptionML=ENU=Details;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=OpDetails;
+                ImplicitType=BigText }
+
+  }
+  CODE
+  {
+    VAR
+      NavAppTenantOperationTable@1000 : Record "NAV App Tenant Operation";
+      OpDetails@1001 : BigText;
+
+    LOCAL PROCEDURE SetOperationRecord@6();
+    VAR
+      DetailsStream@1000 : InStream;
+    BEGIN
+      "Operation ID" := NavAppTenantOperationTable."Operation ID";
+      Description := NavAppTenantOperationTable.Description;
+      "Started On" := NavAppTenantOperationTable."Started On";
+      Status := NavAppTenantOperationTable.Status;
+
+      NavAppTenantOperationTable.CALCFIELDS(Details);
+      NavAppTenantOperationTable.Details.CREATEINSTREAM(DetailsStream,TEXTENCODING::UTF8);
+      OpDetails.READ(DetailsStream);
+      INSERT;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

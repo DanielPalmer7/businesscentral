@@ -1,0 +1,113 @@
+OBJECT Page 2321 BC O365 Payment Method Card
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161408.623T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Payment Method;
+    LinksAllowed=false;
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 PaymentMethodCode := PaymentMethod.Code;
+                 PaymentMethodDescription := COPYSTR(PaymentMethod.GetDescriptionInCurrentLanguage,1,MAXSTRLEN(PaymentMethodDescription));
+                 if PaymentMethodCode = '' then
+                   CurrPage.CAPTION := NewPaymentMethodTxt;
+               END;
+
+    OnQueryClosePage=VAR
+                       PaymentMethodTranslation@1002 : Record "Payment Method Translation";
+                       Language@1003 : Record Language;
+                       LocalPaymentMethod@1001 : Record "Payment Method";
+                       O365SalesInitialSetup@1004 : Record "O365 Sales Initial Setup";
+                     BEGIN
+                       if CloseAction = ACTION::LookupCancel then
+                         exit;
+
+                       if PaymentMethodCode = '' then
+                         ERROR(MustSpecifyCodeErr);
+
+                       // Clean up translation if description changed
+                       if (PaymentMethod.Description <> PaymentMethodDescription) and
+                          (PaymentMethod.Code <> '')
+                       then begin
+                         if PaymentMethodTranslation.GET(PaymentMethod.Code,Language.GetUserLanguage) then
+                           PaymentMethodTranslation.DELETE(true);
+                       end;
+
+                       // Handle the code
+                       if not PaymentMethod.GET(PaymentMethod.Code) then begin
+                         if LocalPaymentMethod.GET(PaymentMethodCode) then
+                           ERROR(PaymentMethodAlreadyExistErr);
+                         PaymentMethod.VALIDATE(Code,PaymentMethodCode);
+                         PaymentMethod.VALIDATE("Use for Invoicing",true);
+                         PaymentMethod.INSERT(true);
+                       end else
+                         if PaymentMethod.Code <> PaymentMethodCode then begin
+                           if LocalPaymentMethod.GET(PaymentMethodCode) then
+                             ERROR(PaymentMethodAlreadyExistErr);
+                           PaymentMethod.RENAME(PaymentMethodCode);
+                           if O365SalesInitialSetup.GET and (O365SalesInitialSetup."Default Payment Method Code" = PaymentMethodCode) then
+                             O365SalesInitialSetup.UpdateDefaultPaymentMethod(PaymentMethodCode);
+                         end;
+
+                       // Handle the description
+                       if PaymentMethodDescription <> PaymentMethod.Description then begin
+                         PaymentMethodTranslation.SETRANGE("Payment Method Code",PaymentMethod.Code);
+                         PaymentMethodTranslation.DELETEALL;
+                         PaymentMethod.VALIDATE(Description,PaymentMethodDescription);
+                         PaymentMethod.MODIFY(true);
+                       end;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 4   ;1   ;Group     ;
+                Name=Control4;
+                GroupType=Group;
+                InstructionalTextML=ENU=Specify how the customer paid you. }
+
+    { 6   ;2   ;Field     ;
+                Name=PaymentMethodCode;
+                CaptionML=ENU=Short name;
+                ToolTipML=ENU=Specifies the short name of the payment method.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=PaymentMethodCode }
+
+    { 8   ;2   ;Field     ;
+                Name=PaymentMethodDescription;
+                CaptionML=ENU=Description;
+                ToolTipML=ENU=Specifies a a description of the payment method.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=PaymentMethodDescription }
+
+  }
+  CODE
+  {
+    VAR
+      PaymentMethod@1001 : Record "Payment Method";
+      PaymentMethodDescription@1000 : Text[50];
+      PaymentMethodCode@1003 : Code[10];
+      PaymentMethodAlreadyExistErr@1005 : TextConst 'ENU=You already have a payment method with this name. Please use a different name.';
+      MustSpecifyCodeErr@1007 : TextConst 'ENU=You must specify a short name for this payment method.';
+      NewPaymentMethodTxt@1002 : TextConst 'ENU=New payment method.';
+
+    PROCEDURE SetPaymentMethod@1(NewPaymentMethod@1000 : Record "Payment Method");
+    BEGIN
+      PaymentMethod := NewPaymentMethod;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

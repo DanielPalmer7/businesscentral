@@ -1,0 +1,289 @@
+OBJECT Page 36642 Customer Credit FactBox
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161727.617T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Credit Information;
+    SaveValues=true;
+    SourceTable=Customer;
+    PageType=CardPart;
+    OnOpenPage=BEGIN
+                 // Default the Aging Period to 30D
+                 EVALUATE(AgingPeriod,'<30D>');
+                 // Initialize Record Variables
+                 LatestCustLedgerEntry.RESET;
+                 LatestCustLedgerEntry.SETCURRENTKEY("Document Type","Customer No.","Posting Date");
+                 LatestCustLedgerEntry.SETRANGE("Document Type",LatestCustLedgerEntry."Document Type"::Payment);
+                 for I := 1 to ARRAYLEN(CustLedgerEntry) do begin
+                   CustLedgerEntry[I].RESET;
+                   CustLedgerEntry[I].SETCURRENTKEY("Customer No.",Open,Positive,"Due Date");
+                   CustLedgerEntry[I].SETRANGE(Open,true);
+                 end;
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       ChangeCustomer;
+                       GetLatestPayment;
+                       CalculateAging;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 6   ;1   ;Field     ;
+                Name=Contact;
+                ToolTipML=ENU=Specifies the contact person for the customer record.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Contact;
+                ImplicitType=Text50 }
+
+    { 8   ;1   ;Field     ;
+                Name="Phone No.";
+                ToolTipML=ENU=Specifies the customer's phone number.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Phone No.";
+                ImplicitType=Text30 }
+
+    { 26  ;1   ;Field     ;
+                Name="Collection Method";
+                ToolTipML=ENU=Specifies the method you normally use to collect payment from this customer, such as bank transfer or check.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Collection Method";
+                ImplicitType=Code20 }
+
+    { 1020000;1;Field     ;
+                Name=Blocked;
+                ToolTipML=ENU=Specifies if the customer is blocked from posting.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Blocked;
+                ImplicitType=Option }
+
+    { 14  ;1   ;Field     ;
+                Name="Payment Terms Code";
+                ToolTipML=ENU=Specifies a formula that calculates the payment due date, payment discount date, and payment discount amount on sales documents. By default, the payment term from the customer card is entered.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Payment Terms Code";
+                ImplicitType=Code10 }
+
+    { 28  ;1   ;Field     ;
+                Name="Payment Method Code";
+                ToolTipML=ENU=Specifies how the customer must pay for products on the sales document. By default, the payment method is copied from the customer card.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Payment Method Code";
+                ImplicitType=Code10 }
+
+    { 18  ;1   ;Field     ;
+                Name="LatestCustLedgerEntry.""Posting Date""";
+                CaptionML=ENU=Latest Payment Date;
+                ToolTipML=ENU=Specifies the date when a payment was last made.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=LatestCustLedgerEntry."Posting Date";
+                OnDrillDown=BEGIN
+                              DrillDown(0);
+                            END;
+                             }
+
+    { 21  ;1   ;Field     ;
+                Name="-LatestCustLedgerEntry.""Amount (LCY)""";
+                CaptionML=ENU=Latest Payment Amount;
+                ToolTipML=ENU=Specifies the last payment amount that was made.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=-LatestCustLedgerEntry."Amount (LCY)";
+                OnDrillDown=BEGIN
+                              DrillDown(0);
+                            END;
+                             }
+
+    { 41  ;1   ;Field     ;
+                Name="Credit Limit (LCY)";
+                ToolTipML=ENU=Specifies the maximum credit (in $) that can be extended to the customer.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Credit Limit (LCY)";
+                ImplicitType=Decimal }
+
+    { 42  ;1   ;Field     ;
+                Name="Balance (LCY)";
+                ToolTipML=ENU=Specifies the payment amount that the customer owes for completed sales. This value is also known as the customer's balance.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Balance (LCY)";
+                ImplicitType=Decimal }
+
+    { 47  ;1   ;Field     ;
+                Name="Credit Limit (LCY)" - "Balance (LCY)";
+                CaptionML=ENU=Difference;
+                ToolTipML=ENU=Specifies the difference between the credit limit and the balance for the customer. The formula is credit limit minus balance.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Credit Limit (LCY)" - "Balance (LCY)" }
+
+    { 39  ;1   ;Group     ;
+                Name="Aging (showing days overdue)";
+                CaptionML=ENU=Aging (showing days overdue) }
+
+    { 53  ;2   ;Field     ;
+                Name="CustLedgerEntry[1].""Remaining Amt. (LCY)""";
+                CaptionML=ENU=Not Yet Due;
+                ToolTipML=ENU=Specifies amounts that are not yet due for payment.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CustLedgerEntry[1]."Remaining Amt. (LCY)";
+                CaptionClass=FORMAT(AgingTitle[1]);
+                OnDrillDown=BEGIN
+                              DrillDown(1);
+                            END;
+                             }
+
+    { 51  ;2   ;Field     ;
+                Name="CustLedgerEntry[2].""Remaining Amt. (LCY)""";
+                CaptionML=ENU=1-30 Days;
+                ToolTipML=ENU=Specifies payments that are overdue between one and 30 days.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CustLedgerEntry[2]."Remaining Amt. (LCY)";
+                CaptionClass=FORMAT(AgingTitle[2]);
+                OnDrillDown=BEGIN
+                              DrillDown(2);
+                            END;
+                             }
+
+    { 50  ;2   ;Field     ;
+                Name="CustLedgerEntry[3].""Remaining Amt. (LCY)""";
+                CaptionML=ENU=31-60 Days;
+                ToolTipML=ENU=Specifies payments that are overdue between 30 and 60 days.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CustLedgerEntry[3]."Remaining Amt. (LCY)";
+                CaptionClass=FORMAT(AgingTitle[3]);
+                OnDrillDown=BEGIN
+                              DrillDown(3);
+                            END;
+                             }
+
+    { 45  ;2   ;Field     ;
+                Name="CustLedgerEntry[4].""Remaining Amt. (LCY)""";
+                CaptionML=ENU=Over 60 Days;
+                ToolTipML=ENU=Specifies payments that are overdue for more than 60 days.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CustLedgerEntry[4]."Remaining Amt. (LCY)";
+                CaptionClass=FORMAT(AgingTitle[4]);
+                OnDrillDown=BEGIN
+                              DrillDown(4);
+                            END;
+                             }
+
+  }
+  CODE
+  {
+    VAR
+      LatestCustLedgerEntry@1020000 : Record "Cust. Ledger Entry";
+      CustLedgerEntry@1020001 : ARRAY [4] OF Record "Cust. Ledger Entry";
+      AgingTitle@1020002 : ARRAY [4] OF Text[30];
+      AgingPeriod@1020003 : DateFormula;
+      I@1020004 : Integer;
+      PeriodStart@1020005 : Date;
+      PeriodEnd@1020006 : Date;
+      Text002@1020009 : TextConst 'ENU=Not Yet Due';
+      Text003@1020010 : TextConst 'ENU=Over %1 Days';
+      Text004@1020011 : TextConst 'ENU=%1-%2 Days';
+
+    [External]
+    PROCEDURE CalculateAgingForPeriod@7(PeriodBeginDate@1020000 : Date;PeriodEndDate@1020001 : Date;Index@1020002 : Integer);
+    VAR
+      CustLedgerEntry2@1020005 : Record "Cust. Ledger Entry";
+      NumDaysToBegin@1020003 : Integer;
+      NumDaysToEnd@1020004 : Integer;
+    BEGIN
+      // Calculate the Aged Balance for a particular Date Range
+      if PeriodEndDate = 0D then
+        CustLedgerEntry[Index].SETFILTER("Due Date",'%1..',PeriodBeginDate)
+      else
+        CustLedgerEntry[Index].SETRANGE("Due Date",PeriodBeginDate,PeriodEndDate);
+
+      CustLedgerEntry2.COPY(CustLedgerEntry[Index]);
+      CustLedgerEntry[Index]."Remaining Amt. (LCY)" := 0;
+      if CustLedgerEntry2.FIND('-') then
+        repeat
+          CustLedgerEntry2.CALCFIELDS("Remaining Amt. (LCY)");
+          CustLedgerEntry[Index]."Remaining Amt. (LCY)" :=
+            CustLedgerEntry[Index]."Remaining Amt. (LCY)" + CustLedgerEntry2."Remaining Amt. (LCY)";
+        until CustLedgerEntry2.NEXT = 0;
+
+      if PeriodBeginDate <> 0D then
+        NumDaysToBegin := WORKDATE - PeriodBeginDate;
+      if PeriodEndDate <> 0D then
+        NumDaysToEnd := WORKDATE - PeriodEndDate;
+      if PeriodEndDate = 0D then
+        AgingTitle[Index] := Text002
+      else
+        if PeriodBeginDate = 0D then
+          AgingTitle[Index] := STRSUBSTNO(Text003,NumDaysToEnd - 1)
+        else
+          AgingTitle[Index] := STRSUBSTNO(Text004,NumDaysToEnd,NumDaysToBegin);
+    END;
+
+    [External]
+    PROCEDURE CalculateAging@5();
+    BEGIN
+      // Calculate the Entire Aging (four Periods)
+      for I := 1 to ARRAYLEN(CustLedgerEntry) do begin
+        case I of
+          1:
+            begin
+              PeriodEnd := 0D;
+              PeriodStart := WORKDATE;
+            end;
+          ARRAYLEN(CustLedgerEntry):
+            begin
+              PeriodEnd := PeriodStart - 1;
+              PeriodStart := 0D;
+            end;
+          else
+            begin
+            PeriodEnd := PeriodStart - 1;
+            PeriodStart := CALCDATE('-' + FORMAT(AgingPeriod),PeriodStart);
+          end;
+        end;
+        CalculateAgingForPeriod(PeriodStart,PeriodEnd,I);
+      end;
+    END;
+
+    [External]
+    PROCEDURE GetLatestPayment@6();
+    BEGIN
+      // Find the Latest Payment
+      if LatestCustLedgerEntry.FINDLAST then
+        LatestCustLedgerEntry.CALCFIELDS("Amount (LCY)")
+      else
+        LatestCustLedgerEntry.INIT;
+    END;
+
+    [External]
+    PROCEDURE ChangeCustomer@2();
+    BEGIN
+      // Change the Customer Filters
+      LatestCustLedgerEntry.SETRANGE("Customer No.","No.");
+      for I := 1 to ARRAYLEN(CustLedgerEntry) do
+        CustLedgerEntry[I].SETRANGE("Customer No.","No.");
+    END;
+
+    [External]
+    PROCEDURE DrillDown@11(Index@1020000 : Integer);
+    BEGIN
+      if Index = 0 then
+        PAGE.RUNMODAL(PAGE::"Customer Ledger Entries",LatestCustLedgerEntry)
+      else
+        PAGE.RUNMODAL(PAGE::"Customer Ledger Entries",CustLedgerEntry[Index]);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

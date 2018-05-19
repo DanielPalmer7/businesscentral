@@ -1,0 +1,40 @@
+OBJECT Table 6302 Power BI Report Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160214.263T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Power BI Report Buffer;
+  }
+  FIELDS
+  {
+    { 1   ;   ;ReportID            ;GUID          ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=ReportID }
+    { 2   ;   ;ReportName          ;Text100       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=ReportName }
+    { 3   ;   ;EmbedUrl            ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=EmbedUrl }
+    { 4   ;   ;Enabled             ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Enabled }
+  }
+  KEYS
+  {
+    {    ;ReportID                                ;Clustered=true }
+    {    ;ReportName                               }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,172 @@
+OBJECT Table 10144 Posted Deposit Line
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160237.617T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Posted Deposit Line;
+    LookupPageID="Posted Deposit Lines";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Deposit No.         ;Code20        ;TableRelation="Posted Deposit Header";
+                                                   CaptionML=ENU=Deposit No. }
+    { 2   ;   ;Line No.            ;Integer       ;CaptionML=ENU=Line No. }
+    { 3   ;   ;Account Type        ;Option        ;InitValue=Customer;
+                                                   CaptionML=ENU=Account Type;
+                                                   OptionCaptionML=ENU=G/L Account,Customer,Vendor,Bank Account,,IC Partner;
+                                                   OptionString="G/L Account",Customer,Vendor,"Bank Account",,"IC Partner" }
+    { 4   ;   ;Account No.         ;Code20        ;TableRelation=IF ("Account Type"=CONST("G/L Account")) "G/L Account"
+                                                                 ELSE IF ("Account Type"=CONST(Customer)) Customer
+                                                                 ELSE IF ("Account Type"=CONST(Vendor)) Vendor
+                                                                 ELSE IF ("Account Type"=CONST("Bank Account")) "Bank Account"
+                                                                 ELSE IF ("Account Type"=CONST("IC Partner")) "IC Partner";
+                                                   CaptionML=ENU=Account No. }
+    { 5   ;   ;Document Date       ;Date          ;CaptionML=ENU=Document Date }
+    { 6   ;   ;Document Type       ;Option        ;CaptionML=ENU=Document Type;
+                                                   OptionCaptionML=ENU=" ,Payment,,,,,Refund";
+                                                   OptionString=" ",Payment,,,,,Refund }
+    { 7   ;   ;Document No.        ;Code20        ;CaptionML=ENU=Document No. }
+    { 8   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+    { 9   ;   ;Currency Code       ;Code10        ;TableRelation=Currency;
+                                                   CaptionML=ENU=Currency Code;
+                                                   Editable=false }
+    { 10  ;   ;Amount              ;Decimal       ;CaptionML=ENU=Amount;
+                                                   MinValue=0;
+                                                   AutoFormatType=1;
+                                                   AutoFormatExpr="Currency Code" }
+    { 11  ;   ;Posting Group       ;Code20        ;TableRelation=IF ("Account Type"=CONST(Customer)) "Customer Posting Group"
+                                                                 ELSE IF ("Account Type"=CONST(Vendor)) "Vendor Posting Group";
+                                                   CaptionML=ENU=Posting Group;
+                                                   Editable=false }
+    { 12  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE ("Global Dimension No."=CONST(1));
+                                                   CaptionML=ENU=Shortcut Dimension 1 Code;
+                                                   CaptionClass='1,2,1' }
+    { 13  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE ("Global Dimension No."=CONST(2));
+                                                   CaptionML=ENU=Shortcut Dimension 2 Code;
+                                                   CaptionClass='1,2,2' }
+    { 14  ;   ;Posting Date        ;Date          ;CaptionML=ENU=Posting Date }
+    { 15  ;   ;Bank Account Ledger Entry No.;Integer;
+                                                   TableRelation="Bank Account Ledger Entry";
+                                                   CaptionML=ENU=Bank Account Ledger Entry No. }
+    { 16  ;   ;Entry No.           ;Integer       ;TableRelation=IF ("Account Type"=CONST("G/L Account")) "G/L Entry"
+                                                                 ELSE IF ("Account Type"=CONST(Customer)) "Cust. Ledger Entry"
+                                                                 ELSE IF ("Account Type"=CONST(Vendor)) "Vendor Ledger Entry"
+                                                                 ELSE IF ("Account Type"=CONST("Bank Account")) "Bank Account Ledger Entry";
+                                                   CaptionML=ENU=Entry No. }
+    { 480 ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
+                                                   OnLookup=BEGIN
+                                                              ShowDimensions;
+                                                            END;
+
+                                                   CaptionML=ENU=Dimension Set ID;
+                                                   Editable=false }
+  }
+  KEYS
+  {
+    {    ;"Deposit No.","Line No."                ;SumIndexFields=Amount;
+                                                   Clustered=true }
+    {    ;"Account Type","Account No."             }
+    {    ;"Document No.","Posting Date"            }
+    {    ;"Bank Account Ledger Entry No."          }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      DimMgt@1020000 : Codeunit DimensionManagement;
+
+    [External]
+    PROCEDURE ShowDimensions@25();
+    BEGIN
+      DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2 %3',TABLECAPTION,"Document No.","Line No."));
+    END;
+
+    [External]
+    PROCEDURE ShowAccountCard@1020000();
+    VAR
+      GLAcc@1020000 : Record "G/L Account";
+      Cust@1020001 : Record Customer;
+      Vend@1020002 : Record Vendor;
+      BankAcc@1020003 : Record "Bank Account";
+    BEGIN
+      case "Account Type" of
+        "Account Type"::"G/L Account":
+          begin
+            GLAcc."No." := "Account No.";
+            PAGE.RUN(PAGE::"G/L Account Card",GLAcc);
+          end;
+        "Account Type"::Customer:
+          begin
+            Cust."No." := "Account No.";
+            PAGE.RUN(PAGE::"Customer Card",Cust);
+          end;
+        "Account Type"::Vendor:
+          begin
+            Vend."No." := "Account No.";
+            PAGE.RUN(PAGE::"Vendor Card",Vend);
+          end;
+        "Account Type"::"Bank Account":
+          begin
+            BankAcc."No." := "Account No.";
+            PAGE.RUN(PAGE::"Bank Account Card",BankAcc);
+          end;
+      end;
+    END;
+
+    [External]
+    PROCEDURE ShowAccountLedgerEntries@1020001();
+    VAR
+      GLEntry@1020000 : Record "G/L Entry";
+      CustLedgEntry@1020001 : Record "Cust. Ledger Entry";
+      VendLedgEntry@1020002 : Record "Vendor Ledger Entry";
+      BankAccLedgEntry@1020003 : Record "Bank Account Ledger Entry";
+    BEGIN
+      case "Account Type" of
+        "Account Type"::"G/L Account":
+          begin
+            GLEntry.SETCURRENTKEY("G/L Account No.","Posting Date");
+            GLEntry.SETRANGE("G/L Account No.","Account No.");
+            if not GLEntry.GET("Entry No.") then
+              if GLEntry.FINDLAST then ;
+            PAGE.RUN(PAGE::"General Ledger Entries",GLEntry);
+          end;
+        "Account Type"::Customer:
+          begin
+            CustLedgEntry.SETCURRENTKEY("Customer No.","Posting Date");
+            CustLedgEntry.SETRANGE("Customer No.","Account No.");
+            if not CustLedgEntry.GET("Entry No.") then
+              if CustLedgEntry.FINDLAST then ;
+            PAGE.RUN(PAGE::"Customer Ledger Entries",CustLedgEntry);
+          end;
+        "Account Type"::Vendor:
+          begin
+            VendLedgEntry.SETCURRENTKEY("Vendor No.","Posting Date");
+            VendLedgEntry.SETRANGE("Vendor No.","Account No.");
+            if not VendLedgEntry.GET("Entry No.") then
+              if VendLedgEntry.FINDLAST then ;
+            PAGE.RUN(PAGE::"Vendor Ledger Entries",VendLedgEntry);
+          end;
+        "Account Type"::"Bank Account":
+          begin
+            BankAccLedgEntry.SETCURRENTKEY("Bank Account No.","Posting Date");
+            BankAccLedgEntry.SETRANGE("Bank Account No.","Account No.");
+            if not BankAccLedgEntry.GET("Entry No.") then
+              if BankAccLedgEntry.FINDLAST then ;
+            PAGE.RUN(PAGE::"Bank Account Ledger Entries",BankAccLedgEntry);
+          end;
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

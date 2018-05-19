@@ -1,0 +1,34 @@
+OBJECT Table 27014 SAT Country Code
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160238.480T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+    CaptionML=ENU=SAT Country Code;
+  }
+  FIELDS
+  {
+    { 1   ;   ;SAT Country Code    ;Code10        ;CaptionML=ENU=SAT Country Code }
+    { 2   ;   ;Description         ;Text100       ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;"SAT Country Code"                      ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

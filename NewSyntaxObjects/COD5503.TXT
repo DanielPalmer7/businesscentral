@@ -1,0 +1,828 @@
+OBJECT Codeunit 5503 Graph Mgt - Attachment Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160741.120T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData "Incoming Document Attachment"=rimd;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      DocumentIDNotSpecifiedForAttachmentsErr@1009 : TextConst '@@@={Locked};ENU=You must specify a document id to get the attachments.';
+      DocumentDoesNotExistErr@1001 : TextConst '@@@={Locked};ENU=No document with the specified ID exists.';
+      MultipleDocumentsFoundForIdErr@1006 : TextConst '@@@={Locked};ENU=Multiple documents have been found for the specified criteria.';
+      CannotInsertAnAttachmentThatAlreadyExistsErr@1011 : TextConst '@@@={Locked};ENU=You cannot insert an attachment because an attachment already exists.';
+      CannotModifyAnAttachmentThatDoesntExistErr@1010 : TextConst '@@@={Locked};ENU=You cannot modify an attachment that does not exist.';
+      CannotDeleteAnAttachmentThatDoesntExistErr@1012 : TextConst '@@@={Locked};ENU=You cannot delete an attachment that does not exist.';
+      EmptyGuid@1013 : GUID;
+      AttachmentLinkedToAnotherDocumentErr@1002 : TextConst '@@@={Locked};ENU=The attachment is linked to another document than you specified.';
+      DocumentTypeErr@1000 : TextConst '@@@={Locked};ENU=Only Sales Invoices and Sales Quotes can have attachments.';
+      CannotFindRelatedDocumentErr@1003 : TextConst '@@@={Locked};ENU=Cannot find a document which the attachment is linked to.';
+
+    PROCEDURE LoadAttachments@80(VAR TempAttachmentEntityBuffer@1000 : TEMPORARY Record "Attachment Entity Buffer";DocumentIdFilter@1007 : Text;AttachmentIdFilter@1005 : Text);
+    VAR
+      IncomingDocument@1001 : Record "Incoming Document";
+      DocumentRecordRef@1002 : RecordRef;
+      DocumentId@1003 : GUID;
+    BEGIN
+      TempAttachmentEntityBuffer.RESET;
+      TempAttachmentEntityBuffer.DELETEALL;
+
+      if not IsLinkedAttachment(DocumentIdFilter) then begin
+        LoadUnlinkedAttachmentsToBuffer(TempAttachmentEntityBuffer,AttachmentIdFilter);
+        exit;
+      end;
+
+      FindParentDocument(DocumentIdFilter,DocumentRecordRef);
+      if not FindIncomingDocument(DocumentRecordRef,IncomingDocument) then
+        exit;
+      DocumentId := GetDocumentId(DocumentRecordRef);
+      LoadLinkedAttachmentsToBuffer(TempAttachmentEntityBuffer,IncomingDocument,DocumentId,AttachmentIdFilter);
+    END;
+
+    PROCEDURE PropagateInsertAttachment@34(VAR TempAttachmentEntityBuffer@1000 : TEMPORARY Record "Attachment Entity Buffer";VAR TempFieldBuffer@1005 : TEMPORARY Record "Field Buffer");
+    VAR
+      ErrorMsg@1001 : Text;
+    BEGIN
+      if PropagateInsertLinkedAttachment(TempAttachmentEntityBuffer,TempFieldBuffer,ErrorMsg) then
+        exit;
+      ThrowErrorIfAny(ErrorMsg);
+      PropagateInsertUnlinkedAttachment(TempAttachmentEntityBuffer,TempFieldBuffer);
+    END;
+
+    PROCEDURE PropagateInsertAttachmentSafe@81(VAR TempAttachmentEntityBuffer@1000 : TEMPORARY Record "Attachment Entity Buffer";VAR TempFieldBuffer@1005 : TEMPORARY Record "Field Buffer");
+    VAR
+      ErrorMsg@1001 : Text;
+    BEGIN
+      if PropagateInsertLinkedAttachment(TempAttachmentEntityBuffer,TempFieldBuffer,ErrorMsg) then
+        exit;
+      // Ignore an error from above if any, because we don't want to ask the user
+      // to upload the same attachment twice because of a small error like wrong documentId, etc.
+      // The client can then handle this and link the attachment and the document afterwards.
+      PropagateInsertUnlinkedAttachment(TempAttachmentEntityBuffer,TempFieldBuffer);
+    END;
+
+    LOCAL PROCEDURE PropagateInsertUnlinkedAttachment@29(VAR TempAttachmentEntityBuffer@1000 : TEMPORARY Record "Attachment Entity Buffer";VAR TempFieldBuffer@1005 : TEMPORARY Record "Field Buffer") : Boolean;
+    VAR
+      UnlinkedAttachment@1012 : Record "Unlinked Attachment";
+      IncomingDocumentAttachment@1001 : Record "Incoming Document Attachment";
+      IncomingDocument@1007 : Record "Incoming Document";
+      AttachmentRecordRef@1003 : RecordRef;
+      AttachmentId@1002 : GUID;
+    BEGIN
+      if not ISNULLGUID(TempAttachmentEntityBuffer.Id) then
+        if FindUnlinkedAttachment(TempAttachmentEntityBuffer.Id,UnlinkedAttachment) then
+          ERROR(CannotInsertAnAttachmentThatAlreadyExistsErr);
+      CLEAR(UnlinkedAttachment);
+      TransferToUnlinkedAttachment(TempAttachmentEntityBuffer,UnlinkedAttachment,TempFieldBuffer,true);
+      UnlinkedAttachment.INSERT(true);
+      UnlinkedAttachment.FIND;
+
+      if FindLinkedAttachment(TempAttachmentEntityBuffer.Id,IncomingDocumentAttachment) then begin
+        AttachmentId := IncomingDocumentAttachment.Id;
+        IncomingDocument.GET(IncomingDocumentAttachment."Incoming Document Entry No.");
+        DeleteLinkedAttachment(IncomingDocumentAttachment,IncomingDocument);
+        AttachmentRecordRef.GETTABLE(UnlinkedAttachment);
+        TransferIntegrationRecordID(AttachmentId,AttachmentRecordRef);
+      end;
+
+      CLEAR(TempAttachmentEntityBuffer."Document Id");
+      TempAttachmentEntityBuffer.Id := UnlinkedAttachment.Id;
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE PropagateInsertLinkedAttachment@28(VAR TempAttachmentEntityBuffer@1000 : TEMPORARY Record "Attachment Entity Buffer";VAR TempFieldBuffer@1005 : TEMPORARY Record "Field Buffer";VAR ErrorMsg@1009 : Text) : Boolean;
+    VAR
+      IncomingDocument@1003 : Record "Incoming Document";
+      IncomingDocumentAttachment@1002 : Record "Incoming Document Attachment";
+      LastUsedIncomingDocumentAttachment@1004 : Record "Incoming Document Attachment";
+      UnlinkedAttachment@1012 : Record "Unlinked Attachment";
+      DocumentRecordRef@1001 : RecordRef;
+      AttachmentRecordRef@1014 : RecordRef;
+      LineNo@1006 : Integer;
+      Name@1010 : Text[250];
+      Extension@1011 : Text[30];
+      DocumentIdFilter@1007 : Text;
+      DocumentId@1008 : GUID;
+      AttachmentId@1013 : GUID;
+    BEGIN
+      DocumentIdFilter := GetDocumentIdFilter(TempAttachmentEntityBuffer);
+
+      if not IsLinkedAttachment(DocumentIdFilter) then
+        exit(false);
+
+      FindParentDocumentSafe(DocumentIdFilter,DocumentRecordRef,ErrorMsg);
+      if ErrorMsg <> '' then
+        exit(false);
+
+      VerifyCRUDIsPossibleSafe(DocumentRecordRef,ErrorMsg);
+      if ErrorMsg <> '' then
+        exit(false);
+
+      FindOrCreateIncomingDocument(DocumentRecordRef,IncomingDocument);
+
+      LastUsedIncomingDocumentAttachment.SETRANGE("Incoming Document Entry No.",IncomingDocument."Entry No.");
+      if not LastUsedIncomingDocumentAttachment.FINDLAST then
+        LineNo := 10000
+      else
+        LineNo := LastUsedIncomingDocumentAttachment."Line No." + 10000;
+
+      if not ISNULLGUID(TempAttachmentEntityBuffer.Id) then begin
+        IncomingDocumentAttachment.SETRANGE(Id,TempAttachmentEntityBuffer.Id);
+        if IncomingDocumentAttachment.FINDFIRST then begin
+          ErrorMsg := CannotInsertAnAttachmentThatAlreadyExistsErr;
+          exit(false);
+        end;
+      end;
+
+      DocumentId := GetDocumentId(DocumentRecordRef);
+      TransferToIncomingDocumentAttachment(TempAttachmentEntityBuffer,IncomingDocumentAttachment,TempFieldBuffer,true);
+      FileNameToNameAndExtension(TempAttachmentEntityBuffer."File Name",Name,Extension);
+      IncomingDocumentAttachment."Incoming Document Entry No." := IncomingDocument."Entry No.";
+      IncomingDocumentAttachment."Line No." := LineNo;
+      IncomingDocumentAttachment.Id := TempAttachmentEntityBuffer.Id;
+      IncomingDocumentAttachment.Name := Name;
+      IncomingDocumentAttachment."File Extension" := Extension;
+      if IncomingDocument.Posted and (IncomingDocument."Document Type" = IncomingDocument."Document Type"::"Sales Invoice") then begin
+        IncomingDocumentAttachment."Document No." := IncomingDocument."Document No.";
+        IncomingDocumentAttachment."Posting Date" := IncomingDocument."Posting Date";
+      end;
+      IncomingDocumentAttachment.INSERT(true);
+
+      if FindUnlinkedAttachment(TempAttachmentEntityBuffer.Id,UnlinkedAttachment) then begin
+        AttachmentId := UnlinkedAttachment.Id;
+        UnlinkedAttachment.DELETE(true);
+        AttachmentRecordRef.GETTABLE(IncomingDocumentAttachment);
+        TransferIntegrationRecordID(AttachmentId,AttachmentRecordRef);
+      end;
+
+      TempAttachmentEntityBuffer.Id := IncomingDocumentAttachment.Id;
+
+      exit(true);
+    END;
+
+    PROCEDURE PropagateModifyAttachment@82(VAR TempAttachmentEntityBuffer@1000 : TEMPORARY Record "Attachment Entity Buffer";VAR TempFieldBuffer@1004 : TEMPORARY Record "Field Buffer");
+    VAR
+      IncomingDocument@1003 : Record "Incoming Document";
+      IncomingDocumentAttachment@1002 : Record "Incoming Document Attachment";
+      UnlinkedAttachment@1006 : Record "Unlinked Attachment";
+      DocumentRecordRef@1001 : RecordRef;
+      DocumentRecord@1011 : Variant;
+      DocumentIdFilter@1005 : Text;
+      IsUnlinked@1007 : Boolean;
+      IsLinked@1009 : Boolean;
+      ShouldBeLinked@1008 : Boolean;
+      ShouldBeUnlinked@1010 : Boolean;
+    BEGIN
+      IsUnlinked := FindUnlinkedAttachment(TempAttachmentEntityBuffer.Id,UnlinkedAttachment);
+      if IsUnlinked then begin
+        TransferToUnlinkedAttachment(TempAttachmentEntityBuffer,UnlinkedAttachment,TempFieldBuffer,false);
+        UnlinkedAttachment.MODIFY(true);
+        ShouldBeLinked := not ISNULLGUID(TempAttachmentEntityBuffer."Document Id");
+        if ShouldBeLinked then
+          LinkAttachmentToDocument(
+            TempAttachmentEntityBuffer.Id,TempAttachmentEntityBuffer."Document Id",TempAttachmentEntityBuffer."File Name");
+        exit;
+      end;
+
+      IncomingDocumentAttachment.SETAUTOCALCFIELDS(Content);
+      IncomingDocumentAttachment.SETRANGE(Id,TempAttachmentEntityBuffer.Id);
+      IsLinked := IncomingDocumentAttachment.FINDFIRST;
+      if IsLinked then begin
+        ShouldBeUnlinked := ISNULLGUID(TempAttachmentEntityBuffer."Document Id");
+        if ShouldBeUnlinked then begin
+          IncomingDocument.GET(IncomingDocumentAttachment."Incoming Document Entry No.");
+          IncomingDocument.GetNAVRecord(DocumentRecord);
+          DocumentRecordRef := DocumentRecord;
+          VerifyCRUDIsPossible(DocumentRecordRef);
+          TransferToIncomingDocumentAttachment(TempAttachmentEntityBuffer,IncomingDocumentAttachment,TempFieldBuffer,false);
+          UnlinkAttachmentFromDocument(IncomingDocumentAttachment);
+          exit;
+        end;
+        DocumentIdFilter := GetDocumentIdFilter(TempAttachmentEntityBuffer);
+        FindParentDocument(DocumentIdFilter,DocumentRecordRef);
+        if not FindIncomingDocument(DocumentRecordRef,IncomingDocument) then
+          ERROR(AttachmentLinkedToAnotherDocumentErr);
+        VerifyCRUDIsPossible(DocumentRecordRef);
+        TransferToIncomingDocumentAttachment(TempAttachmentEntityBuffer,IncomingDocumentAttachment,TempFieldBuffer,false);
+        IncomingDocumentAttachment.MODIFY(true);
+        exit;
+      end;
+
+      ERROR(CannotModifyAnAttachmentThatDoesntExistErr);
+    END;
+
+    PROCEDURE PropagateDeleteAttachment@83(VAR TempAttachmentEntityBuffer@1000 : TEMPORARY Record "Attachment Entity Buffer");
+    VAR
+      IncomingDocument@1001 : Record "Incoming Document";
+      IncomingDocumentAttachment@1002 : Record "Incoming Document Attachment";
+      UnlinkedAttachment@1009 : Record "Unlinked Attachment";
+      DocumentRecordRef@1003 : RecordRef;
+      DocumentIdFilter@1010 : Text;
+    BEGIN
+      if FindUnlinkedAttachment(TempAttachmentEntityBuffer.Id,UnlinkedAttachment) then begin
+        UnlinkedAttachment.DELETE(true);
+        exit;
+      end;
+
+      IncomingDocumentAttachment.SETRANGE(Id,TempAttachmentEntityBuffer.Id);
+      if not IncomingDocumentAttachment.FINDFIRST then
+        ERROR(CannotDeleteAnAttachmentThatDoesntExistErr);
+
+      DocumentIdFilter := GetDocumentIdFilter(TempAttachmentEntityBuffer);
+      FindParentDocument(DocumentIdFilter,DocumentRecordRef);
+      if not FindIncomingDocument(DocumentRecordRef,IncomingDocument) then
+        ERROR(AttachmentLinkedToAnotherDocumentErr);
+
+      VerifyCRUDIsPossible(DocumentRecordRef);
+      DeleteLinkedAttachment(IncomingDocumentAttachment,IncomingDocument);
+    END;
+
+    PROCEDURE DeleteLinkedAttachment@50(VAR IncomingDocumentAttachment@1000 : Record "Incoming Document Attachment";VAR IncomingDocument@1001 : Record "Incoming Document");
+    VAR
+      AdditionalIncomingDocumentAttachment@1004 : Record "Incoming Document Attachment";
+      DummyRecordID@1005 : RecordID;
+      LineNo@1006 : Integer;
+      IsDefault@1007 : Boolean;
+      IsMain@1008 : Boolean;
+    BEGIN
+      LineNo := IncomingDocumentAttachment."Line No.";
+      IsDefault := IncomingDocumentAttachment.Default;
+      IsMain := IncomingDocumentAttachment."Main Attachment";
+      if (not IsDefault) and (not IsMain) then
+        IncomingDocumentAttachment.DELETE(true)
+      else begin
+        IncomingDocumentAttachment.Default := false;
+        IncomingDocumentAttachment."Main Attachment" := false;
+        IncomingDocumentAttachment.MODIFY;
+        IncomingDocumentAttachment.DELETE(true);
+        AdditionalIncomingDocumentAttachment.SETRANGE("Incoming Document Entry No.",IncomingDocument."Entry No.");
+        AdditionalIncomingDocumentAttachment.SETFILTER("Line No.",'<>%1',LineNo);
+        if AdditionalIncomingDocumentAttachment.FINDFIRST then begin
+          AdditionalIncomingDocumentAttachment.VALIDATE(Default,IsDefault);
+          AdditionalIncomingDocumentAttachment.VALIDATE("Main Attachment",IsMain);
+          AdditionalIncomingDocumentAttachment.MODIFY(true);
+        end;
+      end;
+
+      IncomingDocumentAttachment.RESET;
+      IncomingDocumentAttachment.SETRANGE("Incoming Document Entry No.",IncomingDocument."Entry No.");
+      if IncomingDocumentAttachment.FINDFIRST then
+        exit;
+
+      if IncomingDocument.Posted then begin
+        IncomingDocument."Related Record ID" := DummyRecordID;
+        IncomingDocument."Posted Date-Time" := 0DT;
+        IncomingDocument.Posted := false;
+        IncomingDocument.Processed := false;
+        IncomingDocument.Status := IncomingDocument.Status::Released;
+        IncomingDocument."Document No." := '';
+        IncomingDocument."Document Type" := IncomingDocument."Document Type"::" ";
+        IncomingDocument."Posting Date" := 0D;
+        IncomingDocument.MODIFY(true);
+      end;
+
+      IncomingDocument.DELETE(true);
+    END;
+
+    PROCEDURE UpdateAttachments@91(VAR TempOldAttachmentEntityBuffer@1001 : TEMPORARY Record "Attachment Entity Buffer";VAR TempNewAttachmentEntityBuffer@1009 : TEMPORARY Record "Attachment Entity Buffer";DocumentId@1000 : GUID);
+    BEGIN
+      DeleteUnusedAttachments(TempOldAttachmentEntityBuffer,TempNewAttachmentEntityBuffer);
+      LinkNewAttachmentsToDocument(TempOldAttachmentEntityBuffer,TempNewAttachmentEntityBuffer,DocumentId);
+    END;
+
+    LOCAL PROCEDURE DeleteUnusedAttachments@92(VAR TempOldAttachmentEntityBuffer@1000 : TEMPORARY Record "Attachment Entity Buffer";VAR TempNewAttachmentEntityBuffer@1001 : TEMPORARY Record "Attachment Entity Buffer");
+    BEGIN
+      if TempOldAttachmentEntityBuffer.FINDSET then
+        repeat
+          if not TempNewAttachmentEntityBuffer.GET(TempOldAttachmentEntityBuffer.Id) then
+            PropagateDeleteAttachment(TempOldAttachmentEntityBuffer);
+        until TempOldAttachmentEntityBuffer.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE LinkNewAttachmentsToDocument@93(VAR TempOldAttachmentEntityBuffer@1000 : TEMPORARY Record "Attachment Entity Buffer";VAR TempNewAttachmentEntityBuffer@1001 : TEMPORARY Record "Attachment Entity Buffer";DocumentId@1002 : GUID);
+    VAR
+      IncomingDocumentAttachment@1004 : Record "Incoming Document Attachment";
+      UnlinkedAttachment@1005 : Record "Unlinked Attachment";
+      AttachmentId@1003 : GUID;
+      FileName@1007 : Text[250];
+    BEGIN
+      if TempNewAttachmentEntityBuffer.FINDSET then
+        repeat
+          AttachmentId := TempNewAttachmentEntityBuffer.Id;
+          FileName := TempNewAttachmentEntityBuffer."File Name";
+          if not TempOldAttachmentEntityBuffer.GET(AttachmentId) then
+            case true of
+              FindUnlinkedAttachment(AttachmentId,UnlinkedAttachment):
+                begin
+                  if FileName = '' then
+                    FileName := UnlinkedAttachment."File Name";
+                  LinkAttachmentToDocument(UnlinkedAttachment.Id,DocumentId,FileName);
+                end;
+              FindLinkedAttachment(AttachmentId,IncomingDocumentAttachment):
+                begin
+                  IncomingDocumentAttachment.CALCFIELDS(Content);
+                  TempNewAttachmentEntityBuffer.Content := IncomingDocumentAttachment.Content;
+                  TempNewAttachmentEntityBuffer.MODIFY(true);
+                  CopyAttachment(TempNewAttachmentEntityBuffer,UnlinkedAttachment,true);
+                  if FileName = '' then
+                    FileName := NameAndExtensionToFileName(
+                        IncomingDocumentAttachment.Name,IncomingDocumentAttachment."File Extension");
+                  LinkAttachmentToDocument(UnlinkedAttachment.Id,DocumentId,FileName);
+                end;
+              else begin
+                CopyAttachment(TempNewAttachmentEntityBuffer,UnlinkedAttachment,false);
+                if FileName = '' then
+                  FileName := UnlinkedAttachment."File Name";
+                LinkAttachmentToDocument(UnlinkedAttachment.Id,DocumentId,FileName);
+              end;
+            end
+          else
+            if TempNewAttachmentEntityBuffer."File Name" <> TempOldAttachmentEntityBuffer."File Name" then
+              if FindLinkedAttachment(AttachmentId,IncomingDocumentAttachment) then begin
+                FileNameToNameAndExtension(FileName,IncomingDocumentAttachment.Name,IncomingDocumentAttachment."File Extension");
+                IncomingDocumentAttachment.MODIFY(true);
+              end;
+        until TempNewAttachmentEntityBuffer.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE LinkAttachmentToDocument@94(AttachmentId@1000 : GUID;DocumentId@1001 : GUID;FileName@1006 : Text[250]);
+    VAR
+      TempFieldBuffer@1003 : TEMPORARY Record "Field Buffer";
+      TempAttachmentEntityBuffer@1002 : TEMPORARY Record "Attachment Entity Buffer";
+      UnlinkedAttachment@1004 : Record "Unlinked Attachment";
+      ErrorMsg@1005 : Text;
+    BEGIN
+      UnlinkedAttachment.SETAUTOCALCFIELDS(Content);
+      UnlinkedAttachment.GET(AttachmentId);
+      TransferFromUnlinkedAttachment(TempAttachmentEntityBuffer,UnlinkedAttachment);
+      TempAttachmentEntityBuffer."Document Id" := DocumentId;
+      TempAttachmentEntityBuffer."File Name" := FileName;
+      RegisterFieldSet(TempAttachmentEntityBuffer.FIELDNO("Created Date-Time"),TempFieldBuffer);
+      RegisterFieldSet(TempAttachmentEntityBuffer.FIELDNO("File Name"),TempFieldBuffer);
+      RegisterFieldSet(TempAttachmentEntityBuffer.FIELDNO(Content),TempFieldBuffer);
+      PropagateInsertLinkedAttachment(TempAttachmentEntityBuffer,TempFieldBuffer,ErrorMsg);
+    END;
+
+    LOCAL PROCEDURE UnlinkAttachmentFromDocument@14(VAR IncomingDocumentAttachment@1000 : Record "Incoming Document Attachment");
+    VAR
+      TempFieldBuffer@1003 : TEMPORARY Record "Field Buffer";
+      TempAttachmentEntityBuffer@1002 : TEMPORARY Record "Attachment Entity Buffer";
+    BEGIN
+      TransferFromIncomingDocumentAttachment(TempAttachmentEntityBuffer,IncomingDocumentAttachment,EmptyGuid);
+      RegisterFieldSet(TempAttachmentEntityBuffer.FIELDNO("Created Date-Time"),TempFieldBuffer);
+      RegisterFieldSet(TempAttachmentEntityBuffer.FIELDNO("File Name"),TempFieldBuffer);
+      RegisterFieldSet(TempAttachmentEntityBuffer.FIELDNO(Content),TempFieldBuffer);
+      PropagateInsertUnlinkedAttachment(TempAttachmentEntityBuffer,TempFieldBuffer);
+    END;
+
+    PROCEDURE CopyAttachment@22(VAR TempAttachmentEntityBuffer@1001 : TEMPORARY Record "Attachment Entity Buffer";VAR UnlinkedAttachment@1000 : Record "Unlinked Attachment";GenerateNewId@1002 : Boolean);
+    BEGIN
+      UnlinkedAttachment.TRANSFERFIELDS(TempAttachmentEntityBuffer);
+      if GenerateNewId then
+        CLEAR(UnlinkedAttachment.Id);
+      UnlinkedAttachment.INSERT(true);
+    END;
+
+    PROCEDURE RegisterFieldSet@13(FieldNo@1000 : Integer;VAR TempFieldBuffer@1002 : TEMPORARY Record "Field Buffer");
+    VAR
+      LastOrderNo@1001 : Integer;
+    BEGIN
+      LastOrderNo := 1;
+      if TempFieldBuffer.FINDLAST then
+        LastOrderNo := TempFieldBuffer.Order + 1;
+
+      CLEAR(TempFieldBuffer);
+      TempFieldBuffer.Order := LastOrderNo;
+      TempFieldBuffer."Table ID" := DATABASE::"Attachment Entity Buffer";
+      TempFieldBuffer."Field ID" := FieldNo;
+      TempFieldBuffer.INSERT;
+    END;
+
+    LOCAL PROCEDURE GetDocumentIdFilter@10(VAR AttachmentEntityBuffer@1001 : Record "Attachment Entity Buffer") : Text;
+    VAR
+      DocumentIdFilter@1000 : Text;
+    BEGIN
+      if ISNULLGUID(AttachmentEntityBuffer."Document Id") then begin
+        DocumentIdFilter := AttachmentEntityBuffer.GETFILTER("Document Id");
+        if DocumentIdFilter = '' then
+          DocumentIdFilter := FORMAT(EmptyGuid);
+      end else
+        DocumentIdFilter := FORMAT(AttachmentEntityBuffer."Document Id");
+      exit(DocumentIdFilter);
+    END;
+
+    LOCAL PROCEDURE IsLinkedAttachment@21(DocumentIdFilter@1000 : Text) : Boolean;
+    BEGIN
+      exit((DocumentIdFilter <> '') and (DocumentIdFilter <> FORMAT(EmptyGuid)));
+    END;
+
+    LOCAL PROCEDURE IsPostedDocument@18(VAR DocumentRecordRef@1001 : RecordRef) : Boolean;
+    BEGIN
+      exit(DocumentRecordRef.NUMBER = DATABASE::"Sales Invoice Header");
+    END;
+
+    LOCAL PROCEDURE IsSalesInvoice@8(VAR DocumentRecordRef@1001 : RecordRef) : Boolean;
+    VAR
+      DocumentType@1000 : 'Quote,Invoice';
+    BEGIN
+      GetDocumentType(DocumentRecordRef,DocumentType);
+      exit(DocumentType = DocumentType::Invoice);
+    END;
+
+    LOCAL PROCEDURE IsSalesQuote@9(VAR DocumentRecordRef@1001 : RecordRef) : Boolean;
+    VAR
+      DocumentType@1000 : 'Quote,Invoice';
+    BEGIN
+      GetDocumentType(DocumentRecordRef,DocumentType);
+      exit(DocumentType = DocumentType::Quote);
+    END;
+
+    LOCAL PROCEDURE GetDocumentType@7(VAR DocumentRecordRef@1001 : RecordRef;VAR DocumentType@1005 : 'Quote,Invoice');
+    VAR
+      SalesHeader@1003 : Record "Sales Header";
+    BEGIN
+      if DocumentRecordRef.NUMBER = DATABASE::"Sales Invoice Header" then begin
+        DocumentType := DocumentType::Invoice;
+        exit;
+      end;
+
+      DocumentRecordRef.SETTABLE(SalesHeader);
+
+      if SalesHeader."Document Type" = SalesHeader."Document Type"::Invoice then begin
+        DocumentType := DocumentType::Invoice;
+        exit;
+      end;
+
+      if SalesHeader."Document Type" = SalesHeader."Document Type"::Quote then begin
+        DocumentType := DocumentType::Quote;
+        exit;
+      end;
+
+      ERROR(DocumentTypeErr);
+    END;
+
+    LOCAL PROCEDURE GetDocumentId@24(VAR DocumentRecordRef@1001 : RecordRef) : GUID;
+    VAR
+      DummySalesHeader@1003 : Record "Sales Header";
+      DataTypeManagement@1000 : Codeunit "Data Type Management";
+      IdFieldRef@1002 : FieldRef;
+      Id@1004 : GUID;
+    BEGIN
+      if DataTypeManagement.FindFieldByName(DocumentRecordRef,IdFieldRef,DummySalesHeader.FIELDNAME(Id)) then
+        EVALUATE(Id,FORMAT(IdFieldRef.VALUE));
+      exit(Id);
+    END;
+
+    PROCEDURE GetDocumentIdFromAttachmentId@6(AttachmentId@1000 : GUID) : GUID;
+    VAR
+      IncomingDocumentAttachment@1001 : Record "Incoming Document Attachment";
+      IncomingDocument@1002 : Record "Incoming Document";
+      DocumentVariant@1006 : Variant;
+      DocumentRecordRef@1005 : RecordRef;
+    BEGIN
+      IncomingDocumentAttachment.SETFILTER(Id,AttachmentId);
+      if not IncomingDocumentAttachment.FINDFIRST then
+        exit(EmptyGuid);
+
+      IncomingDocument.GET(IncomingDocumentAttachment."Incoming Document Entry No.");
+
+      if not IncomingDocument.GetNAVRecord(DocumentVariant) then
+        ERROR(CannotFindRelatedDocumentErr);
+
+      DocumentRecordRef.GETTABLE(DocumentVariant);
+
+      exit(GetDocumentId(DocumentRecordRef));
+    END;
+
+    LOCAL PROCEDURE VerifyCRUDIsPossibleSafe@1(VAR DocumentRecordRef@1003 : RecordRef;VAR ErrorMsg@1001 : Text);
+    VAR
+      SalesInvoiceEntityAggregate@1000 : Record "Sales Invoice Entity Aggregate";
+      SearchSalesInvoiceEntityAggregate@1002 : Record "Sales Invoice Entity Aggregate";
+      SalesQuoteEntityBuffer@1006 : Record "Sales Quote Entity Buffer";
+      SearchSalesQuoteEntityBuffer@1005 : Record "Sales Quote Entity Buffer";
+      DocumentId@1004 : GUID;
+    BEGIN
+      DocumentId := GetDocumentId(DocumentRecordRef);
+
+      if IsSalesInvoice(DocumentRecordRef) then begin
+        SalesInvoiceEntityAggregate.SETRANGE(Id,DocumentId);
+        if not SalesInvoiceEntityAggregate.FINDFIRST then begin
+          ErrorMsg := DocumentDoesNotExistErr;
+          exit;
+        end;
+        SearchSalesInvoiceEntityAggregate.COPY(SalesInvoiceEntityAggregate);
+        if SearchSalesInvoiceEntityAggregate.NEXT <> 0 then
+          ErrorMsg := MultipleDocumentsFoundForIdErr;
+        exit;
+      end;
+
+      if IsSalesQuote(DocumentRecordRef) then begin
+        SalesQuoteEntityBuffer.SETRANGE(Id,DocumentId);
+        if not SalesQuoteEntityBuffer.FINDFIRST then begin
+          ErrorMsg := DocumentDoesNotExistErr;
+          exit;
+        end;
+        SearchSalesQuoteEntityBuffer.COPY(SalesQuoteEntityBuffer);
+        if SearchSalesQuoteEntityBuffer.NEXT <> 0 then
+          ErrorMsg := MultipleDocumentsFoundForIdErr;
+        exit;
+      end;
+
+      ErrorMsg := DocumentDoesNotExistErr;
+    END;
+
+    LOCAL PROCEDURE VerifyCRUDIsPossible@84(VAR DocumentRecordRef@1003 : RecordRef);
+    VAR
+      ErrorMsg@1001 : Text;
+    BEGIN
+      VerifyCRUDIsPossibleSafe(DocumentRecordRef,ErrorMsg);
+      ThrowErrorIfAny(ErrorMsg);
+    END;
+
+    LOCAL PROCEDURE FindLinkedAttachment@20(AttachmentId@1001 : GUID;VAR IncomingDocumentAttachment@1002 : Record "Incoming Document Attachment") : Boolean;
+    BEGIN
+      IncomingDocumentAttachment.SETRANGE(Id,AttachmentId);
+      exit(IncomingDocumentAttachment.FINDFIRST);
+    END;
+
+    LOCAL PROCEDURE FindUnlinkedAttachment@26(AttachmentId@1001 : GUID;VAR UnlinkedAttachment@1002 : Record "Unlinked Attachment") : Boolean;
+    BEGIN
+      exit(UnlinkedAttachment.GET(AttachmentId));
+    END;
+
+    LOCAL PROCEDURE FindParentDocumentSafe@5(DocumentIdFilter@1001 : Text;VAR DocumentRecordRef@1005 : RecordRef;VAR ErrorMsg@1000 : Text);
+    VAR
+      SalesHeader@1003 : Record "Sales Header";
+      SalesInvoiceHeader@1004 : Record "Sales Invoice Header";
+    BEGIN
+      if DocumentIdFilter = '' then begin
+        ErrorMsg := DocumentIDNotSpecifiedForAttachmentsErr;
+        exit;
+      end;
+      SalesHeader.SETFILTER(Id,DocumentIdFilter);
+      if SalesHeader.FINDFIRST then begin
+        DocumentRecordRef.GETTABLE(SalesHeader);
+        exit;
+      end;
+      SalesInvoiceHeader.SETFILTER(Id,DocumentIdFilter);
+      if SalesInvoiceHeader.FINDFIRST then begin
+        DocumentRecordRef.GETTABLE(SalesInvoiceHeader);
+        exit;
+      end;
+      ErrorMsg := DocumentDoesNotExistErr;
+    END;
+
+    LOCAL PROCEDURE FindParentDocument@19(DocumentIdFilter@1001 : Text;VAR DocumentRecordRef@1005 : RecordRef);
+    VAR
+      ErrorMsg@1000 : Text;
+    BEGIN
+      FindParentDocumentSafe(DocumentIdFilter,DocumentRecordRef,ErrorMsg);
+      ThrowErrorIfAny(ErrorMsg);
+    END;
+
+    LOCAL PROCEDURE FindIncomingDocument@85(VAR DocumentRecordRef@1000 : RecordRef;VAR IncomingDocument@1001 : Record "Incoming Document") : Boolean;
+    BEGIN
+      if IsPostedDocument(DocumentRecordRef) then
+        exit(IncomingDocument.FindByDocumentNoAndPostingDate(DocumentRecordRef,IncomingDocument));
+      exit(IncomingDocument.FindFromIncomingDocumentEntryNo(DocumentRecordRef,IncomingDocument));
+    END;
+
+    LOCAL PROCEDURE FindOrCreateIncomingDocument@86(VAR DocumentRecordRef@1000 : RecordRef;VAR IncomingDocument@1001 : Record "Incoming Document");
+    VAR
+      SalesInvoiceHeader@1002 : Record "Sales Invoice Header";
+      SalesHeader@1003 : Record "Sales Header";
+    BEGIN
+      if FindIncomingDocument(DocumentRecordRef,IncomingDocument) then
+        exit;
+
+      IncomingDocument.INIT;
+      IncomingDocument."Related Record ID" := DocumentRecordRef.RECORDID;
+
+      if IsPostedDocument(DocumentRecordRef) then begin
+        DocumentRecordRef.SETTABLE(SalesInvoiceHeader);
+        IncomingDocument.Description := COPYSTR(SalesInvoiceHeader."Sell-to Customer Name",1,MAXSTRLEN(IncomingDocument.Description));
+        IncomingDocument."Document Type" := IncomingDocument."Document Type"::"Sales Invoice";
+        IncomingDocument."Document No." := SalesInvoiceHeader."No.";
+        IncomingDocument."Posting Date" := SalesInvoiceHeader."Posting Date";
+        IncomingDocument."Posted Date-Time" := CURRENTDATETIME;
+        IncomingDocument.Status := IncomingDocument.Status::Posted;
+        IncomingDocument.Posted := true;
+        IncomingDocument.INSERT(true);
+        exit;
+      end;
+
+      DocumentRecordRef.SETTABLE(SalesHeader);
+      IncomingDocument.Description := COPYSTR(SalesHeader."Sell-to Customer Name",1,MAXSTRLEN(IncomingDocument.Description));
+      IncomingDocument."Document Type" := IncomingDocument."Document Type"::"Sales Invoice";
+      IncomingDocument."Document No." := SalesHeader."No.";
+      IncomingDocument.INSERT(true);
+      SalesHeader."Incoming Document Entry No." := IncomingDocument."Entry No.";
+      SalesHeader.MODIFY;
+    END;
+
+    LOCAL PROCEDURE LoadLinkedAttachmentsToBuffer@87(VAR TempAttachmentEntityBuffer@1001 : TEMPORARY Record "Attachment Entity Buffer";VAR IncomingDocument@1005 : Record "Incoming Document";DocumentId@1002 : GUID;AttachmentIdFilter@1003 : Text);
+    VAR
+      IncomingDocumentAttachment@1000 : Record "Incoming Document Attachment";
+      TempBlob@1006 : Record TempBlob;
+      LoadContent@1004 : Boolean;
+    BEGIN
+      IncomingDocumentAttachment.SETRANGE("Incoming Document Entry No.",IncomingDocument."Entry No.");
+      LoadContent := AttachmentIdFilter <> '';
+      if LoadContent then
+        IncomingDocumentAttachment.SETFILTER(Id,AttachmentIdFilter);
+
+      if not IncomingDocumentAttachment.FINDSET then
+        exit;
+
+      repeat
+        if LoadContent then
+          IncomingDocumentAttachment.CALCFIELDS(Content); // Needed for transferring
+        TransferFromIncomingDocumentAttachment(TempAttachmentEntityBuffer,IncomingDocumentAttachment,DocumentId);
+        if not LoadContent then
+          IncomingDocumentAttachment.CALCFIELDS(Content); // Needed for getting content length
+        TempBlob.Blob := IncomingDocumentAttachment.Content;
+        TempAttachmentEntityBuffer."Byte Size" := GetContentLength(TempBlob);
+        TempAttachmentEntityBuffer.MODIFY(true);
+      until IncomingDocumentAttachment.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE LoadUnlinkedAttachmentsToBuffer@11(VAR TempAttachmentEntityBuffer@1001 : TEMPORARY Record "Attachment Entity Buffer";AttachmentIdFilter@1003 : Text);
+    VAR
+      UnlinkedAttachment@1000 : Record "Unlinked Attachment";
+      TempBlob@1006 : Record TempBlob;
+      LoadContent@1002 : Boolean;
+    BEGIN
+      LoadContent := AttachmentIdFilter <> '';
+      if LoadContent then
+        UnlinkedAttachment.SETFILTER(Id,AttachmentIdFilter);
+
+      if not UnlinkedAttachment.FINDSET then
+        exit;
+
+      repeat
+        CLEAR(TempAttachmentEntityBuffer);
+        if LoadContent then
+          UnlinkedAttachment.CALCFIELDS(Content); // Needed for transferring
+        TransferFromUnlinkedAttachment(TempAttachmentEntityBuffer,UnlinkedAttachment);
+        if not LoadContent then
+          UnlinkedAttachment.CALCFIELDS(Content); // Needed for getting content length
+        TempBlob.Blob := UnlinkedAttachment.Content;
+        TempAttachmentEntityBuffer."Byte Size" := GetContentLength(TempBlob);
+        TempAttachmentEntityBuffer.MODIFY(true);
+      until UnlinkedAttachment.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE TransferToIncomingDocumentAttachment@88(VAR TempAttachmentEntityBuffer@1000 : TEMPORARY Record "Attachment Entity Buffer";VAR IncomingDocumentAttachment@1001 : Record "Incoming Document Attachment";VAR TempFieldBuffer@1002 : TEMPORARY Record "Field Buffer";IsNewAttachment@1005 : Boolean);
+    VAR
+      TempBlob@1004 : Record TempBlob;
+      TypeHelper@1006 : Codeunit "Type Helper";
+      AttachmentRecordRef@1003 : RecordRef;
+      UpdateFileName@1009 : Boolean;
+      Name@1007 : Text[250];
+      Extension@1008 : Text[30];
+    BEGIN
+      if not IsNewAttachment then begin
+        TempAttachmentEntityBuffer.CALCFIELDS(Content);
+        TempBlob.Blob := TempAttachmentEntityBuffer.Content;
+        TempAttachmentEntityBuffer."Byte Size" := GetContentLength(TempBlob);
+      end;
+      TempFieldBuffer.SETRANGE("Field ID",TempAttachmentEntityBuffer.FIELDNO("File Name"));
+      UpdateFileName := TempFieldBuffer.FINDFIRST;
+      if UpdateFileName then
+        FileNameToNameAndExtension(TempAttachmentEntityBuffer."File Name",Name,Extension);
+      AttachmentRecordRef.GETTABLE(IncomingDocumentAttachment);
+      TypeHelper.TransferFieldsWithValidate(TempFieldBuffer,TempAttachmentEntityBuffer,AttachmentRecordRef);
+      AttachmentRecordRef.SETTABLE(IncomingDocumentAttachment);
+      if UpdateFileName then begin
+        IncomingDocumentAttachment.VALIDATE(Name,Name);
+        IncomingDocumentAttachment.VALIDATE("File Extension",Extension);
+      end;
+    END;
+
+    LOCAL PROCEDURE TransferToUnlinkedAttachment@33(VAR TempAttachmentEntityBuffer@1000 : TEMPORARY Record "Attachment Entity Buffer";VAR UnlinkedAttachment@1001 : Record "Unlinked Attachment";VAR TempFieldBuffer@1002 : TEMPORARY Record "Field Buffer";IsNewAttachment@1005 : Boolean);
+    VAR
+      TypeHelper@1006 : Codeunit "Type Helper";
+      AttachmentRecordRef@1003 : RecordRef;
+    BEGIN
+      if not IsNewAttachment then
+        TempAttachmentEntityBuffer.CALCFIELDS(Content);
+      AttachmentRecordRef.GETTABLE(UnlinkedAttachment);
+      TypeHelper.TransferFieldsWithValidate(TempFieldBuffer,TempAttachmentEntityBuffer,AttachmentRecordRef);
+      AttachmentRecordRef.SETTABLE(UnlinkedAttachment);
+    END;
+
+    PROCEDURE TransferFromIncomingDocumentAttachment@90(VAR TempAttachmentEntityBuffer@1002 : TEMPORARY Record "Attachment Entity Buffer";VAR IncomingDocumentAttachment@1001 : Record "Incoming Document Attachment";DocumentId@1000 : GUID);
+    BEGIN
+      CLEAR(TempAttachmentEntityBuffer);
+      TempAttachmentEntityBuffer.TRANSFERFIELDS(IncomingDocumentAttachment,true);
+      TempAttachmentEntityBuffer."Document Id" := DocumentId;
+      TempAttachmentEntityBuffer."File Name" := NameAndExtensionToFileName(
+          IncomingDocumentAttachment.Name,IncomingDocumentAttachment."File Extension");
+      TempAttachmentEntityBuffer.INSERT(true);
+    END;
+
+    PROCEDURE TransferFromUnlinkedAttachment@31(VAR TempAttachmentEntityBuffer@1002 : TEMPORARY Record "Attachment Entity Buffer";VAR UnlinkedAttachment@1001 : Record "Unlinked Attachment");
+    BEGIN
+      CLEAR(TempAttachmentEntityBuffer);
+      TempAttachmentEntityBuffer.TRANSFERFIELDS(UnlinkedAttachment,true);
+      TempAttachmentEntityBuffer.INSERT(true);
+    END;
+
+    LOCAL PROCEDURE TransferIntegrationRecordID@12(AttachmentId@1000 : GUID;VAR RecordRef@1005 : RecordRef);
+    VAR
+      IncomingDocumentAttachment@1001 : Record "Incoming Document Attachment";
+      UnlinkedAttachment@1007 : Record "Unlinked Attachment";
+      NewIntegrationRecord@1002 : Record "Integration Record";
+      OldIntegrationRecord@1003 : Record "Integration Record";
+      IntegrationManagement@1004 : Codeunit "Integration Management";
+    BEGIN
+      if ISNULLGUID(AttachmentId) then
+        exit;
+
+      case RecordRef.NUMBER of
+        DATABASE::"Incoming Document Attachment":
+          begin
+            RecordRef.SETTABLE(IncomingDocumentAttachment);
+            if IncomingDocumentAttachment.Id = AttachmentId then
+              exit;
+
+            if OldIntegrationRecord.GET(AttachmentId) then
+              OldIntegrationRecord.DELETE;
+
+            if NewIntegrationRecord.GET(IncomingDocumentAttachment.Id) then
+              NewIntegrationRecord.DELETE;
+
+            IncomingDocumentAttachment.Id := AttachmentId;
+            IncomingDocumentAttachment.MODIFY(true);
+          end;
+        DATABASE::"Unlinked Attachment":
+          begin
+            RecordRef.SETTABLE(UnlinkedAttachment);
+            if UnlinkedAttachment.Id = AttachmentId then
+              exit;
+
+            if OldIntegrationRecord.GET(AttachmentId) then
+              OldIntegrationRecord.DELETE;
+
+            if NewIntegrationRecord.GET(UnlinkedAttachment.Id) then
+              NewIntegrationRecord.DELETE;
+
+            UnlinkedAttachment.RENAME(AttachmentId);
+          end;
+      end;
+
+      IntegrationManagement.InsertUpdateIntegrationRecord(RecordRef,CURRENTDATETIME);
+    END;
+
+    PROCEDURE GetContentLength@46(VAR TempBlob@1001 : Record TempBlob) : Integer;
+    VAR
+      InStream@1000 : InStream;
+      MemoryStream@1002 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.IO.MemoryStream";
+      ContentLength@1004 : Integer;
+    BEGIN
+      if not TempBlob.Blob.HASVALUE then
+        exit(0);
+      TempBlob.Blob.CREATEINSTREAM(InStream);
+      MemoryStream := MemoryStream.MemoryStream;
+      COPYSTREAM(MemoryStream,InStream);
+      ContentLength := MemoryStream.Length;
+      MemoryStream.Close;
+      exit(ContentLength);
+    END;
+
+    LOCAL PROCEDURE ThrowErrorIfAny@4(ErrorMsg@1000 : Text);
+    BEGIN
+      if ErrorMsg <> '' then
+        ERROR(ErrorMsg);
+    END;
+
+    LOCAL PROCEDURE FileNameToNameAndExtension@2(FileName@1000 : Text;VAR Name@1001 : Text[250];VAR Extension@1002 : Text[30]);
+    VAR
+      FileManagement@1003 : Codeunit "File Management";
+    BEGIN
+      Extension := COPYSTR(FileManagement.GetExtension(FileName),1,MAXSTRLEN(Extension));
+      Name := COPYSTR(FileManagement.GetFileNameWithoutExtension(FileName),1,MAXSTRLEN(Name));
+    END;
+
+    LOCAL PROCEDURE NameAndExtensionToFileName@3(Name@1000 : Text[250];Extension@1001 : Text[30]) : Text[250];
+    BEGIN
+      if Extension <> '' then
+        exit(STRSUBSTNO('%1.%2',Name,Extension));
+      exit(Name);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

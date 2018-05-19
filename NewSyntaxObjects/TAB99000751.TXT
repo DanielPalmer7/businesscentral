@@ -1,0 +1,48 @@
+OBJECT Table 99000751 Shop Calendar
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160238.907T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataCaptionFields=Code,Description;
+    OnDelete=BEGIN
+               ShopCalendarWorkDays.SETRANGE("Shop Calendar Code",Code);
+               ShopCalendarWorkDays.DELETEALL;
+
+               ShopCalHoliday.SETRANGE("Shop Calendar Code",Code);
+               ShopCalHoliday.DELETEALL;
+             END;
+
+    CaptionML=ENU=Shop Calendar;
+    LookupPageID="Shop Calendars";
+    DrillDownPageID="Shop Calendars";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      ShopCalendarWorkDays@1000 : Record "Shop Calendar Working Days";
+      ShopCalHoliday@1001 : Record "Shop Calendar Holiday";
+
+    BEGIN
+    END.
+  }
+}
+

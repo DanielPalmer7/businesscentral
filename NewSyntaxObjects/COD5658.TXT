@@ -1,0 +1,27 @@
+OBJECT Codeunit 5658 Ins. Reg.-Show Coverage Ledger
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Insurance Register";
+    OnRun=BEGIN
+            InsCoverageLedgEntry.SETRANGE("Entry No.","From Entry No.","To Entry No.");
+            PAGE.RUN(PAGE::"Ins. Coverage Ledger Entries",InsCoverageLedgEntry);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      InsCoverageLedgEntry@1000 : Record "Ins. Coverage Ledger Entry";
+
+    BEGIN
+    END.
+  }
+}
+

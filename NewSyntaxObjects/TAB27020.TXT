@@ -1,0 +1,34 @@
+OBJECT Table 27020 SAT MX Resources
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160238.560T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+    CaptionML=ENU=SAT MX Resources;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code50        ;CaptionML=ENU=Code }
+    { 2   ;   ;Blob                ;BLOB          ;CaptionML=ENU=Blob }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

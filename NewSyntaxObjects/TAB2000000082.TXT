@@ -1,0 +1,40 @@
+OBJECT Table 2000000082 Report Layout
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.733T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20         }
+    { 2   ;   ;Report ID           ;Integer        }
+    { 3   ;   ;Report Name         ;Text80        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(AllObjWithCaption."Object Caption" WHERE ("Object Type"=CONST(Report),
+                                                                                                                "Object ID"=FIELD("Report ID"))) }
+    { 6   ;   ;Type                ;Option        ;OptionString=RDLC,Word }
+    { 7   ;   ;Layout              ;BLOB           }
+    { 10  ;   ;File Extension      ;Text10         }
+    { 11  ;   ;Description         ;Text80         }
+    { 12  ;   ;Custom XML Part     ;BLOB           }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

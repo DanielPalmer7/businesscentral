@@ -1,0 +1,45 @@
+OBJECT Table 2000000120 User
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.797T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;User Security ID    ;GUID           }
+    { 2   ;   ;User Name           ;Code50         }
+    { 3   ;   ;Full Name           ;Text80         }
+    { 4   ;   ;State               ;Option        ;OptionString=Enabled,Disabled }
+    { 5   ;   ;Expiry Date         ;DateTime       }
+    { 7   ;   ;Windows Security ID ;Text119        }
+    { 8   ;   ;Change Password     ;Boolean        }
+    { 10  ;   ;License Type        ;Option        ;OptionString="Full User","Limited User","Device Only User","Windows Group","External User" }
+    { 11  ;   ;Authentication Email;Text250        }
+    { 14  ;   ;Contact Email       ;Text250        }
+    { 15  ;   ;Exchange Identifier ;Text250        }
+    { 16  ;   ;Application ID      ;GUID           }
+  }
+  KEYS
+  {
+    {    ;"User Security ID"                      ;Clustered=true }
+    {    ;"User Name"                              }
+    {    ;"Windows Security ID"                    }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;DropDown            ;"User Name"                              }
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

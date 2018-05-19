@@ -1,0 +1,403 @@
+OBJECT Page 2840 Native - General Setting
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161414.557T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=[@@@={Locked};
+               ENU=nativeInvoicingGeneralSettings];
+    SaveValues=true;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="Native - Gen. Settings Buffer";
+    DelayedInsert=true;
+    PageType=List;
+    SourceTableTemporary=true;
+    OnOpenPage=VAR
+                 IdentityManagement@1000 : Codeunit "Identity Management";
+               BEGIN
+                 if not IdentityManagement.IsInvAppId then begin
+                   INSERT;
+                   exit;
+                 end;
+
+                 BINDSUBSCRIPTION(NativeAPILanguageHandler);
+                 LoadRecord;
+                 SetCalculatedFields;
+               END;
+
+    OnModifyRecord=BEGIN
+                     if UNBINDSUBSCRIPTION(NativeAPILanguageHandler) then;
+                     CLEAR(NativeAPILanguageHandler);
+                     BINDSUBSCRIPTION(NativeAPILanguageHandler);
+
+                     SaveRecord;
+                     SetFileNameTemplates;
+                   END;
+
+  }
+  CONTROLS
+  {
+    { 2   ;0   ;Container ;
+                Name=Control2;
+                ContainerType=ContentArea }
+
+    { 3   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 7   ;2   ;Field     ;
+                Name=primaryKey;
+                CaptionML=[@@@={Locked};
+                           ENU=primaryKey];
+                ApplicationArea=#All;
+                SourceExpr="Primary Key";
+                Editable=false;
+                ImplicitType=Code10 }
+
+    { 5   ;2   ;Field     ;
+                Name=currencySymbol;
+                CaptionML=[@@@={Locked};
+                           ENU=currencySymbol];
+                ToolTipML=ENU=Specifies the currency symbol.;
+                ApplicationArea=#All;
+                SourceExpr="Currency Symbol";
+                ImplicitType=Text10 }
+
+    { 6   ;2   ;Field     ;
+                Name=paypalEmailAddress;
+                CaptionML=[@@@={Locked};
+                           ENU=paypalEmailAddress];
+                ToolTipML=ENU=Specifies the PayPal email address.;
+                ApplicationArea=#All;
+                SourceExpr="Paypal Email Address";
+                OnValidate=VAR
+                             dnRegex@1001 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.RegularExpressions.Regex";
+                             dnMatch@1000 : DotNet "'System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Text.RegularExpressions.Match";
+                           BEGIN
+                             dnMatch := dnRegex.Match("Paypal Email Address",EmailValidatorRegexTxt);
+                             if ("Paypal Email Address" <> '') and (not dnMatch.Success) then
+                               ERROR(EmailInvalidErr);
+                           END;
+
+                ImplicitType=Text250 }
+
+    { 1   ;2   ;Field     ;
+                Name=countryRegionCode;
+                CaptionML=[@@@={Locked};
+                           ENU=countryRegionCode];
+                ApplicationArea=#All;
+                SourceExpr="Country/Region Code";
+                ImplicitType=Code10 }
+
+    { 4   ;2   ;Field     ;
+                Name=languageId;
+                CaptionML=[@@@={Locked};
+                           ENU=languageId];
+                ApplicationArea=#All;
+                SourceExpr="Language Locale ID";
+                ImplicitType=Integer }
+
+    { 14  ;2   ;Field     ;
+                Name=languageCode;
+                CaptionML=ENU=languageCode;
+                ApplicationArea=#All;
+                SourceExpr="Language Code";
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 15  ;2   ;Field     ;
+                Name=languageDisplayName;
+                CaptionML=ENU=languageDisplayName;
+                ApplicationArea=#All;
+                SourceExpr="Language Display Name";
+                Editable=FALSE;
+                ImplicitType=Text80 }
+
+    { 8   ;2   ;Field     ;
+                Name=defaultTaxId;
+                CaptionML=[@@@={Locked};
+                           ENU=defaultTaxId];
+                ApplicationArea=#All;
+                SourceExpr="Default Tax ID";
+                ImplicitType=GUID }
+
+    { 9   ;2   ;Field     ;
+                Name=defaultTaxDisplayName;
+                CaptionML=[@@@={Locked};
+                           ENU=defaultTaxDisplayName];
+                ApplicationArea=#All;
+                SourceExpr="Defauilt Tax Description";
+                ImplicitType=Text50 }
+
+    { 10  ;2   ;Field     ;
+                Name=defaultPaymentTermsId;
+                CaptionML=[@@@={Locked};
+                           ENU=defaultPaymentTermsId];
+                ApplicationArea=#All;
+                SourceExpr="Default Payment Terms ID";
+                ImplicitType=GUID }
+
+    { 11  ;2   ;Field     ;
+                Name=defaultPaymentTermsDisplayName;
+                CaptionML=[@@@={Locked};
+                           ENU=defaultPaymentTermsDisplayName];
+                ApplicationArea=#All;
+                SourceExpr="Def. Pmt. Term Description";
+                ImplicitType=Text50 }
+
+    { 12  ;2   ;Field     ;
+                Name=defaultPaymentMethodId;
+                CaptionML=[@@@={Locked};
+                           ENU=defaultPaymentMethodId];
+                ApplicationArea=#All;
+                SourceExpr="Default Payment Method ID";
+                ImplicitType=GUID }
+
+    { 13  ;2   ;Field     ;
+                Name=defaultPaymentMethodDisplayName;
+                CaptionML=[@@@={Locked};
+                           ENU=defaultPaymentMethodDisplayName];
+                ApplicationArea=#All;
+                SourceExpr="Def. Pmt. Method Description";
+                ImplicitType=Text50 }
+
+    { 16  ;2   ;Field     ;
+                Name=amountRoundingPrecision;
+                CaptionML=[@@@={Locked};
+                           ENU=amountRoundingPrecision];
+                ApplicationArea=#All;
+                SourceExpr="Amount Rounding Precision";
+                ImplicitType=Decimal }
+
+    { 23  ;2   ;Field     ;
+                Name=unitAmountRoundingPrecision;
+                CaptionML=[@@@={Locked};
+                           ENU=unitAmountRoundingPrecision];
+                ApplicationArea=#All;
+                SourceExpr="Unit-Amount Rounding Precision";
+                ImplicitType=Decimal }
+
+    { 25  ;2   ;Field     ;
+                Name=quantityRoundingPrecision;
+                CaptionML=[@@@={Locked};
+                           ENU=quantityRoundingPrecision];
+                ApplicationArea=#All;
+                SourceExpr="Quantity Rounding Precision";
+                ImplicitType=Decimal }
+
+    { 26  ;2   ;Field     ;
+                Name=taxRoundingPrecision;
+                CaptionML=[@@@={Locked};
+                           ENU=taxRoundingPrecision];
+                ApplicationArea=#All;
+                SourceExpr="VAT/Tax Rounding Precision";
+                ImplicitType=Decimal }
+
+    { 17  ;2   ;Field     ;
+                Name=draftInvoiceFileName;
+                CaptionML=[@@@={Locked};
+                           ENU=draftInvoiceFileName];
+                ToolTipML=ENU=Specifies template of PDF file name for draft sales invoices.;
+                ApplicationArea=#All;
+                SourceExpr=DraftInvoiceFileName;
+                Editable=FALSE;
+                ImplicitType=Text250 }
+
+    { 19  ;2   ;Field     ;
+                Name=postedInvoiceFileName;
+                CaptionML=[@@@={Locked};
+                           ENU=postedInvoiceFileName];
+                ToolTipML=ENU=Specifies template of PDF file name for posted sales invoices.;
+                ApplicationArea=#All;
+                SourceExpr=PostedInvoiceFileName;
+                Editable=FALSE;
+                ImplicitType=Text250 }
+
+    { 18  ;2   ;Field     ;
+                Name=quoteFileName;
+                CaptionML=[@@@={Locked};
+                           ENU=quoteFileName];
+                ToolTipML=ENU=Specifies template of PDF file name for sales quotes.;
+                ApplicationArea=#All;
+                SourceExpr=QuoteFileName;
+                Editable=FALSE;
+                ImplicitType=Text250 }
+
+    { 20  ;2   ;Field     ;
+                Name=taxableGroupId;
+                CaptionML=[@@@={Locked};
+                           ENU=taxableGroupId];
+                ToolTipML=ENU=Specifies the taxable group ID.;
+                ApplicationArea=#All;
+                SourceExpr=TaxableGroupId;
+                Editable=FALSE;
+                ImplicitType=GUID }
+
+    { 21  ;2   ;Field     ;
+                Name=nonTaxableGroupId;
+                CaptionML=[@@@={Locked};
+                           ENU=nonTaxableGroupId];
+                ToolTipML=ENU=Specifies the non-taxable group ID.;
+                ApplicationArea=#All;
+                SourceExpr=NonTaxableGroupId;
+                Editable=FALSE;
+                ImplicitType=GUID }
+
+    { 24  ;2   ;Field     ;
+                Name=enableSynchronization;
+                CaptionML=[@@@={Locked};
+                           ENU=enableSynchronization];
+                ToolTipML=ENU=Specifies whether Microsoft synchronization is enabled.;
+                ApplicationArea=#All;
+                SourceExpr=EnableSync;
+                ImplicitType=Boolean }
+
+    { 22  ;2   ;Field     ;
+                Name=enableSyncCoupons;
+                CaptionML=[@@@={Locked};
+                           ENU=enableSyncCoupons];
+                ApplicationArea=#All;
+                SourceExpr=EnableSyncCoupons;
+                ImplicitType=Boolean }
+
+    { 27  ;2   ;Field     ;
+                Name=updateVersion;
+                CaptionML=[@@@={Locked};
+                           ENU=updateVersion];
+                ToolTipML=ENU=Specifies the update version for the tenant.;
+                ApplicationArea=#All;
+                SourceExpr=UpdateVersion;
+                Editable=FALSE;
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+    VAR
+      EmailValidatorRegexTxt@1001 : TextConst '@@@={Locked};ENU=^[A-Z0-9a-z._%+-]+@(?:[A-Za-z0-9.-]+\.)+[A-Za-z]{2,64}$';
+      EmailInvalidErr@1000 : TextConst 'ENU=Invalid Email Address.';
+      NativeAPILanguageHandler@1008 : Codeunit "Native API - Language Handler";
+      PostedInvoiceFileName@1004 : Text[250];
+      DraftInvoiceFileName@1002 : Text[250];
+      QuoteFileName@1003 : Text[250];
+      DocNoPlaceholderTxt@1005 : TextConst '@@@={Locked};ENU={0}';
+      UpdateVersion@1010 : Text[250];
+      TaxableGroupId@1006 : GUID;
+      NonTaxableGroupId@1007 : GUID;
+      UpdateTxt@1009 : TextConst '@@@={Locked};ENU=Update %1 - Build %2';
+
+    LOCAL PROCEDURE SetCalculatedFields@3();
+    BEGIN
+      SetFileNameTemplates;
+      SetTaxRelatedFields;
+      SetUpdateVersion;
+    END;
+
+    LOCAL PROCEDURE SetFileNameTemplates@4();
+    VAR
+      TempSalesInvoiceHeader@1004 : TEMPORARY Record "Sales Invoice Header";
+      TempSalesHeader@1003 : TEMPORARY Record "Sales Header";
+      Language@1007 : Record Language;
+      NativeReports@1001 : Codeunit "Native - Reports";
+      DocumentMailing@1000 : Codeunit "Document-Mailing";
+      CurrentLanguageID@1008 : Integer;
+    BEGIN
+      CurrentLanguageID := GLOBALLANGUAGE;
+      GLOBALLANGUAGE(Language.GetLanguageID(Language.GetUserLanguage));
+
+      CLEAR(PostedInvoiceFileName);
+      CLEAR(DraftInvoiceFileName);
+      CLEAR(QuoteFileName);
+
+      DocumentMailing.GetAttachmentFileName(
+        PostedInvoiceFileName,DocNoPlaceholderTxt,
+        TempSalesInvoiceHeader.GetDocTypeTxt,NativeReports.PostedSalesInvoiceReportId);
+
+      TempSalesHeader."Document Type" := TempSalesHeader."Document Type"::Invoice;
+      DocumentMailing.GetAttachmentFileName(
+        DraftInvoiceFileName,DocNoPlaceholderTxt,
+        TempSalesHeader.GetDocTypeTxt,NativeReports.DraftSalesInvoiceReportId);
+
+      TempSalesHeader."Document Type" := TempSalesHeader."Document Type"::Quote;
+      DocumentMailing.GetAttachmentFileName(
+        QuoteFileName,DocNoPlaceholderTxt,
+        TempSalesHeader.GetDocTypeTxt,NativeReports.SalesQuoteReportId);
+
+      GLOBALLANGUAGE(CurrentLanguageID);
+    END;
+
+    LOCAL PROCEDURE SetTaxRelatedFields@8();
+    VAR
+      TaxableTaxGroup@1005 : Record "Tax Group";
+      NonTaxableTaxGroup@1006 : Record "Tax Group";
+      NativeEDMTypes@1002 : Codeunit "Native - EDM Types";
+    BEGIN
+      if NativeEDMTypes.GetTaxGroupFromTaxable(true,TaxableTaxGroup) then
+        TaxableGroupId := TaxableTaxGroup.Id
+      else
+        CLEAR(TaxableGroupId);
+
+      if NativeEDMTypes.GetTaxGroupFromTaxable(false,NonTaxableTaxGroup) then
+        NonTaxableGroupId := NonTaxableTaxGroup.Id
+      else
+        CLEAR(NonTaxableGroupId);
+    END;
+
+    LOCAL PROCEDURE SetUpdateVersion@5();
+    VAR
+      ApplicationManagement@1002 : Codeunit ApplicationManagement;
+      NativeEDMTypes@1005 : Codeunit "Native - EDM Types";
+    BEGIN
+      UpdateVersion := STRSUBSTNO(UpdateTxt,NativeEDMTypes.GetBuildBranch,ApplicationManagement.ApplicationBuild);
+    END;
+
+    [ServiceEnabled]
+    [External]
+    PROCEDURE SyncBizProfile@18(VAR ActionContext@1000 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.WebServiceActionContext");
+    VAR
+      GraphIntBusinessProfile@1001 : Codeunit "Graph Int - Business Profile";
+    BEGIN
+      GraphIntBusinessProfile.SyncFromGraphSynchronously;
+      SetActionResponse(ActionContext);
+    END;
+
+    [ServiceEnabled]
+    [External]
+    PROCEDURE FixTemplates@1(VAR ActionContext@1000 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.WebServiceActionContext");
+    VAR
+      O365SalesInitialSetup@1001 : Codeunit "O365 Sales Initial Setup";
+    BEGIN
+      O365SalesInitialSetup.EnsureConfigurationTemplatateSelectionRuleExists(DATABASE::Customer);
+      O365SalesInitialSetup.EnsureConfigurationTemplatateSelectionRuleExists(DATABASE::Item);
+      SetActionResponse(ActionContext);
+    END;
+
+    [ServiceEnabled]
+    [External]
+    PROCEDURE FixIntegrationRecordIDs@2(VAR ActionContext@1000 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.WebServiceActionContext");
+    VAR
+      GraphMgtGeneralTools@1001 : Codeunit "Graph Mgt - General Tools";
+    BEGIN
+      GraphMgtGeneralTools.ApiSetup;
+      SetActionResponse(ActionContext);
+    END;
+
+    LOCAL PROCEDURE SetActionResponse@47(VAR ActionContext@1004 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.WebServiceActionContext");
+    VAR
+      ODataActionManagement@1003 : Codeunit "OData Action Management";
+    BEGIN
+      ODataActionManagement.AddKey(FIELDNO("Primary Key"),'');
+      ODataActionManagement.SetDeleteResponseLocation(ActionContext,PAGE::"Native - General Setting");
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

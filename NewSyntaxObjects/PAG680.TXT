@@ -1,0 +1,67 @@
+OBJECT Page 680 Report Inbox
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161310.930T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Report Inbox;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    ModifyAllowed=false;
+    SourceTable="Report Inbox";
+    SourceTableView=SORTING("User ID","Created Date-Time")
+                    ORDER(Descending);
+    PageType=List;
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="User ID";
+                ToolTipML=ENU=Specifies the ID of the user who posted the entry, to be used, for example, in the change log.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="User ID";
+                ImplicitType=Text65 }
+
+    { 4   ;2   ;Field     ;
+                Name="Created Date-Time";
+                ToolTipML=ENU=Specifies the date and time that the scheduled report was processed from the job queue.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Created Date-Time";
+                ImplicitType=DateTime }
+
+    { 5   ;2   ;Field     ;
+                Name="Report ID";
+                ToolTipML=ENU=Specifies the object ID of the report.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Report ID";
+                ImplicitType=Integer }
+
+    { 6   ;2   ;Field     ;
+                Name="Report Name";
+                ToolTipML=ENU=Specifies the name of the report.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Report Name";
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

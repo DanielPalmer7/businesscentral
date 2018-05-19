@@ -1,0 +1,122 @@
+OBJECT Codeunit 2820 Native - Attachments
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160719.547T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+            CleanupUnlinkedAttachments;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      CleanupJobBufferHoursTxt@1000 : TextConst '@@@={Locked};ENU=6';
+      AttachmentKeepDaysTxt@1001 : TextConst '@@@={Locked};ENU=5';
+
+    PROCEDURE UpdateAttachments@6(DocumentId@1000 : GUID;NewAttachmentsJSON@1001 : Text;PreviousAttachmentsJSON@1009 : Text);
+    VAR
+      TempOldAttachmentEntityBuffer@1007 : TEMPORARY Record "Attachment Entity Buffer";
+      TempNewAttachmentEntityBuffer@1006 : TEMPORARY Record "Attachment Entity Buffer";
+      NativeEDMTypes@1002 : Codeunit "Native - EDM Types";
+      GraphMgtAttachmentBuffer@1005 : Codeunit "Graph Mgt - Attachment Buffer";
+    BEGIN
+      NativeEDMTypes.ParseAttachmentsJSON(PreviousAttachmentsJSON,TempOldAttachmentEntityBuffer,DocumentId);
+      NativeEDMTypes.ParseAttachmentsJSON(NewAttachmentsJSON,TempNewAttachmentEntityBuffer,DocumentId);
+
+      GraphMgtAttachmentBuffer.UpdateAttachments(TempOldAttachmentEntityBuffer,TempNewAttachmentEntityBuffer,DocumentId);
+    END;
+
+    PROCEDURE GenerateAttachmentsJSON@2(DocumentIdFilter@1000 : Text) : Text;
+    VAR
+      TempAttachmentEntityBuffer@1003 : TEMPORARY Record "Attachment Entity Buffer";
+      NativeEDMTypes@1006 : Codeunit "Native - EDM Types";
+      GraphMgtAttachmentBuffer@1005 : Codeunit "Graph Mgt - Attachment Buffer";
+    BEGIN
+      TempAttachmentEntityBuffer.DELETEALL;
+      GraphMgtAttachmentBuffer.LoadAttachments(TempAttachmentEntityBuffer,DocumentIdFilter,'');
+
+      exit(NativeEDMTypes.WriteAttachmentsJSON(TempAttachmentEntityBuffer));
+    END;
+
+    LOCAL PROCEDURE CleanupUnlinkedAttachments@7();
+    VAR
+      UnlinkedAttachment@1000 : Record "Unlinked Attachment";
+    BEGIN
+      UnlinkedAttachment.SETCURRENTKEY("Created Date-Time");
+      UnlinkedAttachment.SETFILTER(
+        "Created Date-Time",'..%1',
+        CREATEDATETIME(CALCDATE(STRSUBSTNO('<-%1D>',AttachmentKeepDays),TODAY),DT2TIME(CURRENTDATETIME)));
+      UnlinkedAttachment.DELETEALL(true);
+    END;
+
+    LOCAL PROCEDURE ScheduleCleanupJob@5();
+    VAR
+      JobQueueEntry@1000 : Record "Job Queue Entry";
+      JobStartTime@1001 : DateTime;
+      CleanupStartTime@1002 : DateTime;
+    BEGIN
+      CleanupStartTime := CURRENTDATETIME + AttachmentKeepDays * HoursPerDay * MillisecondsPerHour;
+      JobStartTime := CleanupStartTime + CleanupJobBufferHours * MillisecondsPerHour;
+
+      JobQueueEntry.SETRANGE("Object Type to Run",JobQueueEntry."Object Type to Run"::Codeunit);
+      JobQueueEntry.SETRANGE("Object ID to Run",CODEUNIT::"Native - Attachments");
+      JobQueueEntry.SETRANGE(Status,JobQueueEntry.Status::Ready);
+      JobQueueEntry.SETFILTER("Earliest Start Date/Time",'%1..%2',CleanupStartTime,JobStartTime);
+      if JobQueueEntry.FINDFIRST then
+        exit;
+
+      JobQueueEntry.LOCKTABLE;
+      JobQueueEntry.INIT;
+      JobQueueEntry."Object Type to Run" := JobQueueEntry."Object Type to Run"::Codeunit;
+      JobQueueEntry."Object ID to Run" := CODEUNIT::"Native - Attachments";
+      JobQueueEntry."Earliest Start Date/Time" := JobStartTime;
+      JobQueueEntry."Maximum No. of Attempts to Run" := 3;
+      CODEUNIT.RUN(CODEUNIT::"Job Queue - Enqueue",JobQueueEntry);
+    END;
+
+    LOCAL PROCEDURE CleanupJobBufferHours@10() : Integer;
+    VAR
+      Result@1000 : Integer;
+    BEGIN
+      EVALUATE(Result,CleanupJobBufferHoursTxt);
+      exit(Result);
+    END;
+
+    LOCAL PROCEDURE AttachmentKeepDays@12() : Integer;
+    VAR
+      Result@1000 : Integer;
+    BEGIN
+      EVALUATE(Result,AttachmentKeepDaysTxt);
+      exit(Result);
+    END;
+
+    LOCAL PROCEDURE HoursPerDay@11() : Integer;
+    BEGIN
+      exit(24);
+    END;
+
+    LOCAL PROCEDURE MillisecondsPerHour@9() : Integer;
+    BEGIN
+      exit(3600000);
+    END;
+
+    [EventSubscriber(Table,138,OnAfterInsertEvent)]
+    LOCAL PROCEDURE OnAfterInsertUnlinkedAttachment@17(VAR Rec@1000 : Record "Unlinked Attachment";RunTrigger@1001 : Boolean);
+    BEGIN
+      if Rec.ISTEMPORARY then
+        exit;
+      ScheduleCleanupJob;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

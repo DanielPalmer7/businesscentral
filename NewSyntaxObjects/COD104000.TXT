@@ -1,0 +1,1060 @@
+OBJECT Codeunit 104000 UPG SaaS
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=120000T;
+    Version List=UPGTK12.00.00;
+  }
+  PROPERTIES
+  {
+    Subtype=Upgrade;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      XPmtInstrBankName@1158 : TextConst '@@@=String should be at most 20 characters;ENU=Bank payment';
+      XPmtInstrBankText@1159 : TextConst 'ENU=Please pay by bank transfer to <your details here>.';
+      XPmtInstrCheckName@1168 : TextConst '@@@=String should be at most 20 characters;ENU=Check payment';
+      XPmtInstrCheckText@1169 : TextConst '@@@="%1 = the name of the current company";ENU=Please make checks payable to %1.';
+      XPmtInstrOnlineName@1101 : TextConst '@@@=String should be at most 20 characters;ENU=Online payment';
+      XPmtInstrOnlineText@1100 : TextConst 'ENU=Please pay this invoice online.';
+      DefaultCompanyName@1108 : TextConst 'ENU=My Company';
+      ODataUtility@1000 : Codeunit ODataUtility;
+      PowerBICustomerListTxt@1024 : TextConst '@@@={Locked};ENU=Power BI Customer List';
+      PowerBIVendorListTxt@1011 : TextConst '@@@={Locked};ENU=Power BI Vendor List';
+      PowerBIJobsListTxt@1022 : TextConst '@@@={Locked};ENU=Power BI Jobs List';
+      PowerBISalesListTxt@1009 : TextConst '@@@={Locked};ENU=Power BI Sales List';
+      PowerBIPurchaseListTxt@1008 : TextConst '@@@={Locked};ENU=Power BI Purchase List';
+      PowerBIItemPurchasesListTxt@1007 : TextConst '@@@={Locked};ENU=Power BI Item Purchase List';
+      PowerBIItemSalesListTxt@1018 : TextConst '@@@={Locked};ENU=Power BI Item Sales List';
+      PowerBIGLAmountListTxt@1017 : TextConst '@@@={Locked};ENU=Power BI GL Amount List';
+      PowerBIGLBudgetedAmountListTxt@1004 : TextConst '@@@={Locked};ENU=Power BI GL BudgetedAmount';
+      PowerBITopCustOverviewTxt@1015 : TextConst '@@@={Locked};ENU=Power BI Top Cust. Overview';
+      PowerBISalesHdrCustTxt@1014 : TextConst '@@@={Locked};ENU=Power BI Sales Hdr. Cust.';
+      PowerBICustItemLedgEntTxt@1013 : TextConst '@@@={Locked};ENU=Power BI Cust. Item Ledg. Ent.';
+      PowerBICustLedgerEntriesTxt@1012 : TextConst '@@@={Locked};ENU=Power BI Cust. Ledger Entries';
+      PowerBIVendorLedgerEntriesTxt@1023 : TextConst '@@@={Locked};ENU=Power BI Vendor Ledger Entries';
+      PowerBIPurchaseHdrVendorTxt@1029 : TextConst '@@@={Locked};ENU=Power BI Purchase Hdr. Vendor';
+      PowerBIVendItemLedgEntTxt@1030 : TextConst '@@@={Locked};ENU=Power BI Vend. Item Ledg. Ent.';
+      PowerBIAgedAccPayableTxt@1010 : TextConst '@@@={Locked};ENU=Power BI Aged Acc. Payable';
+      PowerBIAgedAccReceivableTxt@1021 : TextConst '@@@={Locked};ENU=Power BI Aged Acc. Receivable';
+      PowerBIAgedInventoryChartTxt@1020 : TextConst '@@@={Locked};ENU=Power BI Aged Inventory Chart';
+      PowerBIJobActBudgPriceTxt@1019 : TextConst '@@@={Locked};ENU=Power BI Job Act. v. Budg. Price';
+      PowerBIJobProfitabilityTxt@1006 : TextConst '@@@={Locked};ENU=Power BI Job Profitability';
+      PowerBIJobActBudgCostTxt@1005 : TextConst '@@@={Locked};ENU=Power BI Job Act. v. Budg. Cost';
+      PowerBISalesPipelineTxt@1016 : TextConst '@@@={Locked};ENU=Power BI Sales Pipeline';
+      PowerBITop5OpportunitiesTxt@1003 : TextConst '@@@={Locked};ENU=Power BI Top 5 Opportunities';
+      PowerBIWorkDateCalcTxt@1002 : TextConst '@@@={Locked};ENU=Power BI WorkDate Calc.';
+      PowerBIReportLabelsTxt@1027 : TextConst '@@@={Locked};ENU=Power BI Report Labels';
+      JobListTxt@1028 : TextConst '@@@={Locked};ENU=Job List';
+      JobTaskLinesTxt@1025 : TextConst '@@@={Locked};ENU=Job Task Lines';
+      JobPlanningLinesTxt@1026 : TextConst '@@@={Locked};ENU=Job Planning Lines';
+      DataUpgradeMgt@1001 : Codeunit "Data Upgrade Mgt.";
+
+    [CheckPrecondition]
+    PROCEDURE CheckPreconditions@3();
+    BEGIN
+    END;
+
+    PROCEDURE ActivateUpgradeInProgress@5();
+    BEGIN
+      // This function must be called in each upgrade function to rise the flag DataUpgradeMgt.IsUpgradeInProgress
+      // and avoid unnecessary operations triggered by the upgrade procedure.
+      DataUpgradeMgt.SetUpgradeInProgress;
+    END;
+
+    [TableSyncSetup]
+    PROCEDURE GetTableSyncSetupW1@4(VAR TableSynchSetup@1000 : Record "Table Synch. Setup");
+    BEGIN
+    END;
+
+    [UpgradePerCompany]
+    PROCEDURE UpdatePulseEventSettings@271();
+    VAR
+      O365C2GraphEventSettings@1000 : Record "O365 C2Graph Event Settings";
+    BEGIN
+      ActivateUpgradeInProgress;
+      if not O365C2GraphEventSettings.GET then
+        exit;
+
+      O365C2GraphEventSettings."Kpi Update Enabled" := true;
+
+      if O365C2GraphEventSettings.MODIFY then;
+    END;
+
+    [UpgradePerCompany]
+    PROCEDURE UpdateMyNotificationsForUsers@988();
+    VAR
+      O365SalesInitialSetup@1000 : Record "O365 Sales Initial Setup";
+      User@1001 : Record User;
+      MyNotifications@1002 : Record "My Notifications";
+    BEGIN
+      ActivateUpgradeInProgress;
+      if not (O365SalesInitialSetup.GET and O365SalesInitialSetup."Is initialized") then
+        exit;
+
+      if User.FINDSET then
+        repeat
+          MyNotifications.SETRANGE("User Id",User."User Name");
+          MyNotifications.MODIFYALL(Enabled,false);
+        until User.NEXT = 0;
+    END;
+
+    [UpgradePerCompany]
+    PROCEDURE DeleteExistingBlockedCustomersInInvoicing@6();
+    VAR
+      O365SalesInitialSetup@1000 : Record "O365 Sales Initial Setup";
+      Customer@1001 : Record Customer;
+      ContBusRel@1003 : Record "Contact Business Relation";
+    BEGIN
+      ActivateUpgradeInProgress;
+      if not (O365SalesInitialSetup.GET and O365SalesInitialSetup."Is initialized") then
+        exit;
+
+      Customer.LOCKTABLE;
+      Customer.SETRANGE(Blocked,Customer.Blocked::All);
+      if Customer.FINDSET then begin
+        repeat
+          if Customer."Primary Contact No." = '' then
+            if not ContBusRel.FindByRelation(ContBusRel."Link to Table"::Customer,Customer."No.") then
+              if not Customer.HasAnyOpenOrPostedDocuments then
+                if Customer.DELETE then;
+        until Customer.NEXT = 0;
+      end;
+    END;
+
+    [UpgradePerCompany]
+    PROCEDURE InsertPaymentInstructions@158();
+    VAR
+      O365SalesInitialSetup@1000 : Record "O365 Sales Initial Setup";
+      CompanyInformation@1002 : Record "Company Information";
+      DefaultId@1001 : Integer;
+      CompanyName@1003 : Text[50];
+    BEGIN
+      ActivateUpgradeInProgress;
+      if CompanyInformation.GET then
+        CompanyName := CompanyInformation.Name
+      else
+        CompanyName := DefaultCompanyName;
+
+      CreatePaymentInstructions(XPmtInstrBankName,XPmtInstrBankText);
+
+      CreatePaymentInstructions(XPmtInstrOnlineName,XPmtInstrOnlineText);
+
+      CreatePaymentInstructions(XPmtInstrCheckName,STRSUBSTNO(XPmtInstrCheckText,CompanyName));
+
+      DefaultId := SetDefaultPaymentInstructions(XPmtInstrCheckName);
+
+      // Loop through all draft and posted invoices only for Invoicing users
+      if DefaultId <> 0 then
+        if O365SalesInitialSetup.GET and O365SalesInitialSetup."Is initialized" then
+          UpdatePaymentInstructionsExistingDocs(DefaultId,CompanyName);
+    END;
+
+    LOCAL PROCEDURE CreatePaymentInstructions@145(InstructionsName@1001 : Text[20];InstructionsText@1002 : Text) : Integer;
+    VAR
+      O365PaymentInstructions@1000 : Record "O365 Payment Instructions";
+    BEGIN
+      O365PaymentInstructions.INIT;
+      O365PaymentInstructions.Name := InstructionsName;
+      O365PaymentInstructions."Payment Instructions" :=
+        COPYSTR(InstructionsText,1,MAXSTRLEN(O365PaymentInstructions."Payment Instructions"));
+      if O365PaymentInstructions.INSERT then
+        exit(O365PaymentInstructions.Id);
+      exit(0);
+    END;
+
+    LOCAL PROCEDURE UpdatePaymentInstructionsExistingDocs@118(DefaultId@1000 : Integer;CompanyName@1004 : Text[50]);
+    VAR
+      SalesHeader@1001 : Record "Sales Header";
+      SalesInvoiceHeader@1002 : Record "Sales Invoice Header";
+      TempBlob@1003 : TEMPORARY Record TempBlob;
+    BEGIN
+      SalesHeader.SETRANGE("Document Type",SalesHeader."Document Type"::Invoice);
+      SalesHeader.MODIFYALL("Payment Instructions Id",DefaultId);
+
+      if SalesInvoiceHeader.FINDSET then
+        repeat
+          SalesInvoiceHeader."Payment Instructions Name" := XPmtInstrCheckName;
+          TempBlob.WriteAsText(STRSUBSTNO(XPmtInstrCheckText,CompanyName),TEXTENCODING::Windows);
+          SalesInvoiceHeader."Payment Instructions" := TempBlob.Blob;
+          if SalesInvoiceHeader.MODIFY then;
+        until SalesInvoiceHeader.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE SetDefaultPaymentInstructions@24(Name@1000 : Text[20]) : Integer;
+    VAR
+      O365PaymentInstructions@1001 : Record "O365 Payment Instructions";
+    BEGIN
+      O365PaymentInstructions.SETRANGE(Name,Name);
+      if O365PaymentInstructions.FINDFIRST then begin
+        O365PaymentInstructions.Default := true;
+        if O365PaymentInstructions.MODIFY then
+          exit(O365PaymentInstructions.Id);
+      end;
+
+      exit(0);
+    END;
+
+    [UpgradePerCompany]
+    PROCEDURE UpdateInvoicingCountryForCA@1030000();
+    VAR
+      CompanyInformation@1030000 : Record "Company Information";
+      GeneralLedgerSetup@1030001 : Record "General Ledger Setup";
+      O365SalesInitialSetup@1030002 : Record "O365 Sales Initial Setup";
+    BEGIN
+      ActivateUpgradeInProgress;
+      if (not O365SalesInitialSetup.GET) or (not O365SalesInitialSetup."Is initialized") then
+        exit;
+
+      if CompanyInformation.GET and (CompanyInformation."Country/Region Code" = '') then
+        if GeneralLedgerSetup.GET and (GeneralLedgerSetup."LCY Code" = 'CAD') then begin
+          CompanyInformation."Country/Region Code" := 'CA';
+          if CompanyInformation.MODIFY then;
+          UpdateCustTemplatesWithCA;
+        end;
+    END;
+
+    LOCAL PROCEDURE UpdateCustTemplatesWithCA@1030001();
+    VAR
+      ConfigTemplateHeader@1030001 : Record "Config. Template Header";
+      ConfigTemplateLine@1030000 : Record "Config. Template Line";
+      DummyCustomer@1030002 : Record Customer;
+    BEGIN
+      if ConfigTemplateHeader.FINDSET then
+        repeat
+          if ConfigTemplateHeader.Enabled then begin
+            ConfigTemplateLine.SETRANGE("Data Template Code",ConfigTemplateHeader.Code);
+            ConfigTemplateLine.SETRANGE("Table ID",DATABASE::Customer);
+            ConfigTemplateLine.SETRANGE("Field ID",DummyCustomer.FIELDNO("Country/Region Code"));
+            ConfigTemplateLine.MODIFYALL("Default Value",'CA');
+          end;
+        until ConfigTemplateHeader.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE CreateTenantWebServiceOData@1005(TenantWebService@1000 : Record "Tenant Web Service");
+    VAR
+      TenantWebServiceOData@1003 : Record "Tenant Web Service OData";
+      SelectText@1001 : Text;
+    BEGIN
+      TenantWebServiceOData.INIT;
+      TenantWebServiceOData.TenantWebServiceID := TenantWebService.RECORDID;
+      if not TenantWebServiceOData.INSERT then;
+      ODataUtility.GenerateSelectText(TenantWebService."Service Name",TenantWebService."Object Type",SelectText);
+      TenantWebServiceOData.SetOdataSelectClause(SelectText);
+      TenantWebServiceOData.MODIFY;
+    END;
+
+    LOCAL PROCEDURE CreateTenantWebServiceColumn@1078(TenantWebServiceRecordId@1002 : RecordID;FieldNumber@1000 : Integer;DataItem@1003 : Integer);
+    VAR
+      TenantWebServiceColumns@1001 : Record "Tenant Web Service Columns";
+      FieldTable@1004 : Record Field;
+      ODataUtility@1005 : Codeunit ODataUtility;
+      FieldNameConverted@1006 : Text;
+    BEGIN
+      TenantWebServiceColumns.INIT;
+      TenantWebServiceColumns."Entry ID" := 0;
+      TenantWebServiceColumns."Data Item" := DataItem;
+      TenantWebServiceColumns."Field Number" := FieldNumber;
+      TenantWebServiceColumns.TenantWebServiceID := TenantWebServiceRecordId;
+      TenantWebServiceColumns.Include := true;
+
+      if FieldTable.GET(DataItem,FieldNumber) then
+        FieldNameConverted := ODataUtility.ConvertNavFieldNameToOdataName(FieldTable.FieldName);
+
+      TenantWebServiceColumns."Field Name" := COPYSTR(FieldNameConverted,1,250);
+      TenantWebServiceColumns.INSERT;
+    END;
+
+    [UpgradePerCompany]
+    PROCEDURE CreatePowerBITenantWebServices@1007();
+    BEGIN
+      ActivateUpgradeInProgress;
+      CreatePowerBICustomerList;
+      CreatePowerBIVendorList;
+      CreatePowerBIJobList;
+      CreatePowerBISalesList;
+      CreatePowerBIPurchaseList;
+      CreatePowerBIItemPurchaseList;
+      CreatePowerBIItemSalesList;
+      CreatePowerBIGLAmountList;
+      CreatePowerBIGLBudgetedAmountList;
+      CreatePowerBITopCustOverviewWebService;
+      CreatePowerBISalesHdrCustWebService;
+      CreatePowerBICustItemLedgEntWebService;
+      CreatePowerBICustLedgerEntriesWebService;
+      CreatePowerBIVendorLedgerEntriesWebService;
+      CreatePowerBIPurchaseHdrVendorWebService;
+      CreatePowerBIVendItemLedgEntWebService;
+      CreatePowerBIAgedAccPayableWebService;
+      CreatePowerBIAgedAccReceivableWebService;
+      CreatePowerBIAgedInventoryChartWebService;
+      CreatePowerBIJobActBudgPriceWebService;
+      CreatePowerBIJobProfitabilityWebService;
+      CreatePowerBIJobActBudgCostWebService;
+      CreatePowerBISalesPipelineWebService;
+      CreatePowerBITop5OpportunitiesWebService;
+      CreatePowerBIWorkDateCalcWebService;
+      CreatePowerBIReportLabelsWebService;
+    END;
+
+    LOCAL PROCEDURE CreatePowerBICustomerList@1087();
+    VAR
+      TenantWebService@1001 : Record "Tenant Web Service";
+      Customer@1000 : Record Customer;
+      DetailedCustLedgEntry@1003 : Record "Detailed Cust. Ledg. Entry";
+      WebServiceManagement@1002 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Customer List",PowerBICustomerListTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBICustomerListTxt);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Customer.FIELDNO("No."),DATABASE::Customer);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Customer.FIELDNO(Name),DATABASE::Customer);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Customer.FIELDNO("Credit Limit (LCY)"),DATABASE::Customer);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Customer.FIELDNO("Balance Due"),DATABASE::Customer);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedCustLedgEntry.FIELDNO("Posting Date"),
+        DATABASE::"Detailed Cust. Ledg. Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedCustLedgEntry.FIELDNO("Cust. Ledger Entry No."),
+        DATABASE::"Detailed Cust. Ledg. Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedCustLedgEntry.FIELDNO(Amount),
+        DATABASE::"Detailed Cust. Ledg. Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedCustLedgEntry.FIELDNO("Amount (LCY)"),
+        DATABASE::"Detailed Cust. Ledg. Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedCustLedgEntry.FIELDNO("Transaction No."),
+        DATABASE::"Detailed Cust. Ledg. Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedCustLedgEntry.FIELDNO("Entry No."),
+        DATABASE::"Detailed Cust. Ledg. Entry");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIVendorList@1086();
+    VAR
+      Vendor@1000 : Record Vendor;
+      DetailedVendorLedgEntry@1001 : Record "Detailed Vendor Ledg. Entry";
+      TenantWebService@1003 : Record "Tenant Web Service";
+      WebServiceManagement@1002 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Vendor List",PowerBIVendorListTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBIVendorListTxt);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Vendor.FIELDNO("No."),DATABASE::Vendor);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Vendor.FIELDNO(Name),DATABASE::Vendor);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Vendor.FIELDNO("Balance Due"),DATABASE::Vendor);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedVendorLedgEntry.FIELDNO("Posting Date"),
+        DATABASE::"Detailed Vendor Ledg. Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedVendorLedgEntry.FIELDNO("Applied Vend. Ledger Entry No."),
+        DATABASE::"Detailed Vendor Ledg. Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedVendorLedgEntry.FIELDNO(Amount),
+        DATABASE::"Detailed Vendor Ledg. Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedVendorLedgEntry.FIELDNO("Amount (LCY)"),
+        DATABASE::"Detailed Vendor Ledg. Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedVendorLedgEntry.FIELDNO("Transaction No."),
+        DATABASE::"Detailed Vendor Ledg. Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedVendorLedgEntry.FIELDNO("Entry No."),
+        DATABASE::"Detailed Vendor Ledg. Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,DetailedVendorLedgEntry.FIELDNO("Remaining Pmt. Disc. Possible"),
+        DATABASE::"Detailed Vendor Ledg. Entry");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIJobList@1085();
+    VAR
+      JobLedgerEntry@1000 : Record "Job Ledger Entry";
+      TenantWebService@1001 : Record "Tenant Web Service";
+      Job@1002 : Record Job;
+      WebServiceManagement@1003 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Jobs List",PowerBIJobsListTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBIJobsListTxt);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Job.FIELDNO("No."),DATABASE::Job);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Job.FIELDNO("Search Description"),DATABASE::Job);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Job.FIELDNO(Complete),DATABASE::Job);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Job.FIELDNO(Status),DATABASE::Job);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,JobLedgerEntry.FIELDNO("Posting Date"),DATABASE::"Job Ledger Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,JobLedgerEntry.FIELDNO("Total Cost"),DATABASE::"Job Ledger Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,JobLedgerEntry.FIELDNO("Entry No."),DATABASE::"Job Ledger Entry");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBISalesList@1084();
+    VAR
+      SalesHeader@1001 : Record "Sales Header";
+      SalesLine@1003 : Record "Sales Line";
+      TenantWebService@1002 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Sales List",PowerBISalesListTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBISalesListTxt);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,SalesHeader.FIELDNO("No."),DATABASE::"Sales Header");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,SalesHeader.FIELDNO("Requested Delivery Date"),
+        DATABASE::"Sales Header");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,SalesHeader.FIELDNO("Shipment Date"),DATABASE::"Sales Header");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,SalesHeader.FIELDNO("Due Date"),DATABASE::"Sales Header");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,SalesLine.FIELDNO(Quantity),DATABASE::"Sales Line");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,SalesLine.FIELDNO(Amount),DATABASE::"Sales Line");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,SalesLine.FIELDNO("No."),DATABASE::"Sales Line");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,SalesLine.FIELDNO(Description),DATABASE::"Sales Line");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIPurchaseList@1083();
+    VAR
+      PurchaseHeader@1001 : Record "Purchase Header";
+      PurchaseLine@1002 : Record "Purchase Line";
+      TenantWebService@1003 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Purchase List",PowerBIPurchaseListTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBIPurchaseListTxt);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,PurchaseHeader.FIELDNO("No."),DATABASE::"Purchase Header");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,PurchaseHeader.FIELDNO("Order Date"),DATABASE::"Purchase Header");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,PurchaseHeader.FIELDNO("Expected Receipt Date"),
+        DATABASE::"Purchase Header");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,PurchaseHeader.FIELDNO("Due Date"),DATABASE::"Purchase Header");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,PurchaseHeader.FIELDNO("Pmt. Discount Date"),
+        DATABASE::"Purchase Header");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,PurchaseLine.FIELDNO(Quantity),DATABASE::"Purchase Line");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,PurchaseLine.FIELDNO(Amount),DATABASE::"Purchase Line");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,PurchaseLine.FIELDNO("No."),DATABASE::"Purchase Line");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,PurchaseLine.FIELDNO(Description),DATABASE::"Purchase Line");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIItemPurchaseList@1082();
+    VAR
+      Item@1001 : Record Item;
+      ItemLedgerEntry@1002 : Record "Item Ledger Entry";
+      TenantWebService@1003 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Item Purchase List",PowerBIItemPurchasesListTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBIItemPurchasesListTxt);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Item.FIELDNO("No."),DATABASE::Item);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Item.FIELDNO("Search Description"),DATABASE::Item);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,ItemLedgerEntry.FIELDNO("Posting Date"),
+        DATABASE::"Item Ledger Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,ItemLedgerEntry.FIELDNO("Invoiced Quantity"),
+        DATABASE::"Item Ledger Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,ItemLedgerEntry.FIELDNO("Entry No."),DATABASE::"Item Ledger Entry");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIItemSalesList@1081();
+    VAR
+      Item@1001 : Record Item;
+      ValueEntry@1002 : Record "Value Entry";
+      TenantWebService@1003 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Item Sales List",PowerBIItemSalesListTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBIItemSalesListTxt);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Item.FIELDNO("No."),DATABASE::Item);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,Item.FIELDNO("Search Description"),DATABASE::Item);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,ValueEntry.FIELDNO("Posting Date"),DATABASE::"Value Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,ValueEntry.FIELDNO("Invoiced Quantity"),DATABASE::"Value Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,ValueEntry.FIELDNO("Entry No."),DATABASE::"Value Entry");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIGLAmountList@1080();
+    VAR
+      GLAccount@1002 : Record "G/L Account";
+      GLEntry@1003 : Record "G/L Entry";
+      TenantWebService@1001 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI GL Amount List",PowerBIGLAmountListTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBIGLAmountListTxt);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLAccount.FIELDNO("No."),DATABASE::"G/L Account");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLAccount.FIELDNO(Name),DATABASE::"G/L Account");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLAccount.FIELDNO("Account Type"),DATABASE::"G/L Account");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLAccount.FIELDNO("Debit/Credit"),DATABASE::"G/L Account");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLEntry.FIELDNO("Posting Date"),DATABASE::"G/L Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLEntry.FIELDNO(Amount),DATABASE::"G/L Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLEntry.FIELDNO("Entry No."),DATABASE::"G/L Entry");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIGLBudgetedAmountList@1079();
+    VAR
+      GLAccount@1003 : Record "G/L Account";
+      GLBudgetEntry@1002 : Record "G/L Budget Entry";
+      TenantWebService@1001 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI GL Budgeted Amount",PowerBIGLBudgetedAmountListTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBIGLBudgetedAmountListTxt);
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLAccount.FIELDNO("No."),DATABASE::"G/L Account");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLAccount.FIELDNO(Name),DATABASE::"G/L Account");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLAccount.FIELDNO("Account Type"),DATABASE::"G/L Account");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLAccount.FIELDNO("Debit/Credit"),DATABASE::"G/L Account");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLBudgetEntry.FIELDNO(Date),DATABASE::"G/L Budget Entry");
+      CreateTenantWebServiceColumn(TenantWebService.RECORDID,GLBudgetEntry.FIELDNO(Amount),DATABASE::"G/L Budget Entry");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBITopCustOverviewWebService@2();
+    VAR
+      CustLedgerEntry@1003 : Record "Cust. Ledger Entry";
+      Customer@1002 : Record Customer;
+      TenantWebService@1001 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+      metaData@1004 : DotNet "'Microsoft.Dynamics.Nav.Client.BusinessChart.Model, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Client.BusinessChart.QueryMetadataReader";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Top Cust. Overview",PowerBITopCustOverviewTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBITopCustOverviewTxt);
+      ODataUtility.GetTenantWebServiceMetadata(TenantWebService,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,CustLedgerEntry.FIELDNO("Entry No."),
+        DATABASE::"Cust. Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,CustLedgerEntry.FIELDNO("Posting Date"),
+        DATABASE::"Cust. Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,CustLedgerEntry.FIELDNO("Customer No."),
+        DATABASE::"Cust. Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,CustLedgerEntry.FIELDNO("Sales (LCY)"),
+        DATABASE::"Cust. Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Customer.FIELDNO(Name),
+        DATABASE::Customer,metaData);
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBISalesHdrCustWebService@13();
+    VAR
+      SalesHeader@1003 : Record "Sales Header";
+      SalesLine@1002 : Record "Sales Line";
+      Item@1005 : Record Item;
+      Customer@1006 : Record Customer;
+      TenantWebService@1001 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+      metaData@1004 : DotNet "'Microsoft.Dynamics.Nav.Client.BusinessChart.Model, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Client.BusinessChart.QueryMetadataReader";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Sales Hdr. Cust.",PowerBISalesHdrCustTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBISalesHdrCustTxt);
+      ODataUtility.GetTenantWebServiceMetadata(TenantWebService,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,SalesHeader.FIELDNO("No."),DATABASE::"Sales Header",
+        metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,SalesLine.FIELDNO("No."),DATABASE::"Sales Line",
+        metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,SalesLine.FIELDNO(Quantity),
+        DATABASE::"Sales Line",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,SalesLine.FIELDNO("Qty. Invoiced (Base)"),
+        DATABASE::"Sales Line",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,SalesLine.FIELDNO("Qty. Shipped (Base)"),
+        DATABASE::"Sales Line",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Item.FIELDNO("Base Unit of Measure"),
+        DATABASE::Item,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Item.FIELDNO(Description),
+        DATABASE::Item,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Item.FIELDNO(Inventory),
+        DATABASE::Item,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Item.FIELDNO("Unit Price"),
+        DATABASE::Item,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Customer.FIELDNO("No."),
+        DATABASE::Customer,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Customer.FIELDNO(Name),
+        DATABASE::Customer,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Customer.FIELDNO(Balance),
+        DATABASE::Customer,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Customer.FIELDNO("Country/Region Code"),
+        DATABASE::Customer,metaData);
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBICustItemLedgEntWebService@22();
+    VAR
+      Customer@1003 : Record Customer;
+      ItemLedgerEntry@1002 : Record "Item Ledger Entry";
+      TenantWebService@1001 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+      metaData@1004 : DotNet "'Microsoft.Dynamics.Nav.Client.BusinessChart.Model, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Client.BusinessChart.QueryMetadataReader";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Cust. Item Ledg. Ent.",PowerBICustItemLedgEntTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBICustItemLedgEntTxt);
+      ODataUtility.GetTenantWebServiceMetadata(TenantWebService,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Customer.FIELDNO("No."),
+        DATABASE::Customer,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,ItemLedgerEntry.FIELDNO("Item No."),
+        DATABASE::"Item Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,ItemLedgerEntry.FIELDNO(Quantity),
+        DATABASE::"Item Ledger Entry",metaData);
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBICustLedgerEntriesWebService@27();
+    VAR
+      CustLedgerEntry@1003 : Record "Cust. Ledger Entry";
+      TenantWebService@1001 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+      metaData@1004 : DotNet "'Microsoft.Dynamics.Nav.Client.BusinessChart.Model, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Client.BusinessChart.QueryMetadataReader";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Cust. Ledger Entries",PowerBICustLedgerEntriesTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBICustLedgerEntriesTxt);
+      ODataUtility.GetTenantWebServiceMetadata(TenantWebService,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,CustLedgerEntry.FIELDNO("Entry No."),
+        DATABASE::"Cust. Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,CustLedgerEntry.FIELDNO("Due Date"),
+        DATABASE::"Cust. Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,CustLedgerEntry.FIELDNO("Remaining Amt. (LCY)"),
+        DATABASE::"Cust. Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,CustLedgerEntry.FIELDNO(Open),
+        DATABASE::"Cust. Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,CustLedgerEntry.FIELDNO("Customer Posting Group"),
+        DATABASE::"Cust. Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,CustLedgerEntry.FIELDNO("Sales (LCY)"),
+        DATABASE::"Cust. Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,CustLedgerEntry.FIELDNO("Posting Date"),
+        DATABASE::"Cust. Ledger Entry",metaData);
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIVendorLedgerEntriesWebService@30();
+    VAR
+      VendorLedgerEntry@1003 : Record "Vendor Ledger Entry";
+      TenantWebService@1001 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+      metaData@1004 : DotNet "'Microsoft.Dynamics.Nav.Client.BusinessChart.Model, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Client.BusinessChart.QueryMetadataReader";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Vendor Ledger Entries",PowerBIVendorLedgerEntriesTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBIVendorLedgerEntriesTxt);
+      ODataUtility.GetTenantWebServiceMetadata(TenantWebService,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,VendorLedgerEntry.FIELDNO("Entry No."),
+        DATABASE::"Vendor Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,VendorLedgerEntry.FIELDNO("Due Date"),
+        DATABASE::"Vendor Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,VendorLedgerEntry.FIELDNO("Remaining Amt. (LCY)"),
+        DATABASE::"Vendor Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,VendorLedgerEntry.FIELDNO(Open),
+        DATABASE::"Vendor Ledger Entry",metaData);
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIPurchaseHdrVendorWebService@17();
+    VAR
+      PurchaseHeader@1003 : Record "Purchase Header";
+      PurchaseLine@1002 : Record "Purchase Line";
+      Item@1005 : Record Item;
+      Vendor@1006 : Record Vendor;
+      TenantWebService@1001 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+      metaData@1004 : DotNet "'Microsoft.Dynamics.Nav.Client.BusinessChart.Model, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Client.BusinessChart.QueryMetadataReader";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Purchase Hdr. Vendor",PowerBIPurchaseHdrVendorTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBIPurchaseHdrVendorTxt);
+      ODataUtility.GetTenantWebServiceMetadata(TenantWebService,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,PurchaseHeader.FIELDNO("No."),
+        DATABASE::"Purchase Header",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,PurchaseLine.FIELDNO("No."),
+        DATABASE::"Purchase Line",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,PurchaseLine.FIELDNO(Quantity),
+        DATABASE::"Purchase Line",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Item.FIELDNO("Base Unit of Measure"),
+        DATABASE::Item,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Item.FIELDNO(Description),
+        DATABASE::Item,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Item.FIELDNO(Inventory),
+        DATABASE::Item,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Item.FIELDNO("Qty. on Purch. Order"),
+        DATABASE::Item,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Item.FIELDNO("Unit Price"),
+        DATABASE::Item,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Vendor.FIELDNO("No."),
+        DATABASE::Vendor,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Vendor.FIELDNO(Name),
+        DATABASE::Vendor,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Vendor.FIELDNO(Balance),
+        DATABASE::Vendor,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Vendor.FIELDNO("Country/Region Code"),
+        DATABASE::Vendor,metaData);
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIVendItemLedgEntWebService@14();
+    VAR
+      Vendor@1003 : Record Vendor;
+      ItemLedgerEntry@1002 : Record "Item Ledger Entry";
+      TenantWebService@1001 : Record "Tenant Web Service";
+      WebServiceManagement@1000 : Codeunit "Web Service Management";
+      metaData@1004 : DotNet "'Microsoft.Dynamics.Nav.Client.BusinessChart.Model, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Client.BusinessChart.QueryMetadataReader";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Query,QUERY::"Power BI Vend. Item Ledg. Ent.",PowerBIVendItemLedgEntTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Query,PowerBIVendItemLedgEntTxt);
+      ODataUtility.GetTenantWebServiceMetadata(TenantWebService,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,Vendor.FIELDNO("No."),
+        DATABASE::Vendor,metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,ItemLedgerEntry.FIELDNO("Item No."),
+        DATABASE::"Item Ledger Entry",metaData);
+      ODataUtility.CreateTenantWebServiceColumnForQuery(TenantWebService.RECORDID,ItemLedgerEntry.FIELDNO(Quantity),
+        DATABASE::"Item Ledger Entry",metaData);
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIAgedAccPayableWebService@42();
+    VAR
+      PowerBIChartBuffer@1002 : Record "Power BI Chart Buffer";
+      TenantWebService@1000 : Record "Tenant Web Service";
+      WebServiceManagement@1001 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Page,PAGE::"PBI Aged Acc. Payable",PowerBIAgedAccPayableTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Page,PowerBIAgedAccPayableTxt);
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(ID),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(Value),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Period Type"),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(Date),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Date Sorting"),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Period Type Sorting"),
+        DATABASE::"Power BI Chart Buffer");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIAgedAccReceivableWebService@46();
+    VAR
+      PowerBIChartBuffer@1002 : Record "Power BI Chart Buffer";
+      TenantWebService@1000 : Record "Tenant Web Service";
+      WebServiceManagement@1001 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Page,PAGE::"PBI Aged Acc. Receivable",PowerBIAgedAccReceivableTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Page,PowerBIAgedAccReceivableTxt);
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(ID),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(Value),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(Date),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Date Sorting"),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Period Type"),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Period Type Sorting"),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Measure Name"),
+        DATABASE::"Power BI Chart Buffer");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIAgedInventoryChartWebService@49();
+    VAR
+      PowerBIChartBuffer@1002 : Record "Power BI Chart Buffer";
+      TenantWebService@1000 : Record "Tenant Web Service";
+      WebServiceManagement@1001 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Page,PAGE::"PBI Aged Inventory Chart",PowerBIAgedInventoryChartTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Page,PowerBIAgedInventoryChartTxt);
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(ID),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(Value),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(Date),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Period Type"),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Period Type Sorting"),
+        DATABASE::"Power BI Chart Buffer");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIJobActBudgPriceWebService@56();
+    VAR
+      PowerBIChartBuffer@1002 : Record "Power BI Chart Buffer";
+      TenantWebService@1000 : Record "Tenant Web Service";
+      WebServiceManagement@1001 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Page,PAGE::"PBI Job Act. v. Budg. Price",PowerBIJobActBudgPriceTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Page,PowerBIJobActBudgPriceTxt);
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Measure No."),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Measure Name"),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(Value),
+        DATABASE::"Power BI Chart Buffer");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIJobProfitabilityWebService@59();
+    VAR
+      PowerBIChartBuffer@1002 : Record "Power BI Chart Buffer";
+      TenantWebService@1000 : Record "Tenant Web Service";
+      WebServiceManagement@1001 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Page,PAGE::"PBI Job Profitability",PowerBIJobProfitabilityTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Page,PowerBIJobProfitabilityTxt);
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Measure No."),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Measure Name"),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(Value),
+        DATABASE::"Power BI Chart Buffer");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIJobActBudgCostWebService@61();
+    VAR
+      PowerBIChartBuffer@1002 : Record "Power BI Chart Buffer";
+      TenantWebService@1000 : Record "Tenant Web Service";
+      WebServiceManagement@1001 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Page,PAGE::"PBI Job Act. v. Budg. Cost",PowerBIJobActBudgCostTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Page,PowerBIJobActBudgCostTxt);
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Measure No."),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Measure Name"),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(Value),
+        DATABASE::"Power BI Chart Buffer");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBISalesPipelineWebService@63();
+    VAR
+      PowerBIChartBuffer@1002 : Record "Power BI Chart Buffer";
+      TenantWebService@1000 : Record "Tenant Web Service";
+      WebServiceManagement@1001 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Page,PAGE::"PBI Sales Pipeline",PowerBISalesPipelineTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Page,PowerBISalesPipelineTxt);
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(ID),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Row No."),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(Value),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Measure Name"),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Measure No."),
+        DATABASE::"Power BI Chart Buffer");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBITop5OpportunitiesWebService@66();
+    VAR
+      PowerBIChartBuffer@1002 : Record "Power BI Chart Buffer";
+      TenantWebService@1000 : Record "Tenant Web Service";
+      WebServiceManagement@1001 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Page,PAGE::"PBI Top 5 Opportunities",PowerBITop5OpportunitiesTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Page,PowerBITop5OpportunitiesTxt);
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(ID),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO(Value),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Measure Name"),
+        DATABASE::"Power BI Chart Buffer");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIChartBuffer.FIELDNO("Measure No."),
+        DATABASE::"Power BI Chart Buffer");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIWorkDateCalcWebService@73();
+    VAR
+      TenantWebService@1000 : Record "Tenant Web Service";
+      WebServiceManagement@1001 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Page,PAGE::"PBI WorkDate Calc.",PowerBIWorkDateCalcTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Page,PowerBIWorkDateCalcTxt);
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    LOCAL PROCEDURE CreatePowerBIReportLabelsWebService@1();
+    VAR
+      PowerBIReportLabels@1000 : Record "Power BI Report Labels";
+      TenantWebService@1001 : Record "Tenant Web Service";
+      WebServiceManagement@1002 : Codeunit "Web Service Management";
+    BEGIN
+      WebServiceManagement.CreateTenantWebService(
+        TenantWebService."Object Type"::Page,PAGE::"PBI Report Labels",PowerBIReportLabelsTxt,true);
+
+      TenantWebService.GET(TenantWebService."Object Type"::Page,PowerBIReportLabelsTxt);
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIReportLabels.FIELDNO("Label ID"),
+        DATABASE::"Power BI Report Labels");
+      ODataUtility.CreateTenantWebServiceColumnForPage(TenantWebService.RECORDID,PowerBIReportLabels.FIELDNO("Text Value"),
+        DATABASE::"Power BI Report Labels");
+
+      CreateTenantWebServiceOData(TenantWebService);
+    END;
+
+    [UpgradePerCompany]
+    PROCEDURE CreateJobWebServices@1077();
+    VAR
+      TenantWebService@1000 : Record "Tenant Web Service";
+    BEGIN
+      ActivateUpgradeInProgress;
+      TenantWebService.INIT;
+      TenantWebService."Object Type" := TenantWebService."Object Type"::Page;
+      TenantWebService."Object ID" := PAGE::"Job List";
+      TenantWebService."Service Name" := COPYSTR(JobListTxt,1,MAXSTRLEN(TenantWebService."Service Name"));
+      TenantWebService.Published := true;
+
+      if TenantWebService.INSERT then begin
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,1,DATABASE::Job);
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,3,DATABASE::Job);
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,5,DATABASE::Job);
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,19,DATABASE::Job);
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,20,DATABASE::Job);
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,2,DATABASE::Job);
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,1036,DATABASE::Job);
+
+        CreateTenantWebServiceOData(TenantWebService);
+      end;
+
+      CLEAR(TenantWebService);
+
+      TenantWebService.INIT;
+      TenantWebService."Object Type" := TenantWebService."Object Type"::Page;
+      TenantWebService."Object ID" := PAGE::"Job Task Lines";
+      TenantWebService."Service Name" := COPYSTR(JobTaskLinesTxt,1,MAXSTRLEN(TenantWebService."Service Name"));
+      TenantWebService.Published := true;
+
+      if TenantWebService.INSERT then begin
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,1,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,2,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,3,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,4,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,21,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,7,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,6,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,9,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,66,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,67,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,10,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,11,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,12,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,13,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,14,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,15,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,17,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,16,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,64,DATABASE::"Job Task");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,65,DATABASE::"Job Task");
+
+        CreateTenantWebServiceOData(TenantWebService);
+      end;
+
+      CLEAR(TenantWebService);
+
+      TenantWebService.INIT;
+      TenantWebService."Object Type" := TenantWebService."Object Type"::Page;
+      TenantWebService."Object ID" := PAGE::"Job Planning Lines";
+      TenantWebService."Service Name" := COPYSTR(JobPlanningLinesTxt,1,MAXSTRLEN(TenantWebService."Service Name"));
+      TenantWebService.Published := true;
+
+      if TenantWebService.INSERT then begin
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,1000,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,3,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,5794,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,4,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,5,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,7,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,8,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,9,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,1060,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,1002,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,1003,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,1004,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,1006,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,1071,DATABASE::"Job Planning Line");
+        CreateTenantWebServiceColumn(TenantWebService.RECORDID,1035,DATABASE::"Job Planning Line");
+
+        CreateTenantWebServiceOData(TenantWebService);
+      end;
+    END;
+
+    [UpgradePerCompany]
+    PROCEDURE UpdateExperienceFromPreviewToPremiumForEvalAndEssentialForMyCompany@1175();
+    VAR
+      Company@1000 : Record Company;
+      ExperienceTierSetup@1004 : Record "Experience Tier Setup";
+      ApplicationAreaMgmtFacade@1002 : Codeunit "Application Area Mgmt. Facade";
+    BEGIN
+      Company.GET(COMPANYNAME);
+      if ApplicationAreaMgmtFacade.IsPremiumExperienceEnabled then
+        if Company."Evaluation Company" then
+          ApplicationAreaMgmtFacade.SaveExperienceTierCurrentCompany(ExperienceTierSetup.FIELDCAPTION(Premium))
+        else
+          ApplicationAreaMgmtFacade.SaveExperienceTierCurrentCompany(ExperienceTierSetup.FIELDCAPTION(Essential));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

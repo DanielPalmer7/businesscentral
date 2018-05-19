@@ -1,0 +1,40 @@
+OBJECT Table 2000000200 NAV App Tenant Operation
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.983T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Operation ID        ;GUID           }
+    { 2   ;   ;Started On          ;DateTime       }
+    { 3   ;   ;Operation Type      ;Option        ;OptionString=DeployTarget,DeployPackage }
+    { 4   ;   ;Status              ;Option        ;OptionString=Unknown,InProgress,Failed,Completed,NotFound }
+    { 5   ;   ;Details             ;BLOB           }
+    { 6   ;   ;Metadata Version    ;Integer        }
+    { 7   ;   ;Metadata            ;BLOB           }
+    { 8   ;   ;Metadata Key        ;Text250        }
+    { 9   ;   ;Description         ;Text250        }
+  }
+  KEYS
+  {
+    {    ;"Operation ID"                          ;Clustered=true }
+    {    ;"Operation Type","Metadata Key"          }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

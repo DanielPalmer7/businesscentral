@@ -1,0 +1,320 @@
+OBJECT Codeunit 10120 Bank Rec.-Post
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160931.693T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Bank Rec. Header";
+    Permissions=TableData "Bank Account"=rm,
+                TableData "Bank Account Ledger Entry"=rm,
+                TableData "Check Ledger Entry"=rm,
+                TableData TableData356=rimd,
+                TableData "Bank Rec. Header"=rmd,
+                TableData "Bank Rec. Line"=rmd,
+                TableData "Bank Comment Line"=rimd,
+                TableData "Posted Bank Rec. Header"=rimd,
+                TableData "Posted Bank Rec. Line"=rimd,
+                TableData TableData10125=rimd;
+    OnRun=BEGIN
+            CLEARALL;
+
+            BankRecHeader := Rec;
+            with BankRecHeader do begin
+              TESTFIELD("Statement Date");
+              TESTFIELD("Statement No.");
+              TESTFIELD("Bank Account No.");
+
+              CalculateBalance;
+              if ("G/L Balance" +
+                  ("Positive Adjustments" - "Negative Bal. Adjustments") +
+                  ("Negative Adjustments" - "Positive Bal. Adjustments")) -
+                 (("Statement Balance" + "Outstanding Deposits") - "Outstanding Checks") <> 0
+              then
+                ERROR(Text007);
+
+              CALCFIELDS("Total Adjustments","Total Balanced Adjustments");
+              if ("Total Adjustments" - "Total Balanced Adjustments") <> 0 then
+                ERROR(Text008);
+
+              Window.OPEN(Text001 +
+                Text002 +
+                Text003 +
+                Text004 +
+                Text005 +
+                Text006);
+
+              Window.UPDATE(1,"Bank Account No.");
+              Window.UPDATE(2,"Statement No.");
+
+              GLSetup.GET;
+
+              BankRecLine.LOCKTABLE;
+              PostedBankRecLine.LOCKTABLE;
+
+              SourceCodeSetup.GET;
+
+              SETRANGE("Date Filter","Statement Date");
+              CALCFIELDS("G/L Balance (LCY)");
+              CalculateBalance;
+
+              PostedBankRecHeader.INIT;
+              PostedBankRecHeader.TRANSFERFIELDS(BankRecHeader,true);
+              PostedBankRecHeader."G/L Balance (LCY)" := "G/L Balance (LCY)";
+              PostedBankRecHeader.INSERT;
+
+              BankRecCommentLine.SETCURRENTKEY("Table Name",
+                "Bank Account No.",
+                "No.");
+              BankRecCommentLine.SETRANGE("Table Name",BankRecCommentLine."Table Name"::"Bank Rec.");
+              BankRecCommentLine.SETRANGE("Bank Account No.","Bank Account No.");
+              BankRecCommentLine.SETRANGE("No.","Statement No.");
+              if BankRecCommentLine.FIND('-') then
+                repeat
+                  Window.UPDATE(3,BankRecCommentLine."Line No.");
+
+                  PostedBankRecCommentLine.INIT;
+                  PostedBankRecCommentLine.TRANSFERFIELDS(BankRecCommentLine,true);
+                  PostedBankRecCommentLine."Table Name" := PostedBankRecCommentLine."Table Name"::"Posted Bank Rec.";
+                  PostedBankRecCommentLine.INSERT;
+                until BankRecCommentLine.NEXT = 0;
+              BankRecCommentLine.DELETEALL;
+
+              BankRecLine.RESET;
+              BankRecLine.SETCURRENTKEY("Bank Account No.",
+                "Statement No.");
+              BankRecLine.SETRANGE("Bank Account No.","Bank Account No.");
+              BankRecLine.SETRANGE("Statement No.","Statement No.");
+              if BankRecLine.FIND('-') then
+                repeat
+                  Window.UPDATE(BankRecLine."Record Type" + 4,BankRecLine."Line No.");
+                  if BankRecLine."Record Type" = BankRecLine."Record Type"::Adjustment then
+                    if (GLSetup."Bank Rec. Adj. Doc. Nos." <> '') and
+                       (BankRecLine."Document No." <> NoSeriesMgt.GetNextNo(GLSetup."Bank Rec. Adj. Doc. Nos.",
+                          "Posting Date",false))
+                    then
+                      NoSeriesMgt.TestManual(GLSetup."Bank Rec. Adj. Doc. Nos.");
+
+                  if BankRecLine."Record Type" = BankRecLine."Record Type"::Adjustment then
+                    PostAdjustmentToGL(BankRecLine)
+                  else
+                    if BankRecLine.Cleared then
+                      UpdateLedgers(BankRecLine,SetStatus::Posted)
+                    else
+                      UpdateLedgers(BankRecLine,SetStatus::Open);
+
+                  PostedBankRecLine.INIT;
+                  PostedBankRecLine.TRANSFERFIELDS(BankRecLine,true);
+                  PostedBankRecLine.INSERT;
+                until BankRecLine.NEXT = 0;
+              BankRecLine.DELETEALL;
+              BankRecSubLine.RESET;
+              BankRecSubLine.SETRANGE("Bank Account No.","Bank Account No.");
+              BankRecSubLine.SETRANGE("Statement No.","Statement No.");
+              BankRecSubLine.DELETEALL;
+
+              BankAccount.GET("Bank Account No.");
+              BankAccount."Last Statement No." := "Statement No.";
+              BankAccount."Balance Last Statement" := "Statement Balance";
+              BankAccount.MODIFY;
+
+              DELETE;
+
+              COMMIT;
+              Window.CLOSE;
+            end;
+            if GLSetup."Bank Rec. Adj. Doc. Nos." <> '' then
+              NoSeriesMgt.SaveNoSeries;
+            Rec := BankRecHeader;
+            UpdateAnalysisView.UpdateAll(0,true);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      SetStatus@1020016 : 'Open,Cleared,Posted';
+      BankRecHeader@1020000 : Record "Bank Rec. Header";
+      BankRecLine@1020001 : Record "Bank Rec. Line";
+      BankRecCommentLine@1020002 : Record "Bank Comment Line";
+      BankRecSubLine@1480002 : Record "Bank Rec. Sub-line";
+      PostedBankRecHeader@1020003 : Record "Posted Bank Rec. Header";
+      PostedBankRecLine@1020004 : Record "Posted Bank Rec. Line";
+      PostedBankRecCommentLine@1020007 : Record "Bank Comment Line";
+      GLSetup@1033 : Record "General Ledger Setup";
+      SourceCodeSetup@1061 : Record "Source Code Setup";
+      BankAccount@1020014 : Record "Bank Account";
+      GenJnlPostLine@1020017 : Codeunit "Gen. Jnl.-Post Line";
+      UpdateAnalysisView@1480000 : Codeunit "Update Analysis View";
+      Window@1097 : Dialog;
+      Text001@1020005 : TextConst 'ENU=Posting Bank Account  #1#################### \\';
+      Text002@1020006 : TextConst 'ENU=Statement             #2#################### \';
+      Text003@1020008 : TextConst 'ENU=Comment               #3########## \';
+      Text004@1020009 : TextConst 'ENU=Check                 #4########## \;ENC=Cheque                #4########## \';
+      Text005@1020010 : TextConst 'ENU=Deposit               #5########## \';
+      Text006@1020011 : TextConst 'ENU=Adjustment            #6########## \';
+      Text007@1020013 : TextConst 'ENU=Difference must be zero before the statement can be posted.';
+      Text008@1020015 : TextConst 'ENU=Balance of adjustments must be zero before posting.';
+      NoSeriesMgt@1020018 : Codeunit NoSeriesManagement;
+
+    [External]
+    PROCEDURE UpdateLedgers@1020003(BankRecLine3@1020001 : Record "Bank Rec. Line";UseStatus@1020003 : 'Open,Cleared,Posted');
+    VAR
+      BankLedgerEntry@1020000 : Record "Bank Account Ledger Entry";
+      CheckLedgerEntry@1020002 : Record "Check Ledger Entry";
+      BankRecSubLine@1480000 : Record "Bank Rec. Sub-line";
+      CheckLedgerEntry2@1480001 : Record "Check Ledger Entry";
+    BEGIN
+      if (BankRecLine3."Bank Ledger Entry No." <> 0) and (BankRecLine3."Check Ledger Entry No." = 0) then
+        UpdateBankLedger(
+          BankRecLine3."Bank Ledger Entry No.",UseStatus,
+          BankRecLine3."Statement No.",BankRecLine3."Line No.");
+      if BankRecLine3."Check Ledger Entry No." <> 0 then
+        if CheckLedgerEntry.GET(BankRecLine3."Check Ledger Entry No.") then begin
+          if UseStatus = UseStatus::Posted then
+            CheckLedgerEntry.Open := false;
+          case UseStatus of
+            UseStatus::Open:
+              CheckLedgerEntry."Statement Status" := CheckLedgerEntry."Statement Status"::Open;
+            UseStatus::Cleared:
+              CheckLedgerEntry."Statement Status" := CheckLedgerEntry."Statement Status"::"Check Entry Applied";
+            UseStatus::Posted:
+              CheckLedgerEntry."Statement Status" := CheckLedgerEntry."Statement Status"::Closed;
+          end;
+          if CheckLedgerEntry."Statement Status" = CheckLedgerEntry."Statement Status"::Open then begin
+            CheckLedgerEntry."Statement No." := '';
+            CheckLedgerEntry."Statement Line No." := 0;
+          end else begin
+            CheckLedgerEntry."Statement No." := BankRecLine3."Statement No.";
+            CheckLedgerEntry."Statement Line No." := BankRecLine3."Line No.";
+          end;
+          CheckLedgerEntry.MODIFY;
+          if (CheckLedgerEntry."Check Type" = CheckLedgerEntry."Check Type"::"Total Check") or
+             (UseStatus <> UseStatus::Posted)
+          then
+            UpdateBankLedger(
+              BankRecLine3."Bank Ledger Entry No.",UseStatus,
+              BankRecLine3."Statement No.",BankRecLine3."Line No.")
+          else begin
+            CheckLedgerEntry2.RESET;
+            CheckLedgerEntry2.SETCURRENTKEY("Bank Account Ledger Entry No.");
+            CheckLedgerEntry2.SETRANGE("Bank Account Ledger Entry No.",CheckLedgerEntry."Bank Account Ledger Entry No.");
+            CheckLedgerEntry2.SETFILTER("Statement Status",'<>%1',CheckLedgerEntry."Statement Status"::Closed);
+            if CheckLedgerEntry2.FIND('-') then begin
+              if BankLedgerEntry.GET(CheckLedgerEntry2."Bank Account Ledger Entry No.") then begin
+                BankLedgerEntry."Remaining Amount" := 0;
+                repeat
+                  BankLedgerEntry."Remaining Amount" :=
+                    BankLedgerEntry."Remaining Amount" - CheckLedgerEntry2.Amount;
+                until CheckLedgerEntry2.NEXT = 0;
+                BankLedgerEntry.MODIFY;
+              end;
+            end else
+              UpdateBankLedger(
+                BankRecLine3."Bank Ledger Entry No.",UseStatus,
+                BankRecLine3."Statement No.",BankRecLine3."Line No.");
+          end;
+        end;
+      if BankRecLine3."Collapse Status" = BankRecLine3."Collapse Status"::"Collapsed Deposit" then begin
+        BankRecSubLine.SETRANGE("Bank Account No.",BankRecLine3."Bank Account No.");
+        BankRecSubLine.SETRANGE("Statement No.",BankRecLine3."Statement No.");
+        BankRecSubLine.SETRANGE("Bank Rec. Line No.",BankRecLine3."Line No.");
+        if BankRecSubLine.FIND('-') then
+          repeat
+            UpdateBankLedger(
+              BankRecSubLine."Bank Ledger Entry No.",UseStatus,
+              BankRecLine3."Statement No.",BankRecLine3."Line No.");
+          until BankRecSubLine.NEXT = 0;
+      end;
+    END;
+
+    LOCAL PROCEDURE UpdateBankLedger@1480000(BankLedgerEntryNo@1480000 : Integer;UseStatus@1480001 : 'Open,Cleared,Posted';StatementNo@1480003 : Code[20];StatementLineNo@1480004 : Integer);
+    VAR
+      BankLedgerEntry@1480002 : Record "Bank Account Ledger Entry";
+    BEGIN
+      if BankLedgerEntry.GET(BankLedgerEntryNo) then begin
+        if UseStatus = UseStatus::Posted then begin
+          BankLedgerEntry.Open := false;
+          BankLedgerEntry."Remaining Amount" := 0;
+        end;
+        case UseStatus of
+          UseStatus::Open:
+            BankLedgerEntry."Statement Status" := BankLedgerEntry."Statement Status"::Open;
+          UseStatus::Cleared:
+            BankLedgerEntry."Statement Status" := BankLedgerEntry."Statement Status"::"Bank Acc. Entry Applied";
+          UseStatus::Posted:
+            BankLedgerEntry."Statement Status" := BankLedgerEntry."Statement Status"::Closed;
+        end;
+        if BankLedgerEntry."Statement Status" = BankLedgerEntry."Statement Status"::Open then begin
+          BankLedgerEntry."Statement No." := '';
+          BankLedgerEntry."Statement Line No." := 0;
+        end else begin
+          BankLedgerEntry."Statement No." := StatementNo;
+          BankLedgerEntry."Statement Line No." := StatementLineNo;
+        end;
+        OnBeforeBankLedgerEntryModify(BankLedgerEntry,UseStatus,StatementNo,StatementLineNo);
+        BankLedgerEntry.MODIFY;
+      end;
+    END;
+
+    LOCAL PROCEDURE PostAdjustmentToGL@1020000(BankRecLine2@1020002 : Record "Bank Rec. Line");
+    VAR
+      GenJnlLine@1020000 : Record "Gen. Journal Line";
+      GLEntry@1020001 : Record "G/L Entry";
+    BEGIN
+      with BankRecLine2 do
+        if Amount <> 0 then begin
+          GenJnlLine.INIT;
+          GenJnlLine."Posting Date" := "Posting Date";
+          GenJnlLine."Document Date" := "Posting Date";
+          GenJnlLine.Description := Description;
+          GenJnlLine."Account Type" := "Account Type";
+          GenJnlLine."Account No." := "Account No.";
+          GenJnlLine."Bal. Account Type" := "Bal. Account Type";
+          GenJnlLine."Bal. Account No." := "Bal. Account No.";
+          GenJnlLine."Document Type" := "Document Type";
+          GenJnlLine."Document No." := "Document No.";
+          GenJnlLine."External Document No." := "External Document No.";
+          GenJnlLine."Currency Code" := "Currency Code";
+          GenJnlLine."Currency Factor" := "Currency Factor";
+          GenJnlLine."Source Currency Code" := "Currency Code";
+          GenJnlLine."Source Currency Amount" := Amount;
+          if "Currency Code" = '' then
+            GenJnlLine."Currency Factor" := 1
+          else
+            GenJnlLine."Currency Factor" := "Currency Factor";
+          GenJnlLine.VALIDATE(Amount,Amount);
+          GenJnlLine."Source Type" := "Account Type";
+          GenJnlLine."Source No." := "Account No.";
+          GenJnlLine."Source Code" := SourceCodeSetup."Bank Rec. Adjustment";
+          GenJnlLine."Shortcut Dimension 1 Code" := "Shortcut Dimension 1 Code";
+          GenJnlLine."Shortcut Dimension 2 Code" := "Shortcut Dimension 2 Code";
+          GenJnlLine."Dimension Set ID" := "Dimension Set ID";
+
+          GenJnlPostLine.RunWithCheck(GenJnlLine);
+
+          GLEntry.FINDLAST;
+          if GLEntry."Bal. Account Type" = GLEntry."Bal. Account Type"::"Bank Account" then
+            "Bank Ledger Entry No." := GLEntry."Entry No." - 1
+          else
+            "Bank Ledger Entry No." := GLEntry."Entry No.";
+          "Check Ledger Entry No." := 0;
+          MODIFY;
+          UpdateLedgers(BankRecLine2,SetStatus::Posted);
+        end;
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnBeforeBankLedgerEntryModify@1020001(VAR BankAccLedgerEntry@1020003 : Record "Bank Account Ledger Entry";UseStatus@1020002 : 'Open,Cleared,Posted';StatementNo@1020001 : Code[20];StatementLineNo@1020000 : Integer);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

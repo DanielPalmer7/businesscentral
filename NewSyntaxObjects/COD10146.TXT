@@ -1,0 +1,66 @@
+OBJECT Codeunit 10146 Blob Management
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      TempBlob@1020000 : Record TempBlob;
+      InStr@1020001 : InStream;
+      OutStr@1020002 : OutStream;
+      TempText@1020003 : Text[1024];
+
+    [External]
+    PROCEDURE Init@1020001();
+    BEGIN
+      CLEAR(TempBlob);
+      TempBlob.INIT;
+      TempBlob.Blob.CREATEOUTSTREAM(OutStr);
+    END;
+
+    [External]
+    PROCEDURE Write@1020002(TextParam@1020000 : Text[1024]);
+    BEGIN
+      if STRLEN(TextParam) > 1 then
+        OutStr.WRITETEXT(TextParam,STRLEN(TextParam));
+    END;
+
+    [External]
+    PROCEDURE WriteAllowOneCharacter@1020004(TextParam@1020000 : Text[1024]);
+    BEGIN
+      if STRLEN(TextParam) > 0 then
+        OutStr.WRITETEXT(TextParam,STRLEN(TextParam));
+    END;
+
+    [External]
+    PROCEDURE Get@1020003(VAR TempBlobParam@1020000 : Record TempBlob);
+    BEGIN
+      TempBlobParam := TempBlob;
+    END;
+
+    [External]
+    PROCEDURE Read@1020000(VAR ReturnText@1020000 : BigText;VAR BlobToRead@1020001 : Record TempBlob);
+    BEGIN
+      TempText := '';
+      BlobToRead.Blob.CREATEINSTREAM(InStr);
+      while not InStr.EOS do begin
+        InStr.READTEXT(TempText,1024);
+        ReturnText.ADDTEXT(TempText);
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

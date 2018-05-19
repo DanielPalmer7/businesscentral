@@ -1,0 +1,65 @@
+OBJECT Table 5973 Service Contract Account Group
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160211.527T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Service Contract Account Group;
+    LookupPageID="Serv. Contract Account Groups";
+    DrillDownPageID="Serv. Contract Account Groups";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+    { 3   ;   ;Non-Prepaid Contract Acc.;Code20   ;TableRelation="G/L Account"."No.";
+                                                   OnValidate=BEGIN
+                                                                if "Non-Prepaid Contract Acc." <> '' then begin
+                                                                  GlAcc.GET("Non-Prepaid Contract Acc.");
+                                                                  GLSetup.GET;
+                                                                  if GLSetup."VAT in Use" then begin
+                                                                    GlAcc.TESTFIELD("Gen. Prod. Posting Group");
+                                                                    GlAcc.TESTFIELD("VAT Prod. Posting Group");
+                                                                  end;
+                                                                end;
+                                                              END;
+
+                                                   CaptionML=ENU=Non-Prepaid Contract Acc. }
+    { 4   ;   ;Prepaid Contract Acc.;Code20       ;TableRelation="G/L Account"."No.";
+                                                   OnValidate=BEGIN
+                                                                if "Prepaid Contract Acc." <> '' then begin
+                                                                  GlAcc.GET("Prepaid Contract Acc.");
+                                                                  GLSetup.GET;
+                                                                  if GLSetup."VAT in Use" then begin
+                                                                    GlAcc.TESTFIELD("Gen. Prod. Posting Group");
+                                                                    GlAcc.TESTFIELD("VAT Prod. Posting Group");
+                                                                  end;
+                                                                end;
+                                                              END;
+
+                                                   CaptionML=ENU=Prepaid Contract Acc. }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      GlAcc@1000 : Record "G/L Account";
+      GLSetup@1020000 : Record "General Ledger Setup";
+
+    BEGIN
+    END.
+  }
+}
+

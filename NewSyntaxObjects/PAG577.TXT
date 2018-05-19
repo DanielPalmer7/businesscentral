@@ -1,0 +1,186 @@
+OBJECT Page 577 Change Global Dimensions
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161301.990T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Change Global Dimensions;
+    LinksAllowed=false;
+    ShowFilter=false;
+    OnOpenPage=BEGIN
+                 ChangeGlobalDimensions.DeleteAllEntriesIfAllCompleted;
+                 ChangeGlobalDimensions.Initialize;
+                 ChangeGlobalDimensions.GetCurrentGlobalDimCodes(CurrentGlobalDimCode);
+               END;
+
+    OnAfterGetCurrRecord=BEGIN
+                           IsGlobalDimCodeEnabled := ChangeGlobalDimensions.IsDimCodeEnabled;
+                           ChangeGlobalDimensions.GetNewGlobalDimCodes(NewGlobalDimCode);
+                           IsPrepareEnabled := ChangeGlobalDimensions.IsPrepareEnabled;
+                           IsStartEnabled := ChangeGlobalDimensions.IsStartEnabled;
+                           SetStyle;
+                         END;
+
+    ActionList=ACTIONS
+    {
+      { 7       ;    ;ActionContainer;
+                      Name=ActionContainer7;
+                      ActionContainerType=ActionItems }
+      { 8       ;1   ;Action    ;
+                      Name=Prepare;
+                      AccessByPermission=TableData "Change Global Dim. Log Entry"=IM;
+                      CaptionML=ENU=Prepare;
+                      ToolTipML=ENU=Fill the Log Entries FastTab with the list of tables that will be affected by the specified dimension change. Here you can also follow the progress of the background job that performs the change. Note: Before you can start the job, you must sign out and in to ensure that the current user cannot modify the tables that are being updated.;
+                      ApplicationArea=#Dimensions;
+                      Promoted=true;
+                      Enabled=IsPrepareEnabled;
+                      PromotedIsBig=true;
+                      Image=ChangeBatch;
+                      PromotedCategory=Process;
+                      PromotedOnly=true;
+                      OnAction=BEGIN
+                                 ChangeGlobalDimensions.Prepare;
+                                 ChangeGlobalDimensions.GetCurrentGlobalDimCodes(CurrentGlobalDimCode);
+                               END;
+                                }
+      { 11      ;1   ;Action    ;
+                      Name=Reset;
+                      AccessByPermission=TableData "Change Global Dim. Log Entry"=D;
+                      CaptionML=ENU=Reset;
+                      ToolTipML=ENU=Cancel the change.;
+                      ApplicationArea=#Dimensions;
+                      Promoted=true;
+                      Visible=IsStartEnabled;
+                      PromotedIsBig=true;
+                      Image=Cancel;
+                      PromotedCategory=Process;
+                      PromotedOnly=true;
+                      OnAction=BEGIN
+                                 ChangeGlobalDimensions.Reset;
+                               END;
+                                }
+      { 10      ;1   ;Action    ;
+                      Name=Start;
+                      AccessByPermission=TableData "Change Global Dim. Log Entry"=MD;
+                      CaptionML=ENU=Start;
+                      ToolTipML=ENU=Start a background job that implements the specified dimension change(s) in the affected tables. Other users cannot change the affected global dimensions while the job is running. Note: Before you can start the job, you must choose the Prepare action, and then sign out and in.;
+                      ApplicationArea=#Dimensions;
+                      Promoted=true;
+                      Enabled=IsStartEnabled;
+                      PromotedIsBig=true;
+                      Image=Start;
+                      PromotedCategory=Process;
+                      PromotedOnly=true;
+                      OnAction=BEGIN
+                                 ChangeGlobalDimensions.Start;
+                                 ChangeGlobalDimensions.GetCurrentGlobalDimCodes(CurrentGlobalDimCode);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Options;
+                CaptionML=ENU=Options;
+                GroupType=Group }
+
+    { 3   ;2   ;Field     ;
+                Name=GlobalDimension1Code;
+                CaptionML=ENU=Global Dimension 1 Code;
+                ToolTipML=ENU=Specifies another global dimension that you want to use. The second field on the row will show the current global dimension.;
+                ApplicationArea=#Dimensions;
+                SourceExpr=NewGlobalDimCode[1];
+                TableRelation=Dimension;
+                Editable=IsGlobalDimCodeEnabled;
+                StyleExpr=CurrGlobalDimCodeStyle1;
+                OnValidate=BEGIN
+                             ChangeGlobalDimensions.SetNewGlobalDim1Code(NewGlobalDimCode[1]);
+                             ChangeGlobalDimensions.GetNewGlobalDimCodes(NewGlobalDimCode);
+                             IsPrepareEnabled := ChangeGlobalDimensions.IsPrepareEnabled;
+                             SetStyle;
+                           END;
+                            }
+
+    { 4   ;2   ;Field     ;
+                Name=GlobalDimension2Code;
+                CaptionML=ENU=Global Dimension 2 Code;
+                ToolTipML=ENU=Specifies another global dimension that you want to use. The second field on the row will show the current global dimension.;
+                ApplicationArea=#Dimensions;
+                SourceExpr=NewGlobalDimCode[2];
+                TableRelation=Dimension;
+                Editable=IsGlobalDimCodeEnabled;
+                StyleExpr=CurrGlobalDimCodeStyle2;
+                OnValidate=BEGIN
+                             ChangeGlobalDimensions.SetNewGlobalDim2Code(NewGlobalDimCode[2]);
+                             ChangeGlobalDimensions.GetNewGlobalDimCodes(NewGlobalDimCode);
+                             IsPrepareEnabled := ChangeGlobalDimensions.IsPrepareEnabled;
+                             SetStyle;
+                           END;
+                            }
+
+    { 5   ;2   ;Field     ;
+                Name=CurrGlobalDimension1Code;
+                ToolTipML=ENU=Specifies the dimension that is currently defined as Global Dimension 1.;
+                ApplicationArea=#Dimensions;
+                SourceExpr=CurrentGlobalDimCode[1];
+                Enabled=FALSE;
+                StyleExpr=CurrGlobalDimCodeStyle1;
+                ShowCaption=false }
+
+    { 6   ;2   ;Field     ;
+                Name=CurrGlobalDimension2Code;
+                ToolTipML=ENU=Specifies the dimension that is currently defined as Global Dimension 2.;
+                ApplicationArea=#Dimensions;
+                SourceExpr=CurrentGlobalDimCode[2];
+                Enabled=FALSE;
+                StyleExpr=CurrGlobalDimCodeStyle2;
+                ShowCaption=false }
+
+    { 9   ;1   ;Part      ;
+                Name=LogLines;
+                ApplicationArea=#Dimensions;
+                PagePartID="Change Global Dim. Log Entries";
+                PartType=Page }
+
+  }
+  CODE
+  {
+    VAR
+      ChangeGlobalDimensions@1001 : Codeunit "Change Global Dimensions";
+      CurrentGlobalDimCode@1005 : ARRAY [2] OF Code[20];
+      NewGlobalDimCode@1000 : ARRAY [2] OF Code[20];
+      CurrGlobalDimCodeStyle1@1006 : Text INDATASET;
+      CurrGlobalDimCodeStyle2@1007 : Text INDATASET;
+      IsPrepareEnabled@1002 : Boolean;
+      IsStartEnabled@1004 : Boolean;
+      IsGlobalDimCodeEnabled@1003 : Boolean;
+
+    LOCAL PROCEDURE SetStyle@1();
+    BEGIN
+      SetAmbiguousStyle(CurrGlobalDimCodeStyle1,CurrentGlobalDimCode[1] <> NewGlobalDimCode[1]);
+      SetAmbiguousStyle(CurrGlobalDimCodeStyle2,CurrentGlobalDimCode[2] <> NewGlobalDimCode[2]);
+    END;
+
+    LOCAL PROCEDURE SetAmbiguousStyle@7(VAR Style@1000 : Text;Modified@1001 : Boolean);
+    BEGIN
+      if Modified then
+        Style := 'Ambiguous'
+      else
+        Style := '';
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

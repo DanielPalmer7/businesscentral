@@ -1,0 +1,117 @@
+OBJECT Page 10811 Generate EFT File Lines
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161725.160T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Lines;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="EFT Export Workset";
+    PageType=ListPart;
+    SourceTableTemporary=true;
+  }
+  CONTROLS
+  {
+    { 1020000;0;Container ;
+                Name=Control1020000;
+                ContainerType=ContentArea }
+
+    { 1020001;1;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 1020007;2;Field     ;
+                Name=Include;
+                ToolTipML=ENU=Specifies to either include or exclude this line.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Include;
+                ImplicitType=Boolean }
+
+    { 1020006;2;Field     ;
+                Name="Document Date";
+                ToolTipML=ENU=Specifies the date on the document that provides the basis for the entry on the journal line.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document Date";
+                Editable=FALSE;
+                ImplicitType=Date }
+
+    { 1020002;2;Field     ;
+                Name="Document No.";
+                ToolTipML=ENU=Specifies a document number for the journal line.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Document No.";
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 1020003;2;Field     ;
+                Name="Account No.";
+                ToolTipML=ENU=Specifies the account number that the journal line entry will be posted to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Account No.";
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 1020005;2;Field     ;
+                Name=Amount;
+                CaptionML=ENU=Amount;
+                ToolTipML=ENU=Specifies the total amount that the journal line consists of.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Amount (LCY)";
+                Editable=FALSE;
+                ImplicitType=Decimal }
+
+  }
+  CODE
+  {
+
+    PROCEDURE Set@1020000(BankAccountNumber@1020001 : Code[20]);
+    VAR
+      EFTExport@1020000 : Record "EFT Export";
+    BEGIN
+      DELETEALL;
+      EFTExport.SETCURRENTKEY("Bank Account No.",Transmitted);
+      EFTExport.SETRANGE("Bank Account No.",BankAccountNumber);
+      EFTExport.SETRANGE(Transmitted,false);
+      if EFTExport.FIND('-') then
+        repeat
+          TRANSFERFIELDS(EFTExport);
+          Include := true;
+          INSERT;
+        until EFTExport.NEXT = 0;
+      CurrPage.UPDATE(false);
+    END;
+
+    PROCEDURE GetColumns@1020001(VAR TempEFTExportWorkset@1020000 : TEMPORARY Record "EFT Export Workset");
+    BEGIN
+      TempEFTExportWorkset.DELETEALL;
+      SETRANGE(Include,true);
+      if FINDFIRST then
+        repeat
+          TempEFTExportWorkset.TRANSFERFIELDS(Rec);
+          TempEFTExportWorkset.INSERT;
+        until NEXT = 0;
+      RESET;
+    END;
+
+    PROCEDURE MarkUnmarkInclude@1020002(SetInclude@1020000 : Boolean;BankAccountNumber@1020001 : Code[20]);
+    BEGIN
+      SETCURRENTKEY("Bal. Account No.");
+      SETRANGE("Bal. Account No.",BankAccountNumber);
+      if FINDFIRST then
+        repeat
+          Include := SetInclude;
+          MODIFY;
+        until NEXT = 0;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

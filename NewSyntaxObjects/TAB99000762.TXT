@@ -1,0 +1,36 @@
+OBJECT Table 99000762 Scrap
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160240.217T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Scrap;
+    LookupPageID="Scrap Codes";
+    DrillDownPageID="Scrap Codes";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

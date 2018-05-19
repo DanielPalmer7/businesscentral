@@ -1,0 +1,42 @@
+OBJECT Table 2000000161 NAV App Dependencies
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.820T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Package ID          ;GUID           }
+    { 2   ;   ;ID                  ;GUID           }
+    { 3   ;   ;Name                ;Text250        }
+    { 4   ;   ;Publisher           ;Text250        }
+    { 5   ;   ;Version Major       ;Integer        }
+    { 6   ;   ;Version Minor       ;Integer        }
+    { 7   ;   ;Version Build       ;Integer        }
+    { 8   ;   ;Version Revision    ;Integer        }
+    { 9   ;   ;Compatibility Major ;Integer        }
+    { 10  ;   ;Compatibility Minor ;Integer        }
+    { 11  ;   ;Compatibility Build ;Integer        }
+    { 12  ;   ;Compatibility Revision;Integer      }
+  }
+  KEYS
+  {
+    {    ;"Package ID",ID                         ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

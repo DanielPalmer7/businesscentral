@@ -1,0 +1,35 @@
+OBJECT Table 27001 SAT Payment Method Code
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160238.330T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=SAT Payment Method Code;
+    LookupPageID="SAT Payment Method Codes";
+    DrillDownPageID="SAT Payment Method Codes";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20        ;CaptionML=ENU=Code }
+    { 2   ;   ;Description         ;Text50        ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

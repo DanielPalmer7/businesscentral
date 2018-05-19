@@ -1,0 +1,38 @@
+OBJECT Table 2000000169 NAV App Tenant Add-In
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.860T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;App ID              ;GUID           }
+    { 2   ;   ;Add-In Name         ;Text220        }
+    { 3   ;   ;Public Key Token    ;Text20         }
+    { 4   ;   ;Version             ;Text25         }
+    { 5   ;   ;Category            ;Option        ;OptionString="JavaScript Control Add-in","DotNet Control Add-in","DotNet Interoperability","Language Resource" }
+    { 6   ;   ;Description         ;Text250        }
+    { 7   ;   ;Resource            ;BLOB           }
+  }
+  KEYS
+  {
+    {    ;"App ID","Add-In Name","Public Key Token",Version;
+                                                   Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

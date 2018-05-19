@@ -1,0 +1,115 @@
+OBJECT Page 1446 Headline RC Team Member
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161347.77T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Headline;
+    SourceTable="Headline RC Team Member";
+    PageType=HeadlinePart;
+    RefreshOnActivate=true;
+    OnOpenPage=VAR
+                 Uninitialized@1000 : Boolean;
+               BEGIN
+                 if not GET then
+                   if WRITEPERMISSION then begin
+                     INIT;
+                     INSERT;
+                   end else
+                     Uninitialized := true;
+
+                 if not Uninitialized then begin
+                   "Workdate for computations" := WORKDATE;
+                   MODIFY;
+                   HeadlineManagement.ScheduleTask(CODEUNIT::"Headline RC Team Member");
+                 end;
+
+                 HeadlineManagement.GetUserGreetingText(GreetingText);
+                 DocumentationText := STRSUBSTNO(DocumentationTxt,PRODUCTNAME.SHORT);
+
+                 if Uninitialized then
+                   // table is uninitialized because of permission issues. OnAfterGetRecord won't be called
+                   ComputeDefaultFieldsVisibility;
+
+                 COMMIT; // not to mess up the other page parts that may do IF CODEUNIT.RUN()
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       ComputeDefaultFieldsVisibility;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Control2;
+                Visible=UserGreetingVisible;
+                GroupType=Group }
+
+    { 3   ;2   ;Field     ;
+                Name=GreetingText;
+                CaptionML=ENU=Greeting headline;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=GreetingText;
+                Visible=UserGreetingVisible;
+                Editable=FALSE;
+                ImplicitType=Text250 }
+
+    { 4   ;1   ;Group     ;
+                Name=Control4;
+                Visible=DefaultFieldsVisible;
+                GroupType=Group }
+
+    { 5   ;2   ;Field     ;
+                Name=DocumentationText;
+                DrillDown=true;
+                CaptionML=ENU=Documentation headline;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=DocumentationText;
+                Visible=DefaultFieldsVisible;
+                Editable=FALSE;
+                OnDrillDown=BEGIN
+                              HYPERLINK(DocumentationUrlTxt);
+                            END;
+
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+    VAR
+      HeadlineManagement@1007 : Codeunit "Headline Management";
+      DefaultFieldsVisible@1000 : Boolean;
+      DocumentationTxt@1002 : TextConst '@@@=%1 is the NAV short product name.;ENU=Want to learn more about %1?';
+      DocumentationUrlTxt@1005 : TextConst '@@@={Locked};ENU="https://go.microsoft.com/fwlink/?linkid=867580"';
+      GreetingText@1001 : Text[250];
+      DocumentationText@1004 : Text[250];
+      ExtensionHeadlinesVisible@1003 : Boolean;
+      UserGreetingVisible@1006 : Boolean;
+
+    LOCAL PROCEDURE ComputeDefaultFieldsVisibility@9();
+    BEGIN
+      OnIsAnyExtensionHeadlineVisible(ExtensionHeadlinesVisible);
+      DefaultFieldsVisible := not ExtensionHeadlinesVisible;
+      UserGreetingVisible := HeadlineManagement.ShouldUserGreetingBeVisible;
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnIsAnyExtensionHeadlineVisible@2(VAR ExtensionHeadlinesVisible@1000 : Boolean);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

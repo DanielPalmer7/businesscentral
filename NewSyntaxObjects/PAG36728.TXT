@@ -1,0 +1,160 @@
+OBJECT Page 36728 Bank Rec Worksheet FactBox
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161728.977T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Bank Rec Worksheet;
+    SourceTable="Bank Rec. Header";
+    PageType=CardPart;
+    OnOpenPage=BEGIN
+                 CalcLineInfo;
+               END;
+
+    OnFindRecord=BEGIN
+                   exit(FIND(Which));
+                 END;
+
+    OnAfterGetRecord=BEGIN
+                       CalcLineInfo;
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1020000;1;Field     ;
+                Name="Bank Account No.";
+                Lookup=false;
+                ToolTipML=ENU=Specifies the code for the bank account the reconciliation applies to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Bank Account No.";
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 1020005;1;Field     ;
+                Name="Statement No.";
+                ToolTipML=ENU=Specifies the statement number to be reconciled.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Statement No.";
+                Editable=FALSE;
+                ImplicitType=Code20 }
+
+    { 1020009;1;Field     ;
+                Name="Statement Date";
+                ToolTipML=ENU=Specifies the as-of date of the statement. All G/L balances will be calculated based upon this date.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Statement Date";
+                Editable=FALSE;
+                ImplicitType=Date }
+
+    { 1020002;1;Field     ;
+                Name="Currency Code";
+                ToolTipML=ENU=Specifies the currency code assigned to the bank account.;
+                ApplicationArea=#Suite;
+                SourceExpr="Currency Code";
+                ImplicitType=Code10 }
+
+    { 1020001;1;Field     ;
+                Name="Currency Factor";
+                ToolTipML=ENU=Specifies currency conversions when posting adjustments for bank accounts with a foreign currency code assigned.;
+                ApplicationArea=#Suite;
+                SourceExpr="Currency Factor";
+                ImplicitType=Decimal }
+
+    { 1020013;1;Field     ;
+                Name="Date Created";
+                ToolTipML=ENU=Specifies a date automatically populated when the record is created.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Date Created";
+                Editable=FALSE;
+                ImplicitType=Date }
+
+    { 1020014;1;Field     ;
+                Name="Time Created";
+                ToolTipML=ENU=Specifies the  time created, which is automatically populated when the record is created.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Time Created";
+                Editable=FALSE;
+                ImplicitType=Time }
+
+    { 1020015;1;Field     ;
+                Name="Created By";
+                Lookup=false;
+                DrillDown=false;
+                AssistEdit=false;
+                ToolTipML=ENU=Specifies the User ID of the person who created the record.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Created By";
+                Editable=FALSE;
+                ImplicitType=Code50 }
+
+    { 1020016;1;Field     ;
+                Name="Cleared With./Chks. Per Stmnt.";
+                ToolTipML=ENU=Specifies the total of withdrawals or checks that cleared the bank for this statement.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Cleared With./Chks. Per Stmnt.";
+                ImplicitType=Decimal }
+
+    { 1020018;1;Field     ;
+                Name="Total Cleared Checks";
+                ToolTipML=ENU=Specifies the total amount of the cleared checks for the statement being reconciled.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Total Cleared Checks";
+                ImplicitType=Decimal }
+
+    { 1020020;1;Field     ;
+                Name="Cleared Inc./Dpsts. Per Stmnt.";
+                ToolTipML=ENU=Specifies the total of increases or deposits that cleared the bank for this statement.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Cleared Inc./Dpsts. Per Stmnt.";
+                ImplicitType=Decimal }
+
+    { 1020022;1;Field     ;
+                Name="Total Cleared Deposits";
+                ToolTipML=ENU=Specifies the total amount of the cleared deposits for the statement being reconciled.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Total Cleared Deposits";
+                ImplicitType=Decimal }
+
+    { 1020030;1;Field     ;
+                Name=TotalAdjustments;
+                CaptionML=ENU=Total Adjustments;
+                ToolTipML=ENU=Specifies the total amount of the lines that are adjustments.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Total Adjustments" - "Total Balanced Adjustments" }
+
+  }
+  CODE
+  {
+    VAR
+      CurrentDate@1018 : Date;
+
+    [External]
+    PROCEDURE CalcLineInfo@1020001();
+    BEGIN
+      SETRANGE("Bank Account No.");
+      SETRANGE("Statement No.");
+
+      if CurrentDate <> WORKDATE then
+        CurrentDate := WORKDATE;
+
+      SETRANGE("Date Filter",0D,CurrentDate);
+
+      CALCFIELDS("Total Cleared Checks","Total Cleared Deposits",
+        "Total Adjustments","Total Balanced Adjustments");
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

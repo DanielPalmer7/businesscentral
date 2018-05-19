@@ -1,0 +1,49 @@
+OBJECT Codeunit 2850 Native API - Language Handler
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160719.813T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    EventSubscriberInstance=Manual;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      ClashWhileSettingTheLanguageTxt@1000 : TextConst '@@@={Locked};ENU=Clash while setting the language. Something else is trying to change langauge at the same time.';
+      LanguageFound@1001 : Boolean;
+      CachedLanguageID@1002 : Integer;
+
+    [EventSubscriber(Table,8,OnGetUserLanguageId)]
+    LOCAL PROCEDURE InvoicingAPIGetUserLanguageHandler@1(VAR UserLanguageId@1000 : Integer;VAR Handled@1001 : Boolean);
+    VAR
+      Language@1002 : Record Language;
+    BEGIN
+      // Breaking handled pattern here - API subscriber must win, log a clash
+      if Handled then
+        SENDTRACETAG(
+          '00001LJ','NativeInvoicingLanguageHanlder',VERBOSITY::Error,
+          ClashWhileSettingTheLanguageTxt,DATACLASSIFICATION::SystemMetadata);
+
+      // Performance optimization - Calling GetUserSelectedLanguageId is creating 1-2 SQL queries each time
+      if not LanguageFound then begin
+        CachedLanguageID := Language.GetUserSelectedLanguageId;
+        LanguageFound := true;
+      end;
+
+      UserLanguageId := CachedLanguageID;
+      Handled := true;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

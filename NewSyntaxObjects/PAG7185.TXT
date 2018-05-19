@@ -1,0 +1,28 @@
+OBJECT Page 7185 Purch. Invoice Lines Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161614.310T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Lines;
+    MultipleNewLines=true;
+    SourceTable="Purch. Inv. Line";
+    PageType=ListPart;
+  }
+  CONTROLS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

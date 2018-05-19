@@ -1,0 +1,69 @@
+OBJECT Codeunit 1351 Telemetry Subscribers
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160656.433T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      GLPostInconsistentTelem@1000 : Codeunit "G/L Post. Inconsistent Telem.";
+      ProfileChangedTelemetryMsg@1001 : TextConst '@@@="%1=Previous profile id, %2=New profile id";ENU=Profile changed from %1 to %2.';
+      ProfileChangedTelemetryCategoryTxt@1002 : TextConst 'ENU=AL User Profile';
+      NoSeriesCategoryTxt@1004 : TextConst '@@@={LOCKED};ENU=AL NoSeries';
+      NoSeriesEditedTelemetryTxt@1003 : TextConst '@@@={LOCKED};ENU=The number series was changed by the user.';
+
+    [EventSubscriber(Codeunit,1,OnAfterCompanyOpen,"",Skip,Skip)]
+    LOCAL PROCEDURE ScheduleMasterdataTelemetryAfterCompanyOpen@1();
+    VAR
+      CodeUnitMetadata@1001 : Record "CodeUnit Metadata";
+      TelemetryManagement@1000 : Codeunit "Telemetry Management";
+    BEGIN
+      CodeUnitMetadata.ID := CODEUNIT::"Generate Master Data Telemetry";
+      TelemetryManagement.ScheduleCalEventsForTelemetryAsync(CodeUnitMetadata.RECORDID,CODEUNIT::"Create Telemetry Cal. Events",20);
+    END;
+
+    [EventSubscriber(Codeunit,1,OnAfterCompanyOpen,"",Skip,Skip)]
+    LOCAL PROCEDURE ScheduleActivityTelemetryAfterCompanyOpen@2();
+    VAR
+      CodeUnitMetadata@1001 : Record "CodeUnit Metadata";
+      TelemetryManagement@1000 : Codeunit "Telemetry Management";
+    BEGIN
+      CodeUnitMetadata.ID := CODEUNIT::"Generate Activity Telemetry";
+      TelemetryManagement.ScheduleCalEventsForTelemetryAsync(CodeUnitMetadata.RECORDID,CODEUNIT::"Create Telemetry Cal. Events",21);
+    END;
+
+    [EventSubscriber(Codeunit,80,OnBeforePostCustomerEntry,"",Skip,Skip)]
+    LOCAL PROCEDURE EnableTelemetryInconsistentPostingOnBeforePostCustomerEntry@4(VAR GenJnlLine@1000 : Record "Gen. Journal Line";VAR SalesHeader@1001 : Record "Sales Header";VAR TotalSalesLine@1002 : Record "Sales Line";VAR TotalSalesLineLCY@1003 : Record "Sales Line");
+    BEGIN
+      BINDSUBSCRIPTION(GLPostInconsistentTelem);
+    END;
+
+    [EventSubscriber(Codeunit,9170,OnProfileChanged,"",Skip,Skip)]
+    LOCAL PROCEDURE SendTraceOnProfileChanged@3(PrevProfileID@1000 : Code[30];ProfileID@1001 : Code[30]);
+    BEGIN
+      SENDTRACETAG(
+        '00001O5',ProfileChangedTelemetryCategoryTxt,VERBOSITY::Normal,STRSUBSTNO(ProfileChangedTelemetryMsg,PrevProfileID,ProfileID),
+        DATACLASSIFICATION::SystemMetadata);
+    END;
+
+    [EventSubscriber(Page,2340,OnAfterNoSeriesModified,"",Skip,Skip)]
+    LOCAL PROCEDURE LogNoSeriesModifiedInvoicing@14();
+    BEGIN
+      SENDTRACETAG('00001PI',NoSeriesCategoryTxt,VERBOSITY::Normal,NoSeriesEditedTelemetryTxt,DATACLASSIFICATION::SystemMetadata);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

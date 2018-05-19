@@ -1,0 +1,28 @@
+OBJECT Codeunit 5919 Serv Reg.-Show WarrLdgEntries
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Service Register";
+    OnRun=BEGIN
+            WarrLedgEntry.RESET;
+            WarrLedgEntry.SETRANGE("Entry No.","From Warranty Entry No.","To Warranty Entry No.");
+            PAGE.RUN(PAGE::"Warranty Ledger Entries",WarrLedgEntry);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      WarrLedgEntry@1000 : Record "Warranty Ledger Entry";
+
+    BEGIN
+    END.
+  }
+}
+

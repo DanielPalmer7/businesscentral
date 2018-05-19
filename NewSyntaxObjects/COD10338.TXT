@@ -1,0 +1,59 @@
+OBJECT Codeunit 10338 Exp. Pre-Mapping Det EFT CA
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="EFT Export Workset";
+    Permissions=TableData "EFT Export"=rimd;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    PROCEDURE PrepareEFTDetails@2(VAR TempEFTExportWorkset@1020004 : TEMPORARY Record "EFT Export Workset";DataExchangeEntryNo@1020001 : Integer;LineNo@1001 : Integer;VAR DetailArray@1020006 : ARRAY [100] OF Integer;VAR ExportEFTRB@1020002 : Codeunit "Export EFT (RB)";DataExchLineDefCode@1020008 : Code[20];VAR EFTValues@1020010 : Codeunit "EFT Values");
+    VAR
+      BankAccount@1020005 : Record "Bank Account";
+      GenerateEFT@1020000 : Codeunit "Generate EFT";
+      TraceNumber@1020003 : Code[30];
+      DetailCount@1020007 : Integer;
+    BEGIN
+      DetailCount := 0;
+      DetailCount := DetailCount + 1;
+      DetailArray[DetailCount] := DataExchangeEntryNo;
+      LineNo += 1;
+      PrepareEFTDetail(DataExchangeEntryNo,DataExchLineDefCode);
+      BankAccount.GET(TempEFTExportWorkset."Bank Account No.");
+      EFTValues.GetParentBoolean;
+      EFTValues.GetTotalFileCredit;
+
+      TraceNumber := ExportEFTRB.ExportElectronicPayment(TempEFTExportWorkset,EFTValues.GetPaymentAmt(TempEFTExportWorkset),
+          TempEFTExportWorkset.UserSettleDate,DataExchangeEntryNo,DataExchLineDefCode,EFTValues);
+      GenerateEFT.UpdateEFTExport(TempEFTExportWorkset,TraceNumber);
+      DataExchangeEntryNo := DataExchangeEntryNo + 1;
+    END;
+
+    LOCAL PROCEDURE PrepareEFTDetail@1(DataExchangeEntryNo@1020001 : Integer;DataExchLineDefCode@1020000 : Code[20]);
+    VAR
+      ACHRBDetail@1004 : Record "ACH RB Detail";
+    BEGIN
+      with ACHRBDetail do begin
+        INIT;
+        "Data Exch. Entry No." := DataExchangeEntryNo;
+        "Data Exch. Line Def Code" := DataExchLineDefCode;
+        INSERT(true);
+        COMMIT;
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

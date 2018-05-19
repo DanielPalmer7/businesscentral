@@ -1,0 +1,35 @@
+OBJECT Table 1545 Flow User Environment Config
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160128.810T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+    CaptionML=ENU=Flow User Environment Config;
+  }
+  FIELDS
+  {
+    { 1   ;   ;User Security ID    ;GUID          ;CaptionML=ENU=User Security ID }
+    { 2   ;   ;Environment ID      ;Text50        ;CaptionML=ENU=Environment ID }
+    { 3   ;   ;Environment Display Name;Text100   ;CaptionML=ENU=Environment Display Name }
+  }
+  KEYS
+  {
+    {    ;"User Security ID"                      ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

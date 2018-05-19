@@ -1,0 +1,151 @@
+OBJECT Page 1316 Accountant Portal User Tasks
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161343.780T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Accountant Portal User Tasks;
+    SourceTable="User Task";
+    SourceTableView=SORTING(ID)
+                    WHERE("Percent Complete"=FILTER(<100));
+    PageType=List;
+    OnOpenPage=BEGIN
+                 RESET;
+
+                 SETRANGE("Assigned To",USERSECURITYID);
+                 SETFILTER("Percent Complete",'< 100');
+               END;
+
+    OnAfterGetRecord=BEGIN
+                       CALCFIELDS("Created By User Name");
+                       CreatedByName := "Created By User Name";
+                       Link := GETURL(CLIENTTYPE::Web,COMPANYNAME,OBJECTTYPE::Page,1171,Rec) + '&Mode=Edit';
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Task;
+                GroupType=Group }
+
+    { 8   ;2   ;Field     ;
+                Name=ID;
+                CaptionML=[@@@={Locked};
+                           ENU=ID];
+                ToolTipML=ENU=Specifies the ID that applies.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=ID;
+                ImplicitType=Integer }
+
+    { 4   ;2   ;Field     ;
+                Name=Title;
+                CaptionML=[@@@={Locked};
+                           ENU=Subject];
+                ToolTipML=ENU=Specifies the title of the task.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Title;
+                ImplicitType=Text250 }
+
+    { 5   ;2   ;Field     ;
+                Name="Due DateTime";
+                CaptionML=[@@@={Locked};
+                           ENU=Due Date];
+                ToolTipML=ENU=Specifies when the task must be completed.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Due DateTime";
+                ImplicitType=DateTime }
+
+    { 6   ;2   ;Field     ;
+                Name="Percent Complete";
+                CaptionML=[@@@={Locked};
+                           ENU=% Complete];
+                ToolTipML=ENU=Specifies the progress of the task.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Percent Complete";
+                ImplicitType=Integer }
+
+    { 7   ;2   ;Field     ;
+                Name=Priority;
+                CaptionML=[@@@={Locked};
+                           ENU=Priority];
+                ToolTipML=ENU=Specifies the priority of the task.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Priority;
+                ImplicitType=Option }
+
+    { 9   ;2   ;Field     ;
+                Name=Description;
+                CaptionML=[@@@={Locked};
+                           ENU=Description];
+                ToolTipML=ENU=Specifies a descriptions of the task.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Description;
+                ImplicitType=BLOB }
+
+    { 10  ;2   ;Field     ;
+                Name=Created_By_Name;
+                CaptionML=[@@@={Locked};
+                           ENU=Created_By_Name];
+                ToolTipML=ENU=Specifies the string value name of the user who created the task.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=CreatedByName;
+                ImplicitType=Code50 }
+
+    { 11  ;2   ;Field     ;
+                Name="Created DateTime";
+                CaptionML=[@@@={Locked};
+                           ENU=Created Date];
+                ToolTipML=ENU=Specifies when the task was created.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Created DateTime";
+                ImplicitType=DateTime }
+
+    { 15  ;2   ;Field     ;
+                Name="Start DateTime";
+                CaptionML=[@@@={Locked};
+                           ENU=Start Date];
+                ToolTipML=ENU=Specifies when the task must start.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Start DateTime";
+                ImplicitType=DateTime }
+
+    { 3   ;2   ;Field     ;
+                Name="Assigned To";
+                CaptionML=[@@@={Locked};
+                           ENU=Assigned To];
+                ToolTipML=ENU=Specifies who the task is assigned to.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Assigned To";
+                ImplicitType=GUID }
+
+    { 12  ;2   ;Field     ;
+                Name=Link;
+                CaptionML=[@@@={Locked};
+                           ENU=Link];
+                ToolTipML=ENU=Specifies the string value of web link to this user task.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Link;
+                ImplicitType=Text }
+
+  }
+  CODE
+  {
+    VAR
+      CreatedByName@1000 : Code[50];
+      Link@1001 : Text;
+
+    BEGIN
+    END.
+  }
+}
+

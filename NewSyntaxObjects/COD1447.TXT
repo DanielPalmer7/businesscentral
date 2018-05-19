@@ -1,0 +1,32 @@
+OBJECT Codeunit 1447 Headline RC Prod. Planner
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=VAR
+            HeadlineRCProdPlanner@1000 : Record "Headline RC Prod. Planner";
+          BEGIN
+            HeadlineRCProdPlanner.GET;
+            WORKDATE := HeadlineRCProdPlanner."Workdate for computations";
+            OnComputeHeadlines;
+          END;
+
+  }
+  CODE
+  {
+
+    [Integration]
+    LOCAL PROCEDURE OnComputeHeadlines@1();
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

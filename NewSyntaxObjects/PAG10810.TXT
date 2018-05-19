@@ -1,0 +1,201 @@
+OBJECT Page 10810 Generate EFT Files
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161725.23T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Generate EFT Files;
+    InsertAllowed=false;
+    DeleteAllowed=false;
+    SourceTable="EFT Export Workset";
+    PageType=ListPlus;
+    RefreshOnActivate=true;
+    PromotedActionCategoriesML=ENU=New,Process,Report,Manage;
+    OnOpenPage=BEGIN
+                 SettlementDate := TODAY;
+
+                 if (BankAccountNoFilter <> '') and (BankAccountNoFilter <> BankAccountNo) then begin
+                   BankAccountNo := BankAccountNoFilter;
+                   BankAccount.SETRANGE("No.",BankAccountNo);
+                   if BankAccount.FINDFIRST then
+                     BankAccountDescription := BankAccount.Name;
+                 end;
+
+                 UpdateSubForm;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1020011 ;    ;ActionContainer;
+                      Name=Generate;
+                      CaptionML=ENU=Action;
+                      ActionContainerType=ActionItems }
+      { 1020008 ;1   ;Action    ;
+                      Name=Delete;
+                      CaptionML=ENU=Delete;
+                      ToolTipML=ENU=Delete the selected file.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Delete;
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 EFTExportWorkset@1020001 : Record "EFT Export Workset";
+                                 EFTExport@1020000 : Record "EFT Export";
+                               BEGIN
+                                 CurrPage.GenerateEFTFileLines.PAGE.GetColumns(EFTExportWorkset);
+                                 with EFTExportWorkset do begin
+                                   if FIND('-') then begin
+                                     if DIALOG.CONFIRM(DeleteQst) then
+                                       repeat
+                                         EFTExport.RESET;
+                                         EFTExport.SETRANGE("Journal Template Name","Journal Template Name");
+                                         EFTExport.SETRANGE("Journal Batch Name","Journal Batch Name");
+                                         EFTExport.SETRANGE("Line No.","Line No.");
+                                         EFTExport.SETRANGE("Sequence No.","Sequence No.");
+                                         if EFTExport.FINDFIRST then
+                                           EFTExport.DELETE;
+                                       until NEXT = 0;
+                                     UpdateSubForm;
+                                   end else
+                                     MESSAGE(NoLineMsg);
+                                 end;
+                               END;
+                                }
+      { 1020012 ;1   ;Action    ;
+                      Name=GenerateEFTFile;
+                      ShortCutKey=Ctrl+G;
+                      Ellipsis=true;
+                      CaptionML=ENU=Generate EFT Files;
+                      ToolTipML=ENU=Export payments on journal lines that are set to electronic payment to a file prior to transmitting the file to your bank.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=ExportFile;
+                      PromotedCategory=Process;
+                      OnAction=VAR
+                                 EFTExportWorkset@1020000 : Record "EFT Export Workset";
+                                 GenerateEFT@1020001 : Codeunit "Generate EFT";
+                               BEGIN
+                                 CurrPage.GenerateEFTFileLines.PAGE.GetColumns(EFTExportWorkset);
+                                 if EFTExportWorkset.FINDFIRST then
+                                   GenerateEFT.ProcessAndGenerateEFTFile(BankAccountNo,SettlementDate,EFTExportWorkset,EFTValues);
+                                 UpdateSubForm;
+                               END;
+                                }
+      { 1020006 ;1   ;Action    ;
+                      Name=Mark All;
+                      ShortCutKey=Ctrl+M;
+                      CaptionML=ENU=Mark All;
+                      ToolTipML=ENU=Select all lines to be generated.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Apply;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CurrPage.GenerateEFTFileLines.PAGE.MarkUnmarkInclude(true,BankAccountNo);
+                                 CurrPage.UPDATE(false);
+                               END;
+                                }
+      { 1020007 ;1   ;Action    ;
+                      Name=Unmark All;
+                      ShortCutKey=Ctrl+U;
+                      CaptionML=ENU=Unmark All;
+                      ToolTipML=ENU=View a trial balance with amounts shown in separate columns for each time period.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=UnApply;
+                      PromotedCategory=Process;
+                      OnAction=BEGIN
+                                 CurrPage.GenerateEFTFileLines.PAGE.MarkUnmarkInclude(false,BankAccountNo);
+                                 CurrPage.UPDATE(false);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1020000; ;Container ;
+                Name=General;
+                ContainerType=ContentArea }
+
+    { 1020003;1;Field     ;
+                Name=Bank Account;
+                CaptionML=ENU=Bank Account;
+                ToolTipML=ENU=Specifies the number of the bank account.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=BankAccountNo;
+                TableRelation="Bank Account";
+                OnValidate=BEGIN
+                             BankAccount.SETRANGE("No.",BankAccountNo);
+                             if BankAccount.FINDFIRST then begin
+                               BankAccountDescription := BankAccount.Name;
+                               if (BankAccount."Export Format" = 0) or (BankAccount."Export Format" = BankAccount."Export Format"::Other) then
+                                 MESSAGE(NotSetupMsg);
+                             end;
+                             UpdateSubForm;
+                           END;
+
+                ImplicitType=Code20 }
+
+    { 1020002;1;Field     ;
+                Name=BankAccountDescription;
+                CaptionML=ENU=Description;
+                ToolTipML=ENU=Specifies the name of the bank.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=BankAccountDescription;
+                Editable=FALSE;
+                ImplicitType=Text50 }
+
+    { 1020001;1;Field     ;
+                Name=SettlementDate;
+                CaptionML=ENU=Settlement Date;
+                ToolTipML=ENU=Specifies the settlement date for the electronic funds transfer.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=SettlementDate;
+                ImplicitType=Date }
+
+    { 1020004;1;Part      ;
+                Name=GenerateEFTFileLines;
+                CaptionML=ENU=Lines;
+                ApplicationArea=#Basic,#Suite;
+                PagePartID="Generate EFT File Lines";
+                PartType=Page }
+
+  }
+  CODE
+  {
+    VAR
+      BankAccount@1020008 : Record "Bank Account";
+      EFTValues@1020007 : Codeunit "EFT Values";
+      BankAccountNo@1020006 : Code[20];
+      BankAccountDescription@1020005 : Text[50];
+      SettlementDate@1020002 : Date;
+      BankAccountNoFilter@1020003 : Code[20];
+      DeleteQst@1020000 : TextConst 'ENU=Deleting these marked payments will remove them from the EFT file, do you want to continue?';
+      NoLineMsg@1020001 : TextConst 'ENU=There are no lines selected to delete.';
+      NotSetupMsg@1020004 : TextConst 'ENU=This bank account is not setup for EFT payments.';
+
+    LOCAL PROCEDURE UpdateSubForm@1();
+    BEGIN
+      CurrPage.GenerateEFTFileLines.PAGE.Set(BankAccountNo);
+      CurrPage.UPDATE(false);
+    END;
+
+    PROCEDURE SetBalanceAccount@1020003(BankAccountNumber@1020000 : Code[20]);
+    BEGIN
+      BankAccountNoFilter := BankAccountNumber;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

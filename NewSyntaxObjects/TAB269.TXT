@@ -1,0 +1,37 @@
+OBJECT Table 269 G/L Account Net Change
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160106.337T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=G/L Account Net Change;
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;CaptionML=ENU=No. }
+    { 2   ;   ;Name                ;Text50        ;CaptionML=ENU=Name }
+    { 3   ;   ;Net Change in Jnl.  ;Decimal       ;CaptionML=ENU=Net Change in Jnl.;
+                                                   AutoFormatType=1 }
+    { 4   ;   ;Balance after Posting;Decimal      ;CaptionML=ENU=Balance after Posting;
+                                                   AutoFormatType=1 }
+  }
+  KEYS
+  {
+    {    ;"No."                                   ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

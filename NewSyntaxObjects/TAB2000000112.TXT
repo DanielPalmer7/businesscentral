@@ -1,0 +1,39 @@
+OBJECT Table 2000000112 Server Instance
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.777T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Server Instance ID  ;Integer       ;AutoIncrement=true }
+    { 2   ;   ;Service Name        ;Text250        }
+    { 3   ;   ;Server Computer Name;Text250        }
+    { 4   ;   ;Last Active         ;DateTime      ;Volatile=true }
+    { 5   ;   ;Server Instance Name;Text250        }
+    { 6   ;   ;Server Port         ;Integer        }
+    { 7   ;   ;Management Port     ;Integer        }
+    { 8   ;   ;Status              ;Option        ;OptionString=Started,Stopped,Crashed }
+    { 9   ;   ;Last Tenant Config Version;BigInteger }
+  }
+  KEYS
+  {
+    {    ;"Server Instance ID"                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

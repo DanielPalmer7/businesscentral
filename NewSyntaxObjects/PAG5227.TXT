@@ -1,0 +1,27 @@
+OBJECT Page 5227 Empl. Absences by Cat. Matrix
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161436.650T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Lines;
+    LinksAllowed=false;
+    SourceTable=Date;
+    PageType=Card;
+  }
+  CONTROLS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

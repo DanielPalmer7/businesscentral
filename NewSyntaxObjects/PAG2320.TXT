@@ -1,0 +1,112 @@
+OBJECT Page 2320 BC O365 Payment Terms Card
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161408.527T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Payment Terms;
+    LinksAllowed=false;
+    PageType=Card;
+    OnOpenPage=BEGIN
+                 Days := CALCDATE(PaymentTerms."Due Date Calculation",TODAY) - TODAY;
+                 PaymentTermsCode := PaymentTerms.Code;
+                 if PaymentTermsCode = '' then
+                   CurrPage.CAPTION := NewPaymentTermTxt;
+               END;
+
+    OnQueryClosePage=VAR
+                       O365SalesInitialSetup@1002 : Record "O365 Sales Initial Setup";
+                       LocalPaymentTerms@1003 : Record "Payment Terms";
+                       PaymentTermTranslation@1004 : Record "Payment Term Translation";
+                       DateFormula@1000 : DateFormula;
+                     BEGIN
+                       if CloseAction = ACTION::LookupCancel then
+                         exit;
+
+                       if PaymentTermsCode = '' then
+                         ERROR(MustSpecifyCodeErr);
+
+                       // Handle the code
+                       if not PaymentTerms.GET(PaymentTerms.Code) then begin
+                         if LocalPaymentTerms.GET(PaymentTermsCode) then
+                           ERROR(PaymentTermsAlreadyExistErr);
+                         PaymentTerms.Code := PaymentTermsCode;
+                         PaymentTerms.Description := PaymentTermsCode;
+                         PaymentTerms.INSERT(true);
+                       end else
+                         if PaymentTerms.Code <> PaymentTermsCode then begin
+                           if LocalPaymentTerms.GET(PaymentTermsCode) then
+                             ERROR(PaymentTermsAlreadyExistErr);
+                           PaymentTermTranslation.SETRANGE("Payment Term",PaymentTerms.Code);
+                           PaymentTermTranslation.DELETEALL;
+                           PaymentTerms.RENAME(PaymentTermsCode);
+                           PaymentTerms.Description := PaymentTermsCode;
+                           if O365SalesInitialSetup.GET and (O365SalesInitialSetup."Default Payment Terms Code" = PaymentTermsCode) then
+                             O365SalesInitialSetup.UpdateDefaultPaymentTerms(PaymentTermsCode);
+                         end;
+
+                       // Handle the date
+                       EVALUATE(DateFormula,STRSUBSTNO(DayDueDateCalculationTxt,Days));
+                       PaymentTerms.VALIDATE("Due Date Calculation",DateFormula);
+                       PaymentTerms.MODIFY(true);
+                     END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 4   ;1   ;Group     ;
+                Name=Control4;
+                GroupType=Group;
+                InstructionalTextML=ENU=Specify when payment is due for invoices that use this payment term. }
+
+    { 8   ;2   ;Field     ;
+                Name=PaymentTermsCode;
+                CaptionML=ENU=Short name;
+                ToolTipML=ENU=Specifies the short name of the payment term.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=PaymentTermsCode }
+
+    { 9   ;2   ;Field     ;
+                Name=Days;
+                CaptionML=ENU=Days;
+                ToolTipML=ENU=Specifies the number of days until payments are due when this payment term is used.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Days;
+                OnValidate=BEGIN
+                             if Days < 0 then
+                               ERROR(DaysMustBePositiveErr);
+                           END;
+                            }
+
+  }
+  CODE
+  {
+    VAR
+      PaymentTerms@1001 : Record "Payment Terms";
+      Days@1000 : Integer;
+      DayDueDateCalculationTxt@1002 : TextConst '@@@={Locked};ENU=<%1D>';
+      PaymentTermsCode@1003 : Code[10];
+      PaymentTermsAlreadyExistErr@1005 : TextConst 'ENU=You already have payment terms with this name. Please use a different name.';
+      DaysMustBePositiveErr@1006 : TextConst 'ENU=Please specify 0 or more days. If you want to be paid immediately, then set the number of days to 0.';
+      MustSpecifyCodeErr@1007 : TextConst 'ENU=You must specify a short name for these payment terms.';
+      NewPaymentTermTxt@1009 : TextConst 'ENU=New payment term';
+
+    PROCEDURE SetPaymentTerms@1(NewPaymentTerms@1000 : Record "Payment Terms");
+    BEGIN
+      PaymentTerms := NewPaymentTerms;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

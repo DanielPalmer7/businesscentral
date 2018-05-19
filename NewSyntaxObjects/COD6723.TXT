@@ -1,0 +1,54 @@
+OBJECT Codeunit 6723 Server Config. Setting Handler
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      ALConfigSettings@1000 : DotNet "'Microsoft.Dynamics.Nav.Types, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Types.ALConfigSettings";
+
+    LOCAL PROCEDURE InitializeConfigSettings@3();
+    BEGIN
+      ALConfigSettings := ALConfigSettings.Instance;
+    END;
+
+    PROCEDURE GetEnableSaaSExtensionInstallSetting@2() : Boolean;
+    VAR
+      EnableSaaSExtensionInstall@1000 : Boolean;
+    BEGIN
+      InitializeConfigSettings;
+      EnableSaaSExtensionInstall := ALConfigSettings.EnableSaasExtensionInstallConfigSetting;
+      exit(EnableSaaSExtensionInstall);
+    END;
+
+    PROCEDURE GetIsSaasExcelAddinEnabled@1() : Boolean;
+    VAR
+      SaasExcelAddinEnabled@1000 : Boolean;
+    BEGIN
+      InitializeConfigSettings;
+      SaasExcelAddinEnabled := ALConfigSettings.IsSaasExcelAddinEnabled;
+      exit(SaasExcelAddinEnabled);
+    END;
+
+    PROCEDURE GetApiServicesEnabled@4() ApiEnabled : Boolean;
+    BEGIN
+      InitializeConfigSettings;
+      ApiEnabled := ALConfigSettings.ApiServicesEnabled;
+      exit(ApiEnabled);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

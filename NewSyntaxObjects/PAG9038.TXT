@@ -1,0 +1,216 @@
+OBJECT Page 9038 Production Planner Activities
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161634.923T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Activities;
+    SourceTable="Manufacturing Cue";
+    PageType=CardPart;
+    RefreshOnActivate=true;
+    OnOpenPage=BEGIN
+                 RESET;
+                 if not GET then begin
+                   INIT;
+                   INSERT;
+                 end;
+
+                 SETRANGE("User ID Filter",USERID);
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 9       ;    ;ActionContainer;
+                      Name=ActionContainer9;
+                      ActionContainerType=ActionItems }
+      { 8       ;1   ;Action    ;
+                      Name=Set Up Cues;
+                      CaptionML=ENU=Set Up Cues;
+                      ToolTipML=ENU=Set up the cues (status tiles) related to the role.;
+                      ApplicationArea=#Basic,#Suite;
+                      Image=Setup;
+                      OnAction=VAR
+                                 CueRecordRef@1000 : RecordRef;
+                               BEGIN
+                                 CueRecordRef.GETTABLE(Rec);
+                                 CueSetup.OpenCustomizePageForCurrentUser(CueRecordRef.NUMBER);
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name="Production Orders";
+                CaptionML=ENU=Production Orders;
+                GroupType=CueGroup;
+                ActionList=ACTIONS
+                {
+                  { 21      ;0   ;Action    ;
+                                  Name="Change Production Order Status";
+                                  CaptionML=ENU=Change Production Order Status;
+                                  ToolTipML=ENU=Change the production order to another status, such as Released.;
+                                  ApplicationArea=#Manufacturing;
+                                  RunObject=Page "Change Production Order Status";
+                                  Image=ChangeStatus }
+                  { 12      ;0   ;Action    ;
+                                  Name="New Production Order";
+                                  CaptionML=ENU=New Production Order;
+                                  ToolTipML=ENU="Prepare to produce an end item. ";
+                                  ApplicationArea=#Manufacturing;
+                                  RunObject=Page "Planned Production Order";
+                                  RunPageMode=Create }
+                  { 28      ;0   ;Action    ;
+                                  Name=Navigate;
+                                  CaptionML=ENU=Navigate;
+                                  ToolTipML=ENU=Find all entries and documents that exist for the document number and posting date on the selected entry or document.;
+                                  ApplicationArea=#Advanced;
+                                  RunObject=Page Navigate;
+                                  Image=Navigate }
+                }
+                 }
+
+    { 1   ;2   ;Field     ;
+                Name="Planned Prod. Orders - All";
+                ToolTipML=ENU=Specifies the number of planned production orders that are displayed in the Manufacturing Cue on the Role Center. The documents are filtered by today's date.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr="Planned Prod. Orders - All";
+                DrillDownPageID="Planned Production Orders";
+                ImplicitType=Integer }
+
+    { 5   ;2   ;Field     ;
+                Name="Firm Plan. Prod. Orders - All";
+                ToolTipML=ENU=Specifies the number of firm planned production orders that are displayed in the Manufacturing Cue on the Role Center. The documents are filtered by today's date.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr="Firm Plan. Prod. Orders - All";
+                DrillDownPageID="Firm Planned Prod. Orders";
+                ImplicitType=Integer }
+
+    { 7   ;2   ;Field     ;
+                Name="Released Prod. Orders - All";
+                ToolTipML=ENU=Specifies the number of released production orders that are displayed in the Manufacturing Cue on the Role Center. The documents are filtered by today's date.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr="Released Prod. Orders - All";
+                DrillDownPageID="Released Production Orders";
+                ImplicitType=Integer }
+
+    { 3   ;1   ;Group     ;
+                Name="Planning - Operations";
+                CaptionML=ENU=Planning - Operations;
+                GroupType=CueGroup;
+                ActionList=ACTIONS
+                {
+                  { 15      ;0   ;Action    ;
+                                  Name="New Purchase Order";
+                                  CaptionML=ENU=New Purchase Order;
+                                  ToolTipML=ENU=Purchase goods or services from a vendor.;
+                                  ApplicationArea=#Advanced;
+                                  RunObject=Page "Purchase Order";
+                                  RunPageMode=Create }
+                  { 16      ;0   ;Action    ;
+                                  Name="Edit Planning Worksheet";
+                                  CaptionML=ENU=Edit Planning Worksheet;
+                                  ToolTipML=ENU=Plan supply orders automatically to fulfill new demand.;
+                                  ApplicationArea=#Advanced;
+                                  RunObject=Page "Planning Worksheet" }
+                  { 17      ;0   ;Action    ;
+                                  Name="Edit Subcontracting Worksheet";
+                                  CaptionML=ENU=Edit Subcontracting Worksheet;
+                                  ToolTipML=ENU=Plan outsourcing of operation on released production orders.;
+                                  ApplicationArea=#Manufacturing;
+                                  RunObject=Page "Subcontracting Worksheet" }
+                }
+                 }
+
+    { 11  ;2   ;Field     ;
+                Name="Purchase Orders";
+                DrillDown=true;
+                CaptionML=ENU=My Purchase Orders;
+                ToolTipML=ENU=Specifies the number of purchase orders that are displayed in the Manufacturing Cue on the Role Center. The documents are filtered by today's date.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Purchase Orders";
+                DrillDownPageID="Purchase Order List";
+                ImplicitType=Integer }
+
+    { 10  ;1   ;Group     ;
+                Name=Design;
+                CaptionML=ENU=Design;
+                GroupType=CueGroup;
+                ActionList=ACTIONS
+                {
+                  { 24      ;0   ;Action    ;
+                                  Name="New Item";
+                                  CaptionML=ENU=New Item;
+                                  ToolTipML=ENU=Create an item card based on the stockkeeping unit.;
+                                  ApplicationArea=#Advanced;
+                                  RunObject=Page "Item Card";
+                                  Image=NewItem;
+                                  RunPageMode=Create }
+                  { 25      ;0   ;Action    ;
+                                  Name="New Production BOM";
+                                  CaptionML=ENU=New Production BOM;
+                                  ToolTipML=ENU=Create a bill of material that defines the components in a produced item.;
+                                  ApplicationArea=#Manufacturing;
+                                  RunObject=Page "Production BOM";
+                                  RunPageMode=Create }
+                  { 26      ;0   ;Action    ;
+                                  Name="New Routing";
+                                  CaptionML=ENU=New Routing;
+                                  ToolTipML=ENU=Create a routing that defines the operations required to produce an end item.;
+                                  ApplicationArea=#Manufacturing;
+                                  RunObject=Page Routing;
+                                  RunPageMode=Create }
+                }
+                 }
+
+    { 19  ;2   ;Field     ;
+                Name="Prod. BOMs under Development";
+                ToolTipML=ENU=Specifies the number of production BOMs that are under development that are displayed in the Manufacturing Cue on the Role Center. The documents are filtered by today's date.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr="Prod. BOMs under Development";
+                DrillDownPageID="Production BOM List";
+                ImplicitType=Integer }
+
+    { 18  ;2   ;Field     ;
+                Name="Routings under Development";
+                ToolTipML=ENU=Specifies the routings under development that are displayed in the Manufacturing Cue on the Role Center. The documents are filtered by today's date.;
+                ApplicationArea=#Manufacturing;
+                SourceExpr="Routings under Development";
+                DrillDownPageID="Routing List";
+                ImplicitType=Integer }
+
+    { 6   ;1   ;Group     ;
+                Name="My User Tasks";
+                CaptionML=ENU=My User Tasks;
+                GroupType=CueGroup }
+
+    { 4   ;2   ;Field     ;
+                Name="Pending Tasks";
+                CaptionML=ENU=Pending User Tasks;
+                ToolTipML=ENU=Specifies the number of pending tasks that are assigned to you.;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Pending Tasks";
+                DrillDownPageID="User Task List";
+                ImplicitType=Integer;
+                Image=Checklist }
+
+  }
+  CODE
+  {
+    VAR
+      CueSetup@1000 : Codeunit "Cue Setup";
+
+    BEGIN
+    END.
+  }
+}
+

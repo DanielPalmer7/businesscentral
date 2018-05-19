@@ -1,0 +1,138 @@
+OBJECT Codeunit 10102 Manage Sales Tax Journal
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160931.533T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      VATEntry@1030000 : Record "VAT Entry";
+      GLEntry@1030001 : Record "G/L Entry";
+      NextVATEntryNo@1030002 : Integer;
+      NextTransactionNo@1030003 : Integer;
+      TotalAmount@1030004 : Decimal;
+      Text001@1030005 : TextConst 'ENU="Amount must not be 0 in Gen. Journal Line Template Name=''%1'',Journal Batch Name=''%2'',Line No.=''%3''. "';
+
+    [External]
+    PROCEDURE CreateGenJnlLines@1030000(VAR GeneralJnlLine@1030000 : Record "Gen. Journal Line");
+    VAR
+      GenJnlLine@1030001 : Record "Gen. Journal Line";
+      BalanceAccNo@1030002 : Code[10];
+    BEGIN
+      BalanceAccNo := GeneralJnlLine."Bal. Account No.";
+      GeneralJnlLine.MODIFYALL("Bal. Account No.",'');
+
+      GeneralJnlLine.SETRANGE("Document No.",GeneralJnlLine."Document No.");
+      GeneralJnlLine.FINDLAST;
+      GenJnlLine.INIT;
+      GenJnlLine.TRANSFERFIELDS(GeneralJnlLine,false);
+      GenJnlLine."Journal Template Name" := GeneralJnlLine."Journal Template Name";
+      GenJnlLine."Journal Batch Name" := GeneralJnlLine."Journal Batch Name";
+      GenJnlLine."Line No." := GeneralJnlLine."Line No." + 10000;
+      GenJnlLine.INSERT;
+      GenJnlLine."System-Created Entry" := true;
+      GenJnlLine.VALIDATE("Account No.",BalanceAccNo);
+      GenJnlLine.VALIDATE(Amount,TotalAmount);
+      GenJnlLine.MODIFY;
+      GeneralJnlLine.FINDSET;
+    END;
+
+    [External]
+    PROCEDURE CreateTempGenJnlLines@1030001(GenJnlLine@1030000 : Record "Gen. Journal Line";VAR TempGenJnlLine@1030001 : Record "Gen. Journal Line");
+    VAR
+      BalanceAccNo@1030002 : Code[10];
+    BEGIN
+      BalanceAccNo := GenJnlLine."Bal. Account No.";
+
+      GenJnlLine.SETRANGE("Document No.",GenJnlLine."Document No.");
+
+      TempGenJnlLine.DELETEALL;
+
+      if GenJnlLine.FINDSET then
+        repeat
+          TempGenJnlLine.INIT;
+          TempGenJnlLine.TRANSFERFIELDS(GenJnlLine,true);
+          TempGenJnlLine.INSERT;
+          TempGenJnlLine."Bal. Account No." := '';
+          TempGenJnlLine.MODIFY;
+        until GenJnlLine.NEXT = 0;
+
+      TempGenJnlLine.INIT;
+      TempGenJnlLine.TRANSFERFIELDS(GenJnlLine,false);
+      TempGenJnlLine."Journal Template Name" := GenJnlLine."Journal Template Name";
+      TempGenJnlLine."Journal Batch Name" := GenJnlLine."Journal Batch Name";
+      TempGenJnlLine."Line No." := GenJnlLine."Line No." + 10000;
+      TempGenJnlLine.INSERT;
+      TempGenJnlLine."System-Created Entry" := true;
+      TempGenJnlLine.VALIDATE("Account No.",BalanceAccNo);
+      TempGenJnlLine.VALIDATE(Amount,TotalAmount);
+      TempGenJnlLine.MODIFY;
+      TempGenJnlLine.FINDSET;
+    END;
+
+    LOCAL PROCEDURE GetLastNosForVAT@1030002();
+    BEGIN
+      GLEntry.LOCKTABLE;
+      if GLEntry.FINDLAST then
+        NextTransactionNo := GLEntry."Transaction No." + 1
+      else
+        NextTransactionNo := 1;
+
+      VATEntry.LOCKTABLE;
+      if VATEntry.FINDLAST then
+        NextVATEntryNo := VATEntry."Entry No." + 1
+      else
+        NextVATEntryNo := 1;
+    END;
+
+    [External]
+    PROCEDURE PostToVAT@1030003(GenJournlLine@1030000 : Record "Gen. Journal Line");
+    BEGIN
+      GetLastNosForVAT;
+      CalculateTotalAmount(GenJournlLine);
+
+      VATEntry.INIT;
+      VATEntry."Entry No." := NextVATEntryNo;
+      VATEntry."Posting Date" := GenJournlLine."Posting Date";
+      VATEntry."Document No." := GenJournlLine."Document No.";
+      VATEntry.Amount := -TotalAmount;
+      VATEntry."User ID" := USERID;
+      VATEntry."Source Code" := GenJournlLine."Source Code";
+      VATEntry."Transaction No." := NextTransactionNo;
+      VATEntry."Tax Group Code" := GenJournlLine."Tax Group Code";
+      VATEntry."Tax Jurisdiction Code" := GenJournlLine."Tax Jurisdiction Code";
+      VATEntry."Document Date" := GenJournlLine."Document Date";
+      VATEntry."GST/HST" := GenJournlLine."GST/HST";
+      VATEntry.INSERT;
+    END;
+
+    LOCAL PROCEDURE CalculateTotalAmount@1030004(GenJournlLine@1030000 : Record "Gen. Journal Line");
+    BEGIN
+      TotalAmount := 0;
+      GenJournlLine.SETRANGE("Document No.",GenJournlLine."Document No.");
+      if GenJournlLine.FINDSET then
+        repeat
+          TotalAmount := TotalAmount - GenJournlLine.Amount;
+        until GenJournlLine.NEXT = 0;
+
+      if TotalAmount = 0 then begin
+        GenJournlLine.FINDFIRST;
+        ERROR(Text001,GenJournlLine."Journal Template Name",GenJournlLine."Journal Batch Name",GenJournlLine."Line No.");
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

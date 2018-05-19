@@ -1,0 +1,199 @@
+OBJECT Codeunit 2103 O365 Sales Cancel Invoice
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160713.557T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Job Queue Entry";
+    OnRun=BEGIN
+            SendInvoiceCancelationEmailFromJobQueue(Rec);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      CancelPostedInvoiceQst@1002 : TextConst 'ENU=The invoice will be canceled and a cancelation email will be sent to the customer.\ \Do you want to continue?';
+      CancelPostedInvoiceMsg@1000 : TextConst 'ENU=The invoice has been canceled and an email has been sent to the customer.';
+      OpenPaymentsQst@1001 : TextConst 'ENU=You cannot cancel an invoice that is partially or fully paid. Do you want to see payments for this invoice so you can remove them?';
+      EmailNotSentErr@1004 : TextConst 'ENU=Customer Email does not exist. Invoice has been canceled but a cancelation email has not been sent to the customer.';
+      EmailSubjectTxt@1006 : TextConst 'ENU=Your invoice has been canceled.';
+      AlreadyCanceledErr@1007 : TextConst 'ENU=You cannot cancel this invoice because it has already been canceled.';
+      GreetingTxt@1005 : TextConst '@@@=%1 - customer name;ENU=Hello %1,';
+      CanceletionEmailBodyTxt@1003 : TextConst 'ENU=Thank you for your business. Your invoice has been canceled.';
+      CancelationEmailSubjectTxt@1008 : TextConst '@@@="%1 = Invoice No,%2 = Currency code, %3 = Total amount including tax , %4 = Due date";ENU="Invoice %1 of amount %2%3, that was due on %4 has been canceled. "';
+
+    [Internal]
+    PROCEDURE CancelInvoice@1(VAR SalesInvoiceHeader@1002 : Record "Sales Invoice Header");
+    VAR
+      CorrectPostedSalesInvoice@1003 : Codeunit "Correct Posted Sales Invoice";
+      O365SalesInvoicePayment@1000 : Codeunit "O365 Sales Invoice Payment";
+      GraphMail@1001 : Codeunit "Graph Mail";
+    BEGIN
+      if IsInvoiceCanceled(SalesInvoiceHeader) then
+        ERROR(AlreadyCanceledErr);
+
+      if IsInvoiceFullyOrPartiallyPaid(SalesInvoiceHeader) then begin
+        if CONFIRM(OpenPaymentsQst) then
+          O365SalesInvoicePayment.ShowHistory(SalesInvoiceHeader."No.");
+        exit;
+      end;
+
+      CorrectPostedSalesInvoice.TestCorrectInvoiceIsAllowed(SalesInvoiceHeader,true);
+      if CONFIRM(CancelPostedInvoiceQst) then begin
+        CODEUNIT.RUN(CODEUNIT::"O365 Setup Email");
+        if CorrectPostedSalesInvoice.CancelPostedInvoice(SalesInvoiceHeader) then begin
+          VerifyEmailAddress(SalesInvoiceHeader);
+
+          if GraphMail.IsEnabled and GraphMail.HasConfiguration then
+            SendInvoiceCancelationEmail(SalesInvoiceHeader)
+          else
+            SendEmailInBackground(SalesInvoiceHeader);
+
+          MESSAGE(CancelPostedInvoiceMsg);
+        end;
+      end;
+    END;
+
+    LOCAL PROCEDURE SendEmailInBackground@2(SalesInvoiceHeader@1000 : Record "Sales Invoice Header");
+    VAR
+      JobQueueEntry@1002 : Record "Job Queue Entry";
+    BEGIN
+      JobQueueEntry.INIT;
+      JobQueueEntry."Object Type to Run" := JobQueueEntry."Object Type to Run"::Codeunit;
+      JobQueueEntry."Object ID to Run" := CODEUNIT::"O365 Sales Cancel Invoice";
+      JobQueueEntry."Maximum No. of Attempts to Run" := 3;
+      JobQueueEntry."Record ID to Process" := SalesInvoiceHeader.RECORDID;
+      CODEUNIT.RUN(CODEUNIT::"Job Queue - Enqueue",JobQueueEntry);
+    END;
+
+    PROCEDURE SendInvoiceCancelationEmail@11(SalesInvoiceHeader@1000 : Record "Sales Invoice Header");
+    VAR
+      ReportSelections@1004 : Record "Report Selections";
+      DocumentMailing@1007 : Codeunit "Document-Mailing";
+      RecordVariant@1009 : Variant;
+      CustomerAddress@1005 : Text[250];
+      ServerEmailBodyFilePath@1006 : Text[250];
+      EmailBodyTxt@1002 : Text;
+    BEGIN
+      if not IsInvoiceCanceled(SalesInvoiceHeader) then
+        exit;
+
+      RecordVariant := SalesInvoiceHeader;
+      CustomerAddress := GetEmailAddress(SalesInvoiceHeader);
+      EmailBodyTxt := GetEmailBody(SalesInvoiceHeader);
+      ReportSelections.GetEmailBodyCustomText(
+        ServerEmailBodyFilePath,2,RecordVariant,SalesInvoiceHeader."Bill-to Customer No.",
+        CustomerAddress,EmailBodyTxt);
+      DocumentMailing.EmailFileWithSubjectAndReportUsage(
+        '','',ServerEmailBodyFilePath,EmailSubjectTxt,SalesInvoiceHeader."No.",CustomerAddress,
+        SalesInvoiceHeader.GetDocTypeTxt,true,2);
+    END;
+
+    LOCAL PROCEDURE SendInvoiceCancelationEmailFromJobQueue@3(JobQueueEntry@1000 : Record "Job Queue Entry");
+    VAR
+      SalesInvoiceHeader@1001 : Record "Sales Invoice Header";
+    BEGIN
+      if not SalesInvoiceHeader.GET(JobQueueEntry."Record ID to Process") then
+        exit;
+
+      SendInvoiceCancelationEmail(SalesInvoiceHeader);
+    END;
+
+    LOCAL PROCEDURE GetCustomerEmailAddress@4(SalesInvoiceHeader@1000 : Record "Sales Invoice Header") : Text[80];
+    VAR
+      Customer@1001 : Record Customer;
+    BEGIN
+      if Customer.GET(SalesInvoiceHeader."Sell-to Customer No.") then
+        exit(Customer."E-Mail");
+    END;
+
+    LOCAL PROCEDURE GetDocumentEmailAddress@58(VAR SalesInvoiceHeader@1000 : Record "Sales Invoice Header") : Text[250];
+    VAR
+      EmailParameter@1002 : Record "Email Parameter";
+    BEGIN
+      if EmailParameter.GET(
+           SalesInvoiceHeader."No.",EmailParameter."Document Type"::Invoice,EmailParameter."Parameter Type"::Address)
+      then
+        exit(EmailParameter."Parameter Value");
+      exit('');
+    END;
+
+    PROCEDURE GetEmailAddress@26(VAR SalesInvoiceHeader@1002 : Record "Sales Invoice Header") : Text[250];
+    VAR
+      EmailAddress@1000 : Text[250];
+    BEGIN
+      EmailAddress := GetDocumentEmailAddress(SalesInvoiceHeader);
+      if EmailAddress <> '' then
+        exit(EmailAddress);
+
+      EmailAddress := GetCustomerEmailAddress(SalesInvoiceHeader);
+      exit(EmailAddress);
+    END;
+
+    PROCEDURE GetEmailSubject@7(VAR SalesInvoiceHeader@1002 : Record "Sales Invoice Header") : Text[250];
+    VAR
+      EmailSubject@1000 : Text[250];
+    BEGIN
+      SalesInvoiceHeader.CALCFIELDS("Amount Including VAT");
+      EmailSubject := STRSUBSTNO(
+          CancelationEmailSubjectTxt,SalesInvoiceHeader."No.",ResolveCurrency(SalesInvoiceHeader."Currency Code"),
+          SalesInvoiceHeader."Amount Including VAT",SalesInvoiceHeader."Due Date");
+      exit(EmailSubject);
+    END;
+
+    LOCAL PROCEDURE IsInvoiceFullyOrPartiallyPaid@5(SalesInvoiceHeader@1000 : Record "Sales Invoice Header") IsPaid : Boolean;
+    BEGIN
+      SalesInvoiceHeader.CALCFIELDS("Amount Including VAT");
+      SalesInvoiceHeader.CALCFIELDS("Remaining Amount");
+      IsPaid := SalesInvoiceHeader."Amount Including VAT" <> SalesInvoiceHeader."Remaining Amount";
+    END;
+
+    [External]
+    PROCEDURE IsInvoiceCanceled@8(SalesInvoiceHeader@1000 : Record "Sales Invoice Header") : Boolean;
+    VAR
+      CancelledDocument@1001 : Record "Cancelled Document";
+    BEGIN
+      exit(CancelledDocument.FindSalesCancelledInvoice(SalesInvoiceHeader."No."));
+    END;
+
+    LOCAL PROCEDURE VerifyEmailAddress@21(SalesInvoiceHeader@1000 : Record "Sales Invoice Header");
+    BEGIN
+      if GetEmailAddress(SalesInvoiceHeader) = '' then
+        ERROR(EmailNotSentErr);
+    END;
+
+    LOCAL PROCEDURE ResolveCurrency@6(CurrencyCode@1000 : Code[10]) : Text;
+    VAR
+      GeneralLedgerSetup@1003 : Record "General Ledger Setup";
+    BEGIN
+      if CurrencyCode = '' then begin
+        GeneralLedgerSetup.GET;
+        exit(GeneralLedgerSetup."LCY Code" + ' ');
+      end;
+      exit(CurrencyCode + ' ');
+    END;
+
+    LOCAL PROCEDURE GetEmailBody@9(SalesInvoiceHeader@1002 : Record "Sales Invoice Header") : Text;
+    VAR
+      CR@1000 : Text[1];
+      EmailBodyTxt@1001 : Text;
+    BEGIN
+      CR[1] := 10;
+
+      // Create cancel invoice body message
+      EmailBodyTxt := STRSUBSTNO(GreetingTxt,SalesInvoiceHeader."Sell-to Customer Name") + CR + CR + CanceletionEmailBodyTxt;
+
+      exit(EmailBodyTxt)
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

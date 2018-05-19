@@ -1,0 +1,32 @@
+OBJECT Codeunit 10144 Posted Deposit-Delete
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Posted Deposit Header";
+    Permissions=TableData "Posted Deposit Header"=rd,
+                TableData "Posted Deposit Line"=rd,
+                TableData TableData10145=rd;
+    OnRun=BEGIN
+            PostedDepositLine.SETRANGE("Deposit No.","No.");
+            PostedDepositLine.DELETEALL;
+
+            DELETE;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      PostedDepositLine@1020000 : Record "Posted Deposit Line";
+
+    BEGIN
+    END.
+  }
+}
+

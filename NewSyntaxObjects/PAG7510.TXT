@@ -1,0 +1,40 @@
+OBJECT Page 7510 Item Attribute Value Editor
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161628.227T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Item Attribute Values;
+    SourceTable=Item;
+    PageType=StandardDialog;
+    OnOpenPage=BEGIN
+                 CurrPage.ItemAttributeValueList.PAGE.LoadAttributes("No.");
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;    ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Part      ;
+                Name=ItemAttributeValueList;
+                ApplicationArea=#Basic,#Suite;
+                PagePartID="Item Attribute Value List";
+                PartType=Page }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

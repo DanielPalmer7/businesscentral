@@ -1,0 +1,44 @@
+OBJECT Table 1519 Notification Context
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160128.147T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               Created := CURRENTDATETIME;
+             END;
+
+    OnModify=BEGIN
+               Created := CURRENTDATETIME;
+             END;
+
+    CaptionML=ENU=Notification Context;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Notification ID     ;GUID          ;CaptionML=ENU=Notification ID }
+    { 2   ;   ;Record ID           ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Record ID }
+    { 3   ;   ;Additional Context ID;GUID         ;CaptionML=ENU=Additional Context ID }
+    { 4   ;   ;Created             ;DateTime      ;CaptionML=ENU=Created }
+  }
+  KEYS
+  {
+    {    ;"Notification ID"                       ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

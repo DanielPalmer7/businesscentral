@@ -1,0 +1,81 @@
+OBJECT Page 2194 O365 Units of Measure List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161406.253T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=Select a unit;
+    LinksAllowed=false;
+    SourceTable="Unit of Measure";
+    PageType=List;
+    CardPageID="O365 Unit Of Measure Card";
+    RefreshOnActivate=true;
+    OnAfterGetRecord=BEGIN
+                       Description := GetDescriptionInCurrentLanguage;
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      Name=ActionContainer1900000003;
+                      ActionContainerType=RelatedInformation }
+      { 6       ;1   ;Action    ;
+                      Name=Edit;
+                      ShortCutKey=Return;
+                      CaptionML=ENU=Edit;
+                      ToolTipML=ENU=Open the measure in an editable view.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      RunObject=Page "O365 Unit Of Measure Card";
+                      RunPageOnRec=true }
+      { 5       ;1   ;Action    ;
+                      Name=New;
+                      CaptionML=ENU=New unit;
+                      ToolTipML=ENU=Create a new unit of measure.;
+                      ApplicationArea=#Basic,#Suite,#Invoicing;
+                      RunObject=Page "O365 Unit Of Measure Card";
+                      Promoted=true;
+                      PromotedIsBig=true;
+                      Image=Invoicing-MDL-New;
+                      RunPageMode=Create }
+    }
+  }
+  CONTROLS
+  {
+    { 3   ;0   ;Container ;
+                Name=Control3;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=Control1;
+                GroupType=Repeater }
+
+    { 2   ;2   ;Field     ;
+                Name=Code;
+                ToolTipML=ENU=Specifies a code for the unit of measure, which you can select on item and resource cards from where it is copied to.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Code;
+                Visible=FALSE;
+                ImplicitType=Code10 }
+
+    { 4   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the unit of measure.;
+                ApplicationArea=#Basic,#Suite,#Invoicing;
+                SourceExpr=Description;
+                ImplicitType=Text10 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

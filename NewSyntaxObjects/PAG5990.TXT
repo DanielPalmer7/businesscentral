@@ -1,0 +1,115 @@
+OBJECT Page 5990 Troubleshooting
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161534.330T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Troubleshooting;
+    SourceTable="Troubleshooting Header";
+    PageType=ListPlus;
+    OnOpenPage=BEGIN
+                 if CaptionCode <> '' then
+                   CurrPage.CAPTION := CaptionCode + ' ' + CaptionDescription + ' - ' + CurrPage.CAPTION;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 1900000003;0 ;ActionContainer;
+                      Name=ActionContainer1900000003;
+                      ActionContainerType=RelatedInformation }
+      { 9       ;1   ;ActionGroup;
+                      Name="T&roublesh.";
+                      CaptionML=ENU=T&roublesh.;
+                      Image=Setup }
+      { 11      ;2   ;Action    ;
+                      Name=Setup;
+                      CaptionML=ENU=Setup;
+                      ToolTipML=ENU=Set up troubleshooting.;
+                      ApplicationArea=#Service;
+                      Image=Setup;
+                      OnAction=BEGIN
+                                 TblshtgSetup.RESET;
+                                 TblshtgSetup.SETCURRENTKEY("Troubleshooting No.");
+                                 TblshtgSetup.SETRANGE("Troubleshooting No.","No.");
+                                 PAGE.RUNMODAL(PAGE::"Troubleshooting Setup",TblshtgSetup)
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1900000001;0;Container;
+                Name=Control1900000001;
+                ContainerType=ContentArea }
+
+    { 1   ;1   ;Group     ;
+                Name=General;
+                CaptionML=ENU=General }
+
+    { 2   ;2   ;Field     ;
+                Name="No.";
+                ToolTipML=ENU=Specifies the number of the involved entry or record, according to the specified number series.;
+                ApplicationArea=#Service;
+                SourceExpr="No.";
+                OnAssistEdit=BEGIN
+                               if AssistEdit(xRec) then
+                                 CurrPage.UPDATE;
+                             END;
+
+                ImplicitType=Code20 }
+
+    { 4   ;2   ;Field     ;
+                Name=Description;
+                ToolTipML=ENU=Specifies a description of the troubleshooting issue.;
+                ApplicationArea=#Service;
+                SourceExpr=Description;
+                ImplicitType=Text50 }
+
+    { 7   ;1   ;Part      ;
+                Name=Control7;
+                ApplicationArea=#Advanced;
+                SubPageLink="No."=FIELD("No.");
+                PagePartID="Troubleshooting Subform";
+                PartType=Page }
+
+    { 1900000007;0;Container;
+                Name=Control1900000007;
+                ContainerType=FactBoxArea }
+
+    { 1900383207;1;Part   ;
+                Name=Control1900383207;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=RecordLinks }
+
+    { 1905767507;1;Part   ;
+                Name=Control1905767507;
+                Visible=FALSE;
+                PartType=System;
+                SystemPartID=Notes }
+
+  }
+  CODE
+  {
+    VAR
+      TblshtgSetup@1000 : Record "Troubleshooting Setup";
+      CaptionCode@1001 : Code[20];
+      CaptionDescription@1002 : Text[30];
+
+    [External]
+    PROCEDURE SetCaption@1(CaptionCode2@1000 : Code[20];CaptionDescription2@1001 : Text[30]);
+    BEGIN
+      CaptionCode := CaptionCode2;
+      CaptionDescription := CaptionDescription2;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

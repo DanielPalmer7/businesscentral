@@ -1,0 +1,52 @@
+OBJECT Table 2154 O365 Payment Method
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160131.333T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=O365 Payment Method;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code10        ;CaptionML=ENU=Code;
+                                                   NotBlank=true }
+    { 2   ;   ;Description         ;Text100       ;CaptionML=ENU=Description }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+    { 1   ;Brick               ;Code,Description                         }
+  }
+  CODE
+  {
+
+    PROCEDURE RefreshRecords@1();
+    VAR
+      PaymentMethod@1000 : Record "Payment Method";
+      PreviousPaymentMethodCode@1001 : Code[10];
+    BEGIN
+      PreviousPaymentMethodCode := Code;
+      DELETEALL;
+      PaymentMethod.SETRANGE("Use for Invoicing",true);
+      if PaymentMethod.FINDSET then
+        repeat
+          Code := PaymentMethod.Code;
+          Description := PaymentMethod.GetDescriptionInCurrentLanguage;
+          if INSERT then;
+        until PaymentMethod.NEXT = 0;
+      if GET(PreviousPaymentMethodCode) then;
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,145 @@
+OBJECT Page 27015 SAT CFDI Document Information
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161725.943T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=ENU=SAT CFDI Document Information;
+    SourceTable="CFDI Documents";
+    PageType=Card;
+    PromotedActionCategoriesML=ENU=New,Process,Report,Electronic Document;
+    ActionList=ACTIONS
+    {
+      { 1020016 ;0   ;ActionContainer;
+                      Name=ActionContainer1020016;
+                      ActionContainerType=ActionItems }
+      { 1020017 ;1   ;ActionGroup;
+                      Name="&Electronic Document";
+                      CaptionML=ENU=&Electronic Document }
+      { 1020020 ;2   ;Action    ;
+                      Name="S&end";
+                      Ellipsis=true;
+                      CaptionML=ENU=S&end;
+                      ToolTipML=ENU=Send an email to the customer with the electronic invoice attached as an XML file.;
+                      ApplicationArea=#Basic,#Suite;
+                      Image=SendTo;
+                      OnAction=BEGIN
+                                 SendEDocument;
+                               END;
+                                }
+      { 1020019 ;2   ;Action    ;
+                      Name="Export E-Document as &XML";
+                      CaptionML=ENU=Export E-Document as &XML;
+                      ToolTipML=ENU=Export the posted sales credit memo as an electronic credit memo, an XML file, and save it to a specified location.;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      Image=ExportElectronicDocument;
+                      PromotedCategory=Category4;
+                      OnAction=BEGIN
+                                 ExportEDocument;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1020000;0;Container ;
+                Name=Control1020000;
+                ContainerType=ContentArea }
+
+    { 1020001;1;Group     ;
+                Name=General;
+                GroupType=Group }
+
+    { 1020002;2;Field     ;
+                Name="No.";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No.";
+                Importance=Promoted;
+                ImplicitType=Code20 }
+
+    { 1020003;1;Group     ;
+                Name=Electronic Document;
+                GroupType=Group }
+
+    { 1020004;2;Field     ;
+                Name=Prepayment;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Prepayment;
+                ImplicitType=Boolean }
+
+    { 1020005;2;Field     ;
+                Name=Reversal;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=Reversal;
+                ImplicitType=Boolean }
+
+    { 1020006;2;Field     ;
+                Name="Electronic Document Status";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Electronic Document Status";
+                ImplicitType=Option }
+
+    { 1020007;2;Field     ;
+                Name="Date/Time Stamped";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Date/Time Stamped";
+                ImplicitType=Text50 }
+
+    { 1020008;2;Field     ;
+                Name="Date/Time Sent";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Date/Time Sent";
+                ImplicitType=Text50 }
+
+    { 1020009;2;Field     ;
+                Name="Date/Time Canceled";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Date/Time Canceled";
+                ImplicitType=Text50 }
+
+    { 1020010;2;Field     ;
+                Name="Error Code";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Error Code";
+                ImplicitType=Code10 }
+
+    { 1020011;2;Field     ;
+                Name="Error Description";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Error Description";
+                ImplicitType=Text250 }
+
+    { 1020012;2;Field     ;
+                Name="PAC Web Service Name";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="PAC Web Service Name";
+                ImplicitType=Text50 }
+
+    { 1020013;2;Field     ;
+                Name="Fiscal Invoice Number PAC";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="Fiscal Invoice Number PAC";
+                ImplicitType=Text50 }
+
+    { 1020014;2;Field     ;
+                Name="No. of E-Documents Sent";
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr="No. of E-Documents Sent";
+                ImplicitType=Integer }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

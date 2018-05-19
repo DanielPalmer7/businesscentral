@@ -1,0 +1,38 @@
+OBJECT Table 743 VAT Report Setup
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160114.967T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Tax Report Setup;
+    LookupPageID="VAT Report Setup";
+  }
+  FIELDS
+  {
+    { 1   ;   ;Primary key         ;Code10        ;CaptionML=ENU=Primary key }
+    { 2   ;   ;No. Series          ;Code20        ;TableRelation="No. Series";
+                                                   CaptionML=ENU=No. Series }
+    { 3   ;   ;Modify Submitted Reports;Boolean   ;CaptionML=ENU=Modify Submitted Reports }
+    { 4   ;   ;VAT Return No. Series;Code20       ;TableRelation="No. Series";
+                                                   CaptionML=ENU=Tax Return No. Series }
+  }
+  KEYS
+  {
+    {    ;"Primary key"                           ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,42 @@
+OBJECT Table 7826 MS-QBO Start Sync. Service
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160231.147T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=MS-QBO Start Sync. Service;
+  }
+  FIELDS
+  {
+    { 1   ;   ;OAuth Token Key     ;Text250       ;CaptionML=ENU=OAuth Token Key }
+    { 2   ;   ;OAuth Token Secret  ;BLOB          ;CaptionML=ENU=OAuth Token Secret }
+    { 3   ;   ;Authorization URL   ;Text250       ;CaptionML=ENU=Authorization URL }
+    { 4   ;   ;Verifier            ;Text250       ;CaptionML=ENU=Verifier }
+    { 5   ;   ;Realm ID            ;Text250       ;CaptionML=ENU=Realm ID }
+    { 6   ;   ;Status              ;Option        ;CaptionML=ENU=Status;
+                                                   OptionCaptionML=ENU=Initialized,SetupComplete,Error;
+                                                   OptionString=Initialized,SetupComplete,Error }
+    { 7   ;   ;Target Application  ;Option        ;CaptionML=ENU=Target Application;
+                                                   OptionCaptionML=ENU=InvoicingApp,BusinessCenter,NativeInvoicingApp;
+                                                   OptionString=InvoicingApp,BusinessCenter,NativeInvoicingApp }
+  }
+  KEYS
+  {
+    {    ;"OAuth Token Key"                       ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

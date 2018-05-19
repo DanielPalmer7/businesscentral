@@ -1,0 +1,35 @@
+OBJECT Codeunit 10141 Deposit-Post (Yes/No)
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160932.930T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="Deposit Header";
+    OnRun=BEGIN
+            DepositHeader.COPY(Rec);
+
+            if not CONFIRM(Text000,false) then
+              exit;
+
+            DepositPost.RUN(DepositHeader);
+            Rec := DepositHeader;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      DepositHeader@1020000 : Record "Deposit Header";
+      DepositPost@1020001 : Codeunit "Deposit-Post";
+      Text000@1020002 : TextConst 'ENU=Do you want to post the Deposit?';
+
+    BEGIN
+    END.
+  }
+}
+

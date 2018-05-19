@@ -1,0 +1,117 @@
+OBJECT Report 5190 Delete Interaction Log Entries
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160351.800T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Delete Interaction Log Entries;
+    ProcessingOnly=true;
+    OnPostReport=BEGIN
+                   MESSAGE(Text000,NoOfInteractions,"Interaction Log Entry".TABLECAPTION);
+                 END;
+
+  }
+  DATASET
+  {
+    { 3056;    ;DataItem;Interaction Log Entry;
+               DataItemTable="Interaction Log Entry";
+               DataItemTableView=SORTING(Canceled,"Campaign No.","Campaign Entry No.",Date) WHERE(Canceled=CONST(true));
+               OnAfterGetRecord=VAR
+                                  SalesHeader@1000 : Record "Sales Header";
+                                  PurchHeader@1001 : Record "Purchase Header";
+                                BEGIN
+                                  if UniqueAttachment then begin
+                                    Attachment.GET("Attachment No.");
+                                    Attachment.DELETE(true);
+                                  end;
+                                  NoOfInteractions := NoOfInteractions + 1;
+
+                                  if "Version No." <> 0 then
+                                    case "Document Type" of
+                                      "Document Type"::"Sales Qte.":
+                                        SetSalesDocInteraction("Interaction Log Entry",SalesHeader."Document Type"::Quote);
+                                      "Document Type"::"Sales Ord. Cnfrmn.":
+                                        SetSalesDocInteraction("Interaction Log Entry",SalesHeader."Document Type"::Order);
+                                      "Document Type"::"Sales Blnkt. Ord":
+                                        SetSalesDocInteraction("Interaction Log Entry",SalesHeader."Document Type"::"Blanket Order");
+                                      "Document Type"::"Purch.Qte.":
+                                        SetPurchDocInteraction("Interaction Log Entry",PurchHeader."Document Type"::Quote);
+                                      "Document Type"::"Purch. Ord.":
+                                        SetPurchDocInteraction("Interaction Log Entry",PurchHeader."Document Type"::Order);
+                                      "Document Type"::"Purch. Blnkt. Ord.":
+                                        SetPurchDocInteraction("Interaction Log Entry",PurchHeader."Document Type"::"Blanket Order");
+                                    end;
+                                  DELETE(true);
+                                END;
+
+               ReqFilterFields="Entry No.","Contact No.",Date,"Campaign No.","Interaction Group Code","Interaction Template Code","Salesperson Code" }
+
+  }
+  REQUESTPAGE
+  {
+    PROPERTIES
+    {
+    }
+    CONTROLS
+    {
+    }
+  }
+  LABELS
+  {
+  }
+  CODE
+  {
+    VAR
+      Text000@1000 : TextConst 'ENU=%1 %2 has been deleted.';
+      Attachment@1002 : Record Attachment;
+      NoOfInteractions@1003 : Integer;
+
+    LOCAL PROCEDURE SetPurchDocInteraction@1(InteractionLogEntry@1001 : Record "Interaction Log Entry";DocumentType@1000 : Option);
+    VAR
+      PurchHeader@1002 : Record "Purchase Header";
+      PurchHeaderArchive@1003 : Record "Purchase Header Archive";
+    BEGIN
+      with InteractionLogEntry do begin
+        PurchHeaderArchive.GET(DocumentType,"Document No.","Doc. No. Occurrence","Version No.");
+        PurchHeader.SETRANGE("Document Type",DocumentType);
+        PurchHeader.SETRANGE("No.","Document No.");
+        PurchHeader.SETRANGE("Doc. No. Occurrence","Doc. No. Occurrence");
+        if PurchHeader.FINDFIRST then begin
+          PurchHeaderArchive."Interaction Exist" := false;
+          PurchHeaderArchive.MODIFY;
+        end else
+          PurchHeaderArchive.DELETE(true);
+      end;
+    END;
+
+    LOCAL PROCEDURE SetSalesDocInteraction@5(InteractionLogEntry@1001 : Record "Interaction Log Entry";DocumentType@1000 : Option);
+    VAR
+      SalesHeader@1002 : Record "Sales Header";
+      SalesHeaderArchive@1003 : Record "Sales Header Archive";
+    BEGIN
+      with InteractionLogEntry do begin
+        SalesHeaderArchive.GET(DocumentType,"Document No.","Doc. No. Occurrence","Version No.");
+        SalesHeader.SETRANGE("Document Type",DocumentType);
+        SalesHeader.SETRANGE("No.","Document No.");
+        SalesHeader.SETRANGE("Doc. No. Occurrence","Doc. No. Occurrence");
+        if SalesHeader.FINDFIRST then begin
+          SalesHeaderArchive."Interaction Exist" := false;
+          SalesHeaderArchive.MODIFY;
+        end else
+          SalesHeaderArchive.DELETE(true);
+      end;
+    END;
+
+    BEGIN
+    END.
+  }
+  RDLDATA
+  {
+  }
+}
+

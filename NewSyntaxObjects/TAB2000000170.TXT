@@ -1,0 +1,36 @@
+OBJECT Table 2000000170 Configuration Package File
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.923T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20         }
+    { 2   ;   ;Name                ;Text50         }
+    { 3   ;   ;Language ID         ;Integer        }
+    { 4   ;   ;Setup Type          ;Option        ;OptionString=Company,Application,Other }
+    { 5   ;   ;Processing Order    ;Integer        }
+    { 6   ;   ;Package             ;BLOB           }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

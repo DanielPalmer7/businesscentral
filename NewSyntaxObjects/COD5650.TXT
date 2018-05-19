@@ -1,0 +1,27 @@
+OBJECT Codeunit 5650 FA Reg.-MaintLedger
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    TableNo="FA Register";
+    OnRun=BEGIN
+            MaintenanceLedgEntry.SETRANGE("Entry No.","From Maintenance Entry No.","To Maintenance Entry No.");
+            PAGE.RUN(PAGE::"Maintenance Ledger Entries",MaintenanceLedgEntry);
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      MaintenanceLedgEntry@1000 : Record "Maintenance Ledger Entry";
+
+    BEGIN
+    END.
+  }
+}
+

@@ -1,0 +1,162 @@
+OBJECT Page 2507 Upload And Deploy Extension
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161411.237T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Upload And Deploy Extension;
+    SourceTable="NAV App";
+    PageType=NavigatePage;
+    SourceTableTemporary=true;
+    OnOpenPage=VAR
+                 WinLanguagesTable@1000 : Record "Windows Language";
+               BEGIN
+                 LanguageID := GLOBALLANGUAGE;
+                 WinLanguagesTable.SETRANGE("Language ID",LanguageID);
+                 if WinLanguagesTable.FINDFIRST then
+                   LanguageName := WinLanguagesTable.Name;
+               END;
+
+    ActionList=ACTIONS
+    {
+      { 8       ;    ;ActionContainer;
+                      Name=ActionContainer8;
+                      ActionContainerType=ActionItems }
+      { 9       ;1   ;Action    ;
+                      Name=Deploy;
+                      CaptionML=ENU=Deploy;
+                      ApplicationArea=#Basic,#Suite;
+                      Promoted=true;
+                      InFooterBar=true;
+                      RunPageMode=Edit;
+                      OnAction=VAR
+                                 NavExtensionOperationMgmt@1000 : Codeunit NavExtensionOperationMgmt;
+                                 NavAppDeploymentSchedule@1002 : DotNet "'Microsoft.Dynamics.Nav.Ncl, Version=12.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35'.Microsoft.Dynamics.Nav.Runtime.Apps.ALPackageDeploymentSchedule";
+                               BEGIN
+                                 if FileName = '' then
+                                   MESSAGE(ExtensionNotUploadedMsg)
+                                 else begin
+                                   case DeployTo of
+                                     DeployTo::"Current version":
+                                       begin
+                                         NavExtensionOperationMgmt.UploadNavExtension(FileStream,NavAppDeploymentSchedule.Immediate,LanguageID);
+                                         MESSAGE(CurrentOperationProgressMsg);
+                                       end;
+                                     DeployTo::"Next version":
+                                       begin
+                                         NavExtensionOperationMgmt.UploadNavExtension(FileStream,NavAppDeploymentSchedule.StageForNextUpdate,LanguageID);
+                                         MESSAGE(ScheduledOperationProgressMsg);
+                                       end;
+                                   end;
+                                   CurrPage.CLOSE;
+                                 end;
+                               END;
+                                }
+      { 10      ;1   ;Action    ;
+                      Name=Cancel;
+                      CaptionML=ENU=Cancel;
+                      ApplicationArea=#Basic,#Suite;
+                      InFooterBar=true;
+                      RunPageMode=Edit;
+                      OnAction=BEGIN
+                                 CurrPage.CLOSE;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Field     ;
+                Name="Upload Extension";
+                CaptionML=ENU=Upload Extension;
+                ApplicationArea=#Basic,#Suite;
+                Style=StrongAccent;
+                StyleExpr=TRUE }
+
+    { 7   ;1   ;Field     ;
+                Name=FileName;
+                CaptionML=ENU=Select .app file;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=FileName;
+                Editable=FALSE;
+                OnAssistEdit=BEGIN
+                               UPLOADINTOSTREAM('Select .APP File','C:\','Extension Files|*.app',FileName,FileStream);
+                             END;
+
+                ImplicitType=Text }
+
+    { 11  ;1   ;Field     ;
+                Name=Control11 }
+
+    { 3   ;1   ;Field     ;
+                Name="Deploy Extension";
+                CaptionML=ENU=Deploy Extension;
+                ApplicationArea=#Basic,#Suite;
+                Style=StrongAccent;
+                StyleExpr=TRUE }
+
+    { 6   ;1   ;Field     ;
+                Name=DeployTo;
+                CaptionML=ENU=Deploy to;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=DeployTo;
+                ImplicitType=Option }
+
+    { 12  ;1   ;Field     ;
+                Name=Language;
+                CaptionML=ENU=Language;
+                ApplicationArea=#Basic,#Suite;
+                SourceExpr=LanguageName;
+                OnValidate=VAR
+                             WinLanguagesTable@1000 : Record "Windows Language";
+                           BEGIN
+                             WinLanguagesTable.SETRANGE(Name,LanguageName);
+                             WinLanguagesTable.SETRANGE("Globally Enabled",true);
+                             WinLanguagesTable.SETRANGE("Localization Exist",true);
+                             if WinLanguagesTable.FINDFIRST then
+                               LanguageID := WinLanguagesTable."Language ID"
+                             else
+                               ERROR(LanguageNotFoundErr,LanguageName);
+                           END;
+
+                OnLookup=VAR
+                           WinLanguagesTable@1001 : Record "Windows Language";
+                         BEGIN
+                           WinLanguagesTable.SETRANGE("Globally Enabled",true);
+                           WinLanguagesTable.SETRANGE("Localization Exist",true);
+                           if PAGE.RUNMODAL(PAGE::"Windows Languages",WinLanguagesTable) = ACTION::LookupOK then begin
+                             LanguageID := WinLanguagesTable."Language ID";
+                             LanguageName := WinLanguagesTable.Name;
+                           end;
+                         END;
+
+                ImplicitType=Text }
+
+  }
+  CODE
+  {
+    VAR
+      FileStream@1004 : InStream;
+      DeployTo@1002 : '"Current version","Next version"';
+      FileName@1003 : Text;
+      LanguageName@1006 : Text;
+      LanguageID@1007 : Integer;
+      LanguageNotFoundErr@1008 : TextConst '@@@="Error message to notify user that the entered language was not found. This could mean that the language doesn''t exist or that the language is not valid within the filter set for the lookup. %1=Entered value.";ENU=Cannot find the specified language, %1. Choose the lookup button to select a language.';
+      ExtensionNotUploadedMsg@1010 : TextConst 'ENU=Please upload an extension file before clicking "Deploy".';
+      CurrentOperationProgressMsg@1000 : TextConst 'ENU=Extension deployment is in progress. Please check the status page for updates.';
+      ScheduledOperationProgressMsg@1001 : TextConst 'ENU=Extension deployment has been scheduled for the next version. Please check the status page for updates.';
+
+    BEGIN
+    END.
+  }
+}
+

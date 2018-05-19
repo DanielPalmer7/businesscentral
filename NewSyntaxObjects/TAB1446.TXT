@@ -1,0 +1,35 @@
+OBJECT Table 1446 Headline RC Team Member
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160127.110T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=Headline RC Team Member;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Key                 ;Code10        ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Key }
+    { 2   ;   ;Workdate for computations;Date     ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Workdate for computations }
+  }
+  KEYS
+  {
+    {    ;Key                                     ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

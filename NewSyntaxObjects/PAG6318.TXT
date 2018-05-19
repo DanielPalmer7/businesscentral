@@ -1,0 +1,59 @@
+OBJECT Page 6318 PBI Report Labels
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=161545.787T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Editable=false;
+    CaptionML=[@@@={Locked};
+               ENU=PBI Report Labels];
+    SourceTable="Power BI Report Labels";
+    PageType=List;
+    SourceTableTemporary=true;
+    OnOpenPage=VAR
+                 PowerBILabelMgt@1000 : Codeunit "Power BI Label Mgt.";
+               BEGIN
+                 PowerBILabelMgt.GetReportLabels(Rec);
+               END;
+
+  }
+  CONTROLS
+  {
+    { 1   ;0   ;Container ;
+                Name=Control1;
+                ContainerType=ContentArea }
+
+    { 2   ;1   ;Group     ;
+                Name=Group;
+                GroupType=Repeater }
+
+    { 3   ;2   ;Field     ;
+                Name="Label ID";
+                CaptionML=[@@@={Locked};
+                           ENU=Label ID];
+                ApplicationArea=#All;
+                SourceExpr="Label ID";
+                ImplicitType=Text100 }
+
+    { 4   ;2   ;Field     ;
+                Name="Text Value";
+                CaptionML=[@@@={Locked};
+                           ENU=Text Value];
+                ApplicationArea=#All;
+                SourceExpr="Text Value";
+                ImplicitType=Text250 }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

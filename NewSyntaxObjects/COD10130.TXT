@@ -1,0 +1,162 @@
+OBJECT Codeunit 10130 Bank Reconciliation Mgt.
+{
+  OBJECT-PROPERTIES
+  {
+    Date=0D;
+    Time=0T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Permissions=TableData "Bank Rec. Header"=r;
+    OnRun=BEGIN
+          END;
+
+  }
+  CODE
+  {
+
+    [External]
+    PROCEDURE New@1020005(VAR BankAccReconciliation@1020005 : Record "Bank Acc. Reconciliation";ShareTable@1020006 : Boolean);
+    VAR
+      BankAccount@1020004 : Record "Bank Account";
+      BankAccReconciliation2@1020003 : Record "Bank Acc. Reconciliation";
+      BankRecHeader@1020002 : Record "Bank Rec. Header";
+      BankAccReconciliationCard@1020001 : Page "Bank Acc. Reconciliation";
+      BankRecWorksheet@1020000 : Page "Bank Rec. Worksheet";
+    BEGIN
+      if not SelectBankAccountUsingFilter(BankAccount,BankAccReconciliation) then
+        if not SelectBankAccount(BankAccount) then
+          exit;
+
+      if not BankAccount.CheckLastStatementNo then
+        exit;
+
+      if AutoMatchSelected then begin
+        BankAccReconciliation2.InsertRec(BankAccReconciliation2."Statement Type"::"Bank Reconciliation",BankAccount."No.");
+        if ShareTable then
+          BankAccReconciliationCard.SetSharedTempTable(BankAccReconciliation);
+        BankAccReconciliationCard.SETRECORD(BankAccReconciliation2);
+        BankAccReconciliationCard.RUN;
+      end else begin
+        BankRecHeader.InsertRec(BankAccount."No.");
+        if ShareTable then
+          BankRecWorksheet.SetSharedTempTable(BankAccReconciliation);
+        BankRecWorksheet.SETRECORD(BankRecHeader);
+        BankRecWorksheet.RUN;
+      end;
+    END;
+
+    [External]
+    PROCEDURE Edit@1020010(VAR BankAccReconciliation@1020004 : Record "Bank Acc. Reconciliation";ShareTable@1020005 : Boolean);
+    VAR
+      BankAccReconciliation2@1020003 : Record "Bank Acc. Reconciliation";
+      BankRecHeader@1020002 : Record "Bank Rec. Header";
+      BankAccReconciliationCard@1020001 : Page "Bank Acc. Reconciliation";
+      BankRecWorksheet@1020000 : Page "Bank Rec. Worksheet";
+      BankAccountNo@1020007 : Code[20];
+      StatementNo@1020008 : Code[20];
+      StatementType@1020006 : Option;
+    BEGIN
+      StatementType := BankAccReconciliation."Statement Type";
+      BankAccountNo := BankAccReconciliation."Bank Account No.";
+      StatementNo := BankAccReconciliation."Statement No.";
+
+      if AutoMatchSelected and BankAccReconciliation2.GET(StatementType,BankAccountNo,StatementNo) then begin
+        BankAccReconciliationCard.SetSharedTempTable(BankAccReconciliation);
+        if ShareTable then
+          BankAccReconciliationCard.SETRECORD(BankAccReconciliation2);
+        BankAccReconciliationCard.RUN;
+      end;
+
+      if (not AutoMatchSelected) and BankRecHeader.GET(BankAccountNo,StatementNo) then begin
+        if ShareTable then
+          BankRecWorksheet.SetSharedTempTable(BankAccReconciliation);
+        BankRecWorksheet.SETRECORD(BankRecHeader);
+        BankRecWorksheet.RUN;
+      end;
+    END;
+
+    [External]
+    PROCEDURE Delete@1020003(BankAccReconciliation@1020002 : Record "Bank Acc. Reconciliation");
+    VAR
+      BankAccReconciliation2@1020001 : Record "Bank Acc. Reconciliation";
+      BankRecHeader@1020000 : Record "Bank Rec. Header";
+      BankAccountNo@1020005 : Code[20];
+      StatementNo@1020004 : Code[20];
+      StatementType@1020003 : Option;
+    BEGIN
+      StatementType := BankAccReconciliation."Statement Type";
+      BankAccountNo := BankAccReconciliation."Bank Account No.";
+      StatementNo := BankAccReconciliation."Statement No.";
+
+      if AutoMatchSelected and BankAccReconciliation2.GET(StatementType,BankAccountNo,StatementNo) then
+        BankAccReconciliation2.DELETE(true);
+
+      if (not AutoMatchSelected) and BankRecHeader.GET(BankAccountNo,StatementNo) then
+        BankRecHeader.DELETE(true);
+    END;
+
+    [External]
+    PROCEDURE Refresh@1020000(VAR BankAccReconciliation@1020002 : Record "Bank Acc. Reconciliation");
+    VAR
+      BankAccReconciliation2@1020001 : Record "Bank Acc. Reconciliation";
+    BEGIN
+      if AutoMatchSelected then
+        BankAccReconciliation2.GetTempCopy(BankAccReconciliation)
+      else
+        BankAccReconciliation2.GetTempCopyFromBankRecHeader(BankAccReconciliation);
+    END;
+
+    [External]
+    PROCEDURE Post@1020002(BankAccReconciliation@1020004 : Record "Bank Acc. Reconciliation";AutoMatchCodeunitID@1020000 : Integer;LocalCodeunitID@1020001 : Integer);
+    VAR
+      BankAccReconciliation2@1020002 : Record "Bank Acc. Reconciliation";
+      BankRecHeader@1020003 : Record "Bank Rec. Header";
+      BankAccountNo@1020007 : Code[20];
+      StatementNo@1020006 : Code[20];
+      StatementType@1020005 : Option;
+    BEGIN
+      StatementType := BankAccReconciliation."Statement Type";
+      BankAccountNo := BankAccReconciliation."Bank Account No.";
+      StatementNo := BankAccReconciliation."Statement No.";
+
+      if AutoMatchSelected and BankAccReconciliation2.GET(StatementType,BankAccountNo,StatementNo) then
+        CODEUNIT.RUN(AutoMatchCodeunitID,BankAccReconciliation2);
+
+      if (not AutoMatchSelected) and BankRecHeader.GET(BankAccountNo,StatementNo) then
+        CODEUNIT.RUN(LocalCodeunitID,BankRecHeader);
+    END;
+
+    LOCAL PROCEDURE SelectBankAccountUsingFilter@1020014(VAR BankAccount@1020000 : Record "Bank Account";VAR BankAccReconciliation@1020001 : Record "Bank Acc. Reconciliation") : Boolean;
+    BEGIN
+      if BankAccReconciliation.GETFILTER("Bank Account No.") <> '' then
+        exit(BankAccount.GET(BankAccReconciliation.GETRANGEMIN("Bank Account No.")));
+    END;
+
+    LOCAL PROCEDURE SelectBankAccount@1020040(VAR BankAccount@1020000 : Record "Bank Account") : Boolean;
+    VAR
+      BankAccountList@1020001 : Page "Bank Account List";
+    BEGIN
+      BankAccountList.LOOKUPMODE := true;
+      if BankAccountList.RUNMODAL <> ACTION::LookupOK then
+        exit(false);
+
+      BankAccountList.GETRECORD(BankAccount);
+
+      exit(true);
+    END;
+
+    LOCAL PROCEDURE AutoMatchSelected@1020001() : Boolean;
+    VAR
+      GeneralLedgerSetup@1020000 : Record "General Ledger Setup";
+    BEGIN
+      GeneralLedgerSetup.GET;
+      exit(GeneralLedgerSetup."Bank Recon. with Auto. Match");
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

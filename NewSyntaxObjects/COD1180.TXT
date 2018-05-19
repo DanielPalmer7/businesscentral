@@ -1,0 +1,578 @@
+OBJECT Codeunit 1180 Data Privacy Mgmt
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160641.487T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnRun=VAR
+            ActivityLog@1001 : Record "Activity Log";
+            ActivityLogPage@1000 : Page "Activity Log";
+          BEGIN
+            CLEAR(ActivityLogPage);
+            ActivityLog.FILTERGROUP(2);
+            ActivityLog.SETRANGE(Context,ActivityContextTxt);
+            ActivityLog.FILTERGROUP(0);
+            ActivityLogPage.SETTABLEVIEW(ActivityLog);
+            ActivityLogPage.RUN;
+          END;
+
+  }
+  CODE
+  {
+    VAR
+      DataPrivacyEntities@1000 : Record "Data Privacy Entities";
+      ConfigProgressBar@1002 : Codeunit "Config. Progress Bar";
+      ActivityContextTxt@1003 : TextConst 'ENU=Privacy Activity';
+      CreatingFieldDataTxt@1012 : TextConst 'ENU=Creating field data...';
+      RemovingConfigPackageTxt@1013 : TextConst 'ENU=Removing config package...';
+      ConfigDeleteStatusTxt@1022 : TextConst 'ENU=records.';
+      ProgressBarText@1023 : Text;
+
+    PROCEDURE InitRecords@16(EntityTypeTableNo@1002 : Integer;EntityNo@1001 : Code[50];VAR PackageCode@1004 : Code[20];ActionType@1005 : '"Export a data subject''s data","Create a data privacy configuration package"';GeneratePreview@1003 : Boolean;DataSensitivityOption@1000 : 'Sensitive,Personal,"Company Confidential",Normal,Unclassified');
+    BEGIN
+      CreateData(EntityTypeTableNo,EntityNo,PackageCode,ActionType,GeneratePreview,DataSensitivityOption);
+    END;
+
+    PROCEDURE CreateData@1(EntityTypeTableNo@1002 : Integer;EntityNo@1001 : Code[50];VAR PackageCode@1019 : Code[20];ActionType@1005 : '"Export a data subject''s data","Create a data privacy configuration package"';GeneratePreview@1003 : Boolean;DataSensitivityOption@1000 : 'Sensitive,Personal,"Company Confidential",Normal,Unclassified');
+    VAR
+      Customer@1008 : Record Customer;
+      Vendor@1007 : Record Vendor;
+      Contact@1006 : Record Contact;
+      Resource@1014 : Record Resource;
+      Employee@1016 : Record Employee;
+      SalespersonPurchaser@1017 : Record "Salesperson/Purchaser";
+      User@1009 : Record User;
+      UserSetup@1010 : Record "User Setup";
+      RecRef@1004 : RecordRef;
+    BEGIN
+      case EntityTypeTableNo of
+        DATABASE::Customer:
+          if Customer.GET(FORMAT(EntityNo,20)) then begin
+            RecRef.GETTABLE(Customer);
+            CreateRelatedData(RecRef,EntityTypeTableNo,EntityNo,PackageCode,ActionType,GeneratePreview,DataSensitivityOption);
+          end;
+        DATABASE::Vendor:
+          if Vendor.GET(FORMAT(EntityNo,20)) then begin
+            RecRef.GETTABLE(Vendor);
+            CreateRelatedData(RecRef,EntityTypeTableNo,EntityNo,PackageCode,ActionType,GeneratePreview,DataSensitivityOption);
+          end;
+        DATABASE::Contact:
+          if Contact.GET(FORMAT(EntityNo,20)) then begin
+            RecRef.GETTABLE(Contact);
+            CreateRelatedData(RecRef,EntityTypeTableNo,EntityNo,PackageCode,ActionType,GeneratePreview,DataSensitivityOption);
+          end;
+        DATABASE::Resource:
+          if Resource.GET(FORMAT(EntityNo,20)) then begin
+            RecRef.GETTABLE(Resource);
+            CreateRelatedData(RecRef,EntityTypeTableNo,EntityNo,PackageCode,ActionType,GeneratePreview,DataSensitivityOption);
+          end;
+        DATABASE::Employee:
+          if Employee.GET(FORMAT(EntityNo,20)) then begin
+            RecRef.GETTABLE(Employee);
+            CreateRelatedData(RecRef,EntityTypeTableNo,EntityNo,PackageCode,ActionType,GeneratePreview,DataSensitivityOption);
+          end;
+        DATABASE::"Salesperson/Purchaser":
+          if SalespersonPurchaser.GET(FORMAT(EntityNo,20)) then begin
+            RecRef.GETTABLE(SalespersonPurchaser);
+            CreateRelatedData(RecRef,EntityTypeTableNo,EntityNo,PackageCode,ActionType,GeneratePreview,DataSensitivityOption);
+          end;
+        DATABASE::User:
+          begin
+            User.SETRANGE("User Name",EntityNo);
+            if User.FINDFIRST then
+              if UserSetup.GET(EntityNo) then begin
+                // Redirect to use the User Setup table
+                RecRef.GETTABLE(UserSetup);
+                CreateRelatedData(RecRef,EntityTypeTableNo,EntityNo,PackageCode,ActionType,GeneratePreview,DataSensitivityOption);
+              end;
+          end;
+        else
+          OnCreateData(EntityTypeTableNo,EntityNo,PackageCode,ActionType,GeneratePreview,DataSensitivityOption);
+      end;
+    END;
+
+    LOCAL PROCEDURE CreateRelatedData@5(VAR RecRef@1014 : RecordRef;EntityTypeTableNo@1002 : Integer;EntityNo@1006 : Code[50];VAR PackageCode@1015 : Code[20];ActionType@1016 : '"Export a data subject''s data","Create a data privacy configuration package"';GeneratePreview@1019 : Boolean;DataSensitivityOption@1020 : 'Sensitive,Personal,"Company Confidential",Normal,Unclassified');
+    VAR
+      ConfigPackage@1007 : Record "Config. Package";
+      TableRelationsMetadata@1017 : Record "Table Relations Metadata";
+      DataSensitivity@1003 : Record "Data Sensitivity";
+      DataPrivacyListPage@1001 : Page "Data Privacy ListPage";
+      LastTableID@1011 : Integer;
+      ProcessingOrder@1012 : Integer;
+      PackageName@1004 : Text[50];
+      EntityKeyField@1000 : Integer;
+    BEGIN
+      PackageCode := GetPackageCode(EntityTypeTableNo,EntityNo,ActionType);
+      PackageName :=
+        COPYSTR(FORMAT('Privacy Package for ' + FORMAT(RecRef.CAPTION,10) + ' ' + DELCHR(FORMAT(EntityNo,20),'<',' ')),1,50);
+
+      if ConfigPackage.GET(PackageCode) then begin
+        if ActionType = ActionType::"Export a data subject's data" then begin
+          // Recreate the package if they chose the option to create the config package or are using the "temp" config package,
+          // otherwise use the one already created
+          if STRPOS(PackageCode,'*') = 0 then
+            exit;
+          DeletePackage(PackageCode);
+        end;
+        // I could not get PreCAL to like this logic in it's original form, which is why I have this extra IF statement...
+        if ActionType = ActionType::"Create a data privacy configuration package" then
+          DeletePackage(PackageCode);
+      end;
+
+      CreateEntities;
+      if DataPrivacyEntities.GET(EntityTypeTableNo) then
+        if EntityTypeTableNo = DATABASE::User then
+          EntityKeyField := 1
+        else
+          EntityKeyField := DataPrivacyEntities."Key Field No.";
+
+      // This will handle the fields on the master table.
+      SetRangeDataSensitivity(DataSensitivity,RecRef.NUMBER,DataSensitivityOption);
+      if DataSensitivity.FINDSET then begin
+        CreatePackage(ConfigPackage,PackageCode,PackageName);
+        repeat
+          CreatePackageTable(PackageCode,DataSensitivity."Table No");
+          LastTableID := DataSensitivity."Table No";
+          ProcessingOrder := 1;
+          if CreatePackageField(PackageCode,DataSensitivity."Table No",DataSensitivity."Field No",ProcessingOrder) then
+            if ProcessingOrder = 1 then
+              CreatePackageFilter(ConfigPackage.Code,DataSensitivity."Table No",EntityKeyField,FORMAT(EntityNo));
+
+          ProcessingOrder += 1;
+        until DataSensitivity.NEXT = 0;
+      end;
+
+      // Now we handle the conditional and unconditional relations.
+      SetRangeTableRelationsMetadata(TableRelationsMetadata,RecRef,EntityKeyField);
+
+      ConfigProgressBar.Init(TableRelationsMetadata.COUNT,1,CreatingFieldDataTxt);
+
+      if TableRelationsMetadata.FINDSET then begin
+        CreatePackage(ConfigPackage,PackageCode,PackageName);
+        CreateRelatedDataFields(TableRelationsMetadata,ConfigPackage,EntityNo,LastTableID,DataSensitivityOption);
+      end;
+
+      // Now to handle the change log entries.
+      CreateDataForChangeLogEntries(PackageCode,EntityNo,EntityTypeTableNo);
+
+      ConfigProgressBar.Close;
+
+      if GeneratePreview then
+        DataPrivacyListPage.GeneratePreviewData(PackageCode);
+    END;
+
+    PROCEDURE DeletePackage@25(PackageCode@1000 : Code[20]);
+    VAR
+      ConfigPackage@1004 : Record "Config. Package";
+    BEGIN
+      ConfigProgressBar.Init(4,1,RemovingConfigPackageTxt);
+
+      ProgressBarText := FORMAT(ConfigPackage.TABLECAPTION) + ' ' + ConfigDeleteStatusTxt;
+      ConfigProgressBar.Update(ProgressBarText);
+      ConfigPackage.SETRANGE(Code,PackageCode);
+      ConfigPackage.DELETEALL(true);
+
+      ConfigProgressBar.Close;
+    END;
+
+    PROCEDURE CreateEntities@3();
+    VAR
+      DataClassificationMgt@1004 : Codeunit "Data Classification Mgt.";
+    BEGIN
+      DataPrivacyEntities.RESET;
+      DataPrivacyEntities.DELETEALL;
+      DataClassificationMgt.OnGetPrivacyMasterTables(DataPrivacyEntities);
+    END;
+
+    PROCEDURE SetPrivacyBlocked@18(EntityTypeTableNo@1004 : Integer;EntityNo@1000 : Code[50]);
+    VAR
+      Customer@1011 : Record Customer;
+      Vendor@1010 : Record Vendor;
+      Contact@1009 : Record Contact;
+      Resource@1008 : Record Resource;
+      Employee@1007 : Record Employee;
+      SalespersonPurchaser@1006 : Record "Salesperson/Purchaser";
+    BEGIN
+      case EntityTypeTableNo of
+        DATABASE::Customer:
+          if Customer.GET(EntityNo) then
+            if not Customer."Privacy Blocked" then begin
+              Customer.VALIDATE("Privacy Blocked",true);
+              if Customer.MODIFY then;
+            end;
+        DATABASE::Vendor:
+          if Vendor.GET(EntityNo) then
+            if not Vendor."Privacy Blocked" then begin
+              Vendor.VALIDATE("Privacy Blocked",true);
+              if Vendor.MODIFY then;
+            end;
+        DATABASE::Contact:
+          if Contact.GET(EntityNo) then
+            if not Contact."Privacy Blocked" then begin
+              Contact.VALIDATE("Privacy Blocked",true);
+              if Contact.MODIFY then;
+            end;
+        DATABASE::Resource:
+          if Resource.GET(EntityNo) then
+            if not Resource."Privacy Blocked" then begin
+              Resource.VALIDATE("Privacy Blocked",true);
+              if Resource.MODIFY then;
+            end;
+        DATABASE::Employee:
+          if Employee.GET(EntityNo) then
+            if not Employee."Privacy Blocked" then begin
+              Employee.VALIDATE("Privacy Blocked",true);
+              if Employee.MODIFY then;
+            end;
+        DATABASE::"Salesperson/Purchaser":
+          if SalespersonPurchaser.GET(EntityNo) then
+            if not SalespersonPurchaser."Privacy Blocked" then begin
+              SalespersonPurchaser.VALIDATE("Privacy Blocked",true);
+              if SalespersonPurchaser.MODIFY then;
+            end;
+        else
+          OnAfterSetPrivacyBlocked(EntityTypeTableNo,EntityNo);
+      end;
+    END;
+
+    PROCEDURE GetPackageCode@17(EntityTypeTableNo@1002 : Integer;EntityNo@1000 : Code[50];ActionType@1004 : '"Export a data subject''s data","Create a data privacy configuration package"') : Code[20];
+    VAR
+      ConfigPackage@1003 : Record "Config. Package";
+      TempEntityNumber@1001 : Code[17];
+      PackageCodeTemp@1006 : Code[20];
+      PackageCodeKeep@1005 : Code[20];
+    BEGIN
+      if STRLEN(EntityNo) >= 18 then
+        TempEntityNumber := COPYSTR(EntityNo,(STRLEN(EntityNo) mod 17) + 1,(STRLEN(EntityNo) - (STRLEN(EntityNo) mod 17)))
+      else
+        TempEntityNumber := COPYSTR(EntityNo,1,STRLEN(EntityNo));
+
+      case EntityTypeTableNo of
+        DATABASE::Customer:
+          begin
+            PackageCodeKeep := 'CUS' + TempEntityNumber;
+            PackageCodeTemp := 'CU*' + TempEntityNumber;
+          end;
+        DATABASE::Vendor:
+          begin
+            PackageCodeKeep := 'VEN' + TempEntityNumber;
+            PackageCodeTemp := 'VE*' + TempEntityNumber;
+          end;
+        DATABASE::Contact:
+          begin
+            PackageCodeKeep := 'CON' + TempEntityNumber;
+            PackageCodeTemp := 'CO*' + TempEntityNumber;
+          end;
+        DATABASE::Resource:
+          begin
+            PackageCodeKeep := 'RES' + TempEntityNumber;
+            PackageCodeTemp := 'RE*' + TempEntityNumber;
+          end;
+        DATABASE::Employee:
+          begin
+            PackageCodeKeep := 'EMP' + TempEntityNumber;
+            PackageCodeTemp := 'EM*' + TempEntityNumber;
+          end;
+        DATABASE::"Salesperson/Purchaser":
+          begin
+            PackageCodeKeep := 'SPC' + TempEntityNumber;
+            PackageCodeTemp := 'SP*' + TempEntityNumber;
+          end;
+        DATABASE::User:
+          begin
+            PackageCodeKeep := 'USR' + TempEntityNumber;
+            PackageCodeTemp := 'US*' + TempEntityNumber;
+          end;
+        else
+          OnAfterGetPackageCode(EntityTypeTableNo,EntityNo,ActionType,PackageCodeTemp,PackageCodeKeep);
+      end;
+
+      if ActionType = ActionType::"Create a data privacy configuration package" then
+        exit(PackageCodeKeep);
+      if ActionType = ActionType::"Export a data subject's data" then begin
+        if ConfigPackage.GET(PackageCodeKeep) then
+          exit(PackageCodeKeep);
+
+        exit(PackageCodeTemp);
+      end;
+    END;
+
+    LOCAL PROCEDURE CreatePackage@20(VAR ConfigPackage@1005 : Record "Config. Package";PackageCode@1001 : Code[20];PackageName@1002 : Text[50]);
+    VAR
+      ApplicationManagement@1004 : Codeunit ApplicationManagement;
+    BEGIN
+      ConfigPackage.INIT;
+      ConfigPackage.VALIDATE(Code,PackageCode);
+      ConfigPackage.VALIDATE("Package Name",PackageName);
+      ConfigPackage."Language ID" := ApplicationManagement.ApplicationLanguage;
+      ConfigPackage."Product Version" :=
+        COPYSTR(ApplicationManagement.ApplicationVersion,1,STRLEN(ConfigPackage."Product Version"));
+      if not ConfigPackage.INSERT(true) then;
+    END;
+
+    LOCAL PROCEDURE CreatePackageTable@21(PackageCode@1000 : Code[20];TableId@1001 : Integer);
+    VAR
+      ConfigPackageTable@1002 : Record "Config. Package Table";
+    BEGIN
+      ConfigPackageTable.INIT;
+      ConfigPackageTable.VALIDATE("Package Code",PackageCode);
+      ConfigPackageTable.VALIDATE("Table ID",TableId);
+      if not ConfigPackageTable.INSERT then;  // Do NOT fire the trigger as it will create the ConfigPackageField
+    END;
+
+    LOCAL PROCEDURE CreatePackageField@22(ConfigPackageCode@1000 : Code[20];TableId@1002 : Integer;FieldId@1005 : Integer;ProcessingOrder@1004 : Integer) : Boolean;
+    VAR
+      ConfigPackageField@1001 : Record "Config. Package Field";
+      Field@1003 : Record Field;
+    BEGIN
+      if IsValidField(TableId,FieldId,Field) then begin
+        InitPackageField(ConfigPackageField,Field,ConfigPackageCode,TableId,ProcessingOrder,FieldId);
+        exit(ConfigPackageField.INSERT(true));
+      end;
+    END;
+
+    LOCAL PROCEDURE CreatePackageFilter@14(ConfigPackageCode@1001 : Code[20];TableId@1000 : Integer;EntityKeyField@1006 : Integer;FieldValue@1005 : Text[250]) : Boolean;
+    VAR
+      Field@1003 : Record Field;
+      ConfigPackageFilter@1007 : Record "Config. Package Filter";
+      ConfigPackage@1002 : Record "Config. Package";
+    BEGIN
+      if ConfigPackage.GET(ConfigPackageCode) then
+        if Field.GET(TableId,EntityKeyField) then
+          if (Field.Class = Field.Class::Normal) and
+             ((Field.Type = Field.Type::Integer) or (Field.Type = Field.Type::Text) or
+              (Field.Type = Field.Type::Code) or (Field.Type = Field.Type::Option))
+          then begin
+            InitPackageFilter(ConfigPackageFilter,ConfigPackageCode,TableId,EntityKeyField,FieldValue);
+            exit(ConfigPackageFilter.INSERT(true));
+          end;
+    END;
+
+    LOCAL PROCEDURE IsValidField@19(TableId@1000 : Integer;FieldId@1002 : Integer;VAR Field@1001 : Record Field) : Boolean;
+    BEGIN
+      if Field.GET(TableId,FieldId) then
+        if (not ((Field.Type = Field.Type::Media) or
+                 (Field.Type = Field.Type::MediaSet) or (Field.Type = Field.Type::BLOB) or (Field.Type = Field.Type::GUID))) and
+           (Field.Class = Field.Class::Normal)
+        then
+          exit(true);
+    END;
+
+    LOCAL PROCEDURE IsInPrimaryKey@7(FieldRef@1000 : FieldRef) : Boolean;
+    VAR
+      RecRef@1003 : RecordRef;
+      KeyRef@1001 : KeyRef;
+      FieldIndex@1002 : Integer;
+    BEGIN
+      RecRef := FieldRef.RECORD;
+
+      KeyRef := RecRef.KEYINDEX(1);
+      for FieldIndex := 1 to KeyRef.FIELDCOUNT do
+        if KeyRef.FIELDINDEX(FieldIndex).NUMBER = FieldRef.NUMBER then
+          exit(true);
+
+      exit(false);
+    END;
+
+    LOCAL PROCEDURE SetRangeTableRelationsMetadata@24(VAR TableRelationsMetadata@1000 : Record "Table Relations Metadata";RecRef@1001 : RecordRef;EntityKeyField@1002 : Integer);
+    BEGIN
+      TableRelationsMetadata.RESET;
+      TableRelationsMetadata.SETRANGE("Related Table ID",RecRef.NUMBER);
+      TableRelationsMetadata.SETRANGE("Related Field No.",EntityKeyField);
+      TableRelationsMetadata.SETRANGE("Validate Table Relation",true);
+      TableRelationsMetadata.SETRANGE("Condition Field No.",0);
+      TableRelationsMetadata.SETFILTER("Table ID",'<>%1',RecRef.NUMBER); // More than one filter causes no records to be returned
+    END;
+
+    LOCAL PROCEDURE SetRangeDataSensitivity@26(VAR DataSensitivity@1000 : Record "Data Sensitivity";TableID@1001 : Integer;DataSensitivityOption@1002 : 'Sensitive,Personal,"Company Confidential",Normal,Unclassified');
+    BEGIN
+      DataSensitivity.RESET;
+      DataSensitivity.SETRANGE("Company Name",COMPANYNAME);
+      DataSensitivity.SETRANGE("Table No",TableID);
+      case DataSensitivityOption of
+        DataSensitivityOption::Sensitive:
+          DataSensitivity.SETFILTER("Data Sensitivity",'%1',DataSensitivity."Data Sensitivity"::Sensitive);
+        DataSensitivityOption::Personal:
+          DataSensitivity.SETFILTER("Data Sensitivity",'%1|%2',
+            DataSensitivity."Data Sensitivity"::Sensitive,
+            DataSensitivity."Data Sensitivity"::Personal);
+        DataSensitivityOption::"Company Confidential":
+          DataSensitivity.SETFILTER("Data Sensitivity",'%1|%2|%3',
+            DataSensitivity."Data Sensitivity"::Sensitive,
+            DataSensitivity."Data Sensitivity"::Personal,
+            DataSensitivity."Data Sensitivity"::"Company Confidential");
+        DataSensitivityOption::Normal:
+          DataSensitivity.SETFILTER("Data Sensitivity",'%1|%2|%3|%4',
+            DataSensitivity."Data Sensitivity"::Sensitive,
+            DataSensitivity."Data Sensitivity"::Personal,
+            DataSensitivity."Data Sensitivity"::"Company Confidential",
+            DataSensitivity."Data Sensitivity"::Normal);
+        DataSensitivityOption::Unclassified:
+          DataSensitivity.SETFILTER("Data Sensitivity",'%1',DataSensitivity."Data Sensitivity"::Unclassified);
+      end;
+    END;
+
+    LOCAL PROCEDURE CreateRelatedDataFields@27(VAR TableRelationsMetadata@1000 : Record "Table Relations Metadata";VAR ConfigPackage@1003 : Record "Config. Package";EntityNo@1007 : Code[50];VAR LastTableID@1005 : Integer;DataSensitivityOption@1004 : 'Sensitive,Personal,"Company Confidential",Normal,Unclassified');
+    VAR
+      DataSensitivity@1002 : Record "Data Sensitivity";
+      RecRef@1008 : RecordRef;
+      FieldRef@1009 : FieldRef;
+      ProcessingOrder@1006 : Integer;
+      FilterCreated@1001 : Boolean;
+      FieldIndex@1010 : Integer;
+      TableIDProcessed@1012 : Integer;
+    BEGIN
+      repeat
+        ConfigProgressBar.Update(TableRelationsMetadata.TABLENAME);
+
+        // Create the fields for the primary key fields first...
+        if TableIDProcessed <> TableRelationsMetadata."Table ID" then begin
+          RecRef.OPEN(TableRelationsMetadata."Table ID");
+          TableIDProcessed := TableRelationsMetadata."Table ID";
+          for FieldIndex := 1 to RecRef.FIELDCOUNT do begin
+            FieldRef := RecRef.FIELDINDEX(FieldIndex);
+            if IsInPrimaryKey(FieldRef) then begin
+              ProcessingOrder += 1;
+              CreatePackageField(ConfigPackage.Code,TableRelationsMetadata."Table ID",FieldRef.NUMBER,ProcessingOrder);
+            end;
+          end;
+          RecRef.CLOSE;
+        end;
+
+        FilterCreated := false;
+
+        FilterCreated :=
+          CreatePackageFilter(ConfigPackage.Code,TableRelationsMetadata."Table ID",TableRelationsMetadata."Field No.",EntityNo);
+
+        if FilterCreated then begin
+          ProcessingOrder += 1;
+          CreatePackageField(
+            ConfigPackage.Code,TableRelationsMetadata."Table ID",TableRelationsMetadata."Field No.",ProcessingOrder);
+        end;
+
+        if FilterCreated then
+          if LastTableID <> TableRelationsMetadata."Table ID" then begin
+            CreatePackageTable(ConfigPackage.Code,TableRelationsMetadata."Table ID");
+            LastTableID := TableRelationsMetadata."Table ID";
+
+            SetRangeDataSensitivity(DataSensitivity,LastTableID,DataSensitivityOption);
+            if DataSensitivity.FINDSET then begin
+              repeat
+                ProcessingOrder += 1;
+                CreatePackageField(ConfigPackage.Code,DataSensitivity."Table No",DataSensitivity."Field No",ProcessingOrder);
+              until DataSensitivity.NEXT = 0;
+            end;
+          end;
+
+      until TableRelationsMetadata.NEXT = 0;
+    END;
+
+    LOCAL PROCEDURE InitPackageField@28(VAR ConfigPackageField@1005 : Record "Config. Package Field";VAR Field@1000 : Record Field;PackageCode@1002 : Code[20];TableId@1001 : Integer;ProcessingOrder@1004 : Integer;FieldId@1006 : Integer);
+    BEGIN
+      ConfigPackageField.INIT;
+      ConfigPackageField.VALIDATE("Package Code",PackageCode);
+      ConfigPackageField.VALIDATE("Table ID",TableId);
+      ConfigPackageField.VALIDATE("Field Name",Field.FieldName);
+      ConfigPackageField.VALIDATE("Field Caption",Field."Field Caption");
+      ConfigPackageField.VALIDATE("Field ID",FieldId);
+      ConfigPackageField.VALIDATE("Validate Field",true);
+      ConfigPackageField.VALIDATE("Include Field",true);
+      ConfigPackageField.VALIDATE("Processing Order",ProcessingOrder);
+    END;
+
+    LOCAL PROCEDURE InitPackageFilter@29(VAR ConfigPackageFilter@1000 : Record "Config. Package Filter";ConfigPackageCode@1001 : Code[20];TableNo@1003 : Integer;EntityKeyField@1004 : Integer;FieldValue@1005 : Text[250]);
+    VAR
+      ContactPerson@1002 : Record Contact;
+      ContactCompany@1006 : Record Contact;
+    BEGIN
+      ConfigPackageFilter.INIT;
+      ConfigPackageFilter.VALIDATE("Package Code",ConfigPackageCode);
+      ConfigPackageFilter.VALIDATE("Table ID",TableNo);
+      ConfigPackageFilter.VALIDATE("Field ID",EntityKeyField);
+      case TableNo of
+        DATABASE::Contact,
+        DATABASE::"Contact Alt. Address",
+        DATABASE::"Sales Header",
+        DATABASE::"Purchase Header",
+        DATABASE::"Sales Shipment Header",
+        DATABASE::"Sales Invoice Header",
+        DATABASE::"Sales Cr.Memo Header",
+        DATABASE::"Purch. Rcpt. Header",
+        DATABASE::"Purch. Inv. Header",
+        DATABASE::"Purch. Cr. Memo Hdr.",
+        DATABASE::"Sales Header Archive",
+        DATABASE::"Purchase Header Archive",
+        DATABASE::"Sales Invoice Entity Aggregate",
+        DATABASE::"Sales Order Entity Buffer",
+        DATABASE::"Sales Quote Entity Buffer",
+        DATABASE::"Sales Cr. Memo Entity Buffer",
+        DATABASE::"Service Header",
+        DATABASE::"Service Contract Header",
+        DATABASE::"Service Shipment Header",
+        DATABASE::"Service Invoice Header",
+        DATABASE::"Service Cr.Memo Header",
+        DATABASE::"Return Shipment Header",
+        DATABASE::"Return Receipt Header":
+          if ContactPerson.GET(FieldValue) then // FieldValue is the EntityNo for this method
+            if ContactCompany.GET(ContactPerson."Company No.") then
+              FieldValue := FieldValue + ' | ' + ContactCompany."No.";
+      end;
+      ConfigPackageFilter.VALIDATE("Field Filter",FORMAT(FieldValue));
+    END;
+
+    LOCAL PROCEDURE CreateDataForChangeLogEntries@8(PackageCode@1000 : Code[20];EntityNo@1001 : Code[50];EntityTableID@1003 : Integer);
+    VAR
+      ConfigPackage@1002 : Record "Config. Package";
+      ChangeLogEntry@1004 : Record "Change Log Entry";
+      ConfigPackageTable@1005 : Record "Config. Package Table";
+      ConfigPackageFilter@1007 : Record "Config. Package Filter";
+    BEGIN
+      if ConfigPackage.GET(PackageCode) then begin
+        // Create package table for Change Log table (405)
+        ConfigPackageTable.INIT;
+        ConfigPackageTable.VALIDATE("Package Code",PackageCode);
+        ConfigPackageTable.VALIDATE("Table ID",DATABASE::"Change Log Entry");
+        if not ConfigPackageTable.INSERT(true) then;  // Fire the trigger as it will create the ConfigPackageField
+
+        // Create package filter for Table No = Change Log table (405) AND Primary key Field 1 value = Entity No
+        ConfigPackageFilter.INIT;
+        ConfigPackageFilter.VALIDATE("Package Code",PackageCode);
+        ConfigPackageFilter.VALIDATE("Table ID",DATABASE::"Change Log Entry");
+        ConfigPackageFilter.VALIDATE("Field ID",ChangeLogEntry.FIELDNO("Table No.")); // Table No. field.
+        ConfigPackageFilter.VALIDATE("Field Filter",FORMAT(EntityTableID)); // Need to pass in table number from entity
+        if not ConfigPackageFilter.INSERT(true) then;
+
+        ConfigPackageFilter.INIT;
+        ConfigPackageFilter.VALIDATE("Package Code",PackageCode);
+        ConfigPackageFilter.VALIDATE("Table ID",DATABASE::"Change Log Entry");
+        ConfigPackageFilter.VALIDATE("Field ID",ChangeLogEntry.FIELDNO("Primary Key Field 1 Value")); // Primary Key Field 1 Value field.
+        ConfigPackageFilter.VALIDATE("Field Filter",FORMAT(EntityNo));
+        if not ConfigPackageFilter.INSERT(true) then;
+      end;
+    END;
+
+    [Integration]
+    PROCEDURE OnCreateData@9(EntityTypeTableNo@1003 : Integer;EntityNo@1002 : Code[50];PackageCode@1000 : Code[20];ActionType@1004 : '"Export a data subject''s data","Create a data privacy configuration package"';GeneratePreview@1005 : Boolean;DataSensitivity@1006 : 'Sensitive,Personal,"Company Confidential",Normal,Unclassified');
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterSetPrivacyBlocked@10(EntityTypeTableNo@1001 : Integer;EntityNo@1000 : Code[50]);
+    BEGIN
+    END;
+
+    [Integration]
+    LOCAL PROCEDURE OnAfterGetPackageCode@2(EntityTypeTableNo@1001 : Integer;EntityNo@1000 : Code[50];ActionType@1003 : '"Export a data subject''s data","Create a data privacy configuration package"';VAR PackageCodeTemp@1002 : Code[20];VAR PackageCodeKeep@1004 : Code[20]);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

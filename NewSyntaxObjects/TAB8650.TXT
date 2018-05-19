@@ -1,0 +1,35 @@
+OBJECT Table 8650 DataExch-RapidStart Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160233.327T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=DataExch-RapidStart Buffer;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Node ID             ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Node ID }
+    { 2   ;   ;RapidStart No.      ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=RapidStart No. }
+  }
+  KEYS
+  {
+    {    ;"Node ID"                               ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

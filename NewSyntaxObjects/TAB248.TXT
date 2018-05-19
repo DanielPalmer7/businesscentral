@@ -1,0 +1,65 @@
+OBJECT Table 248 VAT Reg. No. Srv Config
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160105.737T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               if not ISEMPTY then
+                 ERROR(CannotInsertMultipleSettingsErr);
+             END;
+
+    CaptionML=ENU=Tax Reg. No. Srv Config;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;CaptionML=ENU=Entry No. }
+    { 2   ;   ;Enabled             ;Boolean       ;CaptionML=ENU=Enabled }
+    { 3   ;   ;Service Endpoint    ;Text250       ;CaptionML=ENU=Service Endpoint }
+  }
+  KEYS
+  {
+    {    ;"Entry No."                             ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      VATRegNoVIESSettingIsNotEnabledErr@1000 : TextConst 'ENU=Tax Registration Service (VIES) Setting is not enabled.';
+      CannotInsertMultipleSettingsErr@1001 : TextConst 'ENU=You cannot insert multiple settings.';
+
+    [External]
+    PROCEDURE VATRegNoSrvIsEnabled@43() : Boolean;
+    VAR
+      VATRegNoSrvConfig@1006 : Record "VAT Reg. No. Srv Config";
+    BEGIN
+      VATRegNoSrvConfig.SETRANGE(Enabled,true);
+      exit(VATRegNoSrvConfig.FINDFIRST and VATRegNoSrvConfig.Enabled);
+    END;
+
+    [External]
+    PROCEDURE GetVATRegNoURL@1() : Text;
+    VAR
+      VATRegNoSrvConfig@1000 : Record "VAT Reg. No. Srv Config";
+    BEGIN
+      VATRegNoSrvConfig.SETRANGE(Enabled,true);
+      if not VATRegNoSrvConfig.FINDFIRST then
+        ERROR(VATRegNoVIESSettingIsNotEnabledErr);
+
+      VATRegNoSrvConfig.TESTFIELD("Service Endpoint");
+
+      exit(VATRegNoSrvConfig."Service Endpoint");
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

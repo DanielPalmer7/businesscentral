@@ -1,0 +1,335 @@
+OBJECT Table 5374 CRM Synch. Conflict Buffer
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160144.440T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=CRM Synch. Conflict Buffer;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Entry No. }
+    { 2   ;   ;Integration ID      ;GUID          ;OnValidate=VAR
+                                                                IntegrationRecord@1000 : Record "Integration Record";
+                                                                RecRef@1001 : RecordRef;
+                                                              BEGIN
+                                                                if IntegrationRecord.GET("Integration ID") then begin
+                                                                  "Record ID" := IntegrationRecord."Record ID";
+                                                                  Description := COPYSTR(GetRecDescription,1,MAXSTRLEN(Description));
+                                                                  "Deleted On" := IntegrationRecord."Deleted On";
+                                                                  "Record Exists" := RecRef.GET("Record ID");
+                                                                end;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Integration ID }
+    { 3   ;   ;CRM ID              ;GUID          ;OnValidate=VAR
+                                                                CRMIntegrationRecord@1000 : Record "CRM Integration Record";
+                                                                IntegrationSynchJobErrors@1005 : Record "Integration Synch. Job Errors";
+                                                                IntegrationTableMapping@1004 : Record "Integration Table Mapping";
+                                                                CRMSetupDefaults@1002 : Codeunit "CRM Setup Defaults";
+                                                                RecRef@1001 : RecordRef;
+                                                                FieldRef@1003 : FieldRef;
+                                                              BEGIN
+                                                                if CRMIntegrationRecord.FindByCRMID("CRM ID") then begin
+                                                                  if CRMIntegrationRecord.GetLatestError(IntegrationSynchJobErrors) then begin
+                                                                    "Error Message" := IntegrationSynchJobErrors.Message;
+                                                                    "Failed On" := IntegrationSynchJobErrors."Date/Time";
+                                                                  end;
+                                                                  "Int. Table ID" := CRMSetupDefaults.GetCRMTableNo("Table ID");
+                                                                  if CRMIntegrationRecord.GetCRMRecordRef("Int. Table ID",RecRef) then begin
+                                                                    FieldRef := RecRef.FIELD(CRMSetupDefaults.GetNameFieldNo(RecRef.NUMBER));
+                                                                    "Int. Record ID" := RecRef.RECORDID;
+                                                                    "Int. Description" := FieldRef.VALUE;
+                                                                    "Int. Record Exists" := true;
+
+                                                                    IntegrationTableMapping.SETRANGE("Table ID","Table ID");
+                                                                    if IntegrationTableMapping.FINDFIRST then begin
+                                                                      FieldRef := RecRef.FIELD(IntegrationTableMapping."Int. Tbl. Modified On Fld. No.");
+                                                                      "Int. Modified On" := FieldRef.VALUE;
+                                                                    end;
+                                                                    RecRef.CLOSE;
+                                                                  end;
+                                                                end;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=CRM ID }
+    { 4   ;   ;Table ID            ;Integer       ;OnValidate=BEGIN
+                                                                "Table Name" := GetTableCaption;
+                                                              END;
+
+                                                   DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Table ID }
+    { 5   ;   ;Table Name          ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Table Name }
+    { 6   ;   ;Record ID           ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Record ID }
+    { 7   ;   ;Description         ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Description }
+    { 8   ;   ;Modified On         ;DateTime      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Modified On }
+    { 9   ;   ;Int. Table ID       ;Integer       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Int. Table ID }
+    { 10  ;   ;Int. Record ID      ;RecordID      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Int. Record ID }
+    { 11  ;   ;Int. Description    ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Int. Description }
+    { 12  ;   ;Int. Modified On    ;DateTime      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Int. Modified On }
+    { 13  ;   ;Error Message       ;Text250       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Error Message }
+    { 14  ;   ;Failed On           ;DateTime      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Failed On }
+    { 15  ;   ;Deleted On          ;DateTime      ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Deleted On }
+    { 16  ;   ;Record Exists       ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Record Exists }
+    { 17  ;   ;Int. Record Exists  ;Boolean       ;DataClassification=SystemMetadata;
+                                                   CaptionML=ENU=Int. Record Exists }
+  }
+  KEYS
+  {
+    {    ;"Entry No."                             ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      NoPermissionToDeleteInCRMErr@1000 : TextConst 'ENU=You do not have permission to delete entities in Dynamics 365 for Sales.';
+
+    [External]
+    PROCEDURE DeleteCoupledRecords@15();
+    VAR
+      TempCRMSynchConflictBuffer@1000 : TEMPORARY Record "CRM Synch. Conflict Buffer";
+    BEGIN
+      TempCRMSynchConflictBuffer.COPY(Rec,true);
+      if TempCRMSynchConflictBuffer.FINDSET then
+        repeat
+          TempCRMSynchConflictBuffer.DeleteCoupledRecord;
+        until TempCRMSynchConflictBuffer.NEXT = 0;
+    END;
+
+    PROCEDURE DeleteCoupledRecord@2();
+    BEGIN
+      if IsOneRecordDeleted then
+        if "Record Exists" then
+          DeleteCoupledRecInNAV
+        else
+          DeleteCoupledRecInCRM;
+    END;
+
+    LOCAL PROCEDURE DeleteCoupledRecInCRM@9();
+    VAR
+      CRMIntegrationRecord@1001 : Record "CRM Integration Record";
+      RecRef@1000 : RecordRef;
+    BEGIN
+      if CRMIntegrationRecord.FindByCRMID("CRM ID") then begin
+        if CRMIntegrationRecord.GetCRMRecordRef("Int. Table ID",RecRef) then
+          if not TryToDeleteCRMRecord(RecRef) then
+            ERROR(NoPermissionToDeleteInCRMErr);
+        if CRMIntegrationRecord.DELETE(true) then
+          DELETE;
+      end;
+    END;
+
+    LOCAL PROCEDURE DeleteCoupledRecInNAV@8();
+    VAR
+      CRMIntegrationRecord@1001 : Record "CRM Integration Record";
+      RecRef@1000 : RecordRef;
+    BEGIN
+      if CRMIntegrationRecord.FindByRecordID("Record ID") then begin
+        RecRef.GET("Record ID");
+        RecRef.DELETE(true);
+        if CRMIntegrationRecord.DELETE(true) then
+          DELETE;
+      end;
+    END;
+
+    [External]
+    PROCEDURE DeleteCoupling@17();
+    VAR
+      CRMIntegrationRecord@1003 : Record "CRM Integration Record";
+      TempCRMIntegrationRecord@1002 : TEMPORARY Record "CRM Integration Record";
+      IntegrationRecord@1001 : Record "Integration Record";
+      CRMCouplingManagement@1000 : Codeunit "CRM Coupling Management";
+    BEGIN
+      if "Record Exists" then begin
+        IntegrationRecord.GET("Integration ID");
+        CRMCouplingManagement.RemoveCouplingWithTracking(IntegrationRecord."Record ID",TempCRMIntegrationRecord);
+        TempCRMIntegrationRecord.SETRECFILTER;
+        UpdateSourceTable(TempCRMIntegrationRecord);
+      end else
+        if CRMIntegrationRecord.RemoveCouplingToCRMID("CRM ID","Table ID") then
+          DELETE;
+    END;
+
+    PROCEDURE Fill@13(VAR CRMIntegrationRecord@1000 : Record "CRM Integration Record") : Integer;
+    BEGIN
+      DELETEALL;
+      CRMIntegrationRecord.SETCURRENTKEY(Skipped,"Table ID");
+      if CRMIntegrationRecord.FINDSET then
+        repeat
+          "Entry No." += 1;
+          InitFromCRMIntegrationRecord(CRMIntegrationRecord);
+          if DoesOneRecordExist then
+            INSERT
+          else
+            CRMIntegrationRecord.DELETE;
+        until CRMIntegrationRecord.NEXT = 0;
+      exit(COUNT);
+    END;
+
+    PROCEDURE GetRecDescription@27() Result : Text;
+    VAR
+      RecRef@1001 : RecordRef;
+      PKFilter@1002 : Text;
+      Delimiter@1005 : Text;
+      Pos@1003 : Integer;
+    BEGIN
+      if RecRef.GET("Record ID") then begin
+        RecRef.SETRECFILTER;
+        PKFilter := RecRef.GETVIEW;
+        repeat
+          Pos := STRPOS(PKFilter,'=FILTER(');
+          if Pos <> 0 then begin
+            PKFilter := COPYSTR(PKFilter,Pos + 8);
+            Result += Delimiter + COPYSTR(PKFilter,1,STRPOS(PKFilter,')') - 1);
+            Delimiter := ',';
+          end;
+        until Pos = 0;
+      end;
+    END;
+
+    LOCAL PROCEDURE GetTableCaption@3() : Text[250];
+    VAR
+      AllObjWithCaption@1000 : Record AllObjWithCaption;
+    BEGIN
+      if "Table ID" <> 0 then
+        if AllObjWithCaption.GET(AllObjWithCaption."Object Type"::Table,"Table ID") then
+          exit(AllObjWithCaption."Object Caption");
+    END;
+
+    PROCEDURE InitFromCRMIntegrationRecord@6(CRMIntegrationRecord@1000 : Record "CRM Integration Record");
+    BEGIN
+      INIT;
+      VALIDATE("Table ID",CRMIntegrationRecord."Table ID");
+      VALIDATE("Integration ID",CRMIntegrationRecord."Integration ID");
+      VALIDATE("CRM ID",CRMIntegrationRecord."CRM ID");
+    END;
+
+    PROCEDURE IsOneRecordDeleted@10() : Boolean;
+    BEGIN
+      exit("Record Exists" xor "Int. Record Exists");
+    END;
+
+    PROCEDURE DoBothRecordsExist@14() : Boolean;
+    BEGIN
+      exit("Record Exists" and "Int. Record Exists");
+    END;
+
+    PROCEDURE DoesOneRecordExist@1() : Boolean;
+    BEGIN
+      exit("Record Exists" or "Int. Record Exists");
+    END;
+
+    [External]
+    PROCEDURE RestoreDeletedRecords@16();
+    VAR
+      TempCRMSynchConflictBuffer@1000 : TEMPORARY Record "CRM Synch. Conflict Buffer";
+    BEGIN
+      TempCRMSynchConflictBuffer.COPY(Rec,true);
+      if TempCRMSynchConflictBuffer.FINDSET then
+        repeat
+          TempCRMSynchConflictBuffer.RestoreDeletedRecord;
+        until TempCRMSynchConflictBuffer.NEXT = 0;
+    END;
+
+    PROCEDURE RestoreDeletedRecord@4();
+    BEGIN
+      if IsOneRecordDeleted then
+        if "Record Exists" then
+          RestoreDeletedRecordInCRM
+        else
+          RestoreDeletedRecordInNAV;
+    END;
+
+    LOCAL PROCEDURE RestoreDeletedRecordInCRM@11();
+    VAR
+      CRMIntegrationRecord@1002 : Record "CRM Integration Record";
+      CRMIntegrationManagement@1001 : Codeunit "CRM Integration Management";
+      RecRef@1000 : RecordRef;
+    BEGIN
+      if CRMIntegrationRecord.FindByRecordID("Record ID") then
+        CRMIntegrationRecord.DELETE;
+      RecRef.GET("Record ID");
+      RecRef.SETRECFILTER;
+      CRMIntegrationManagement.CreateNewRecordsInCRM(RecRef);
+      DELETE;
+    END;
+
+    LOCAL PROCEDURE RestoreDeletedRecordInNAV@12();
+    VAR
+      CRMIntegrationRecord@1002 : Record "CRM Integration Record";
+      CRMIntegrationManagement@1001 : Codeunit "CRM Integration Management";
+      RecRef@1000 : RecordRef;
+    BEGIN
+      if CRMIntegrationRecord.FindByCRMID("CRM ID") and
+         CRMIntegrationRecord.GetCRMRecordRef("Int. Table ID",RecRef)
+      then begin
+        CRMIntegrationRecord.DELETE;
+        RecRef.SETRECFILTER;
+        CRMIntegrationManagement.CreateNewRecordsFromCRM(RecRef);
+        DELETE;
+      end;
+    END;
+
+    PROCEDURE SetSelectionFilter@7(VAR CRMIntegrationRecord@1000 : Record "CRM Integration Record");
+    BEGIN
+      SETRANGE("Record Exists",true);
+      SETRANGE("Int. Record Exists",true);
+      if FINDSET then
+        repeat
+          if CRMIntegrationRecord.GET("CRM ID","Integration ID") then
+            CRMIntegrationRecord.MARK(true);
+        until NEXT = 0;
+      CRMIntegrationRecord.MARKEDONLY(true);
+    END;
+
+    [TryFunction]
+    LOCAL PROCEDURE TryToDeleteCRMRecord@20(VAR RecRef@1000 : RecordRef);
+    BEGIN
+      RecRef.DELETE(true);
+    END;
+
+    [External]
+    PROCEDURE UpdateSourceTable@5(VAR CRMIntegrationRecord@1000 : Record "CRM Integration Record") : Integer;
+    VAR
+      TempCRMSynchConflictBuffer@1001 : TEMPORARY Record "CRM Synch. Conflict Buffer";
+    BEGIN
+      if not CRMIntegrationRecord.GET("CRM ID","Integration ID") then
+        DELETE;
+      TempCRMSynchConflictBuffer.COPY(Rec,true);
+      CRMIntegrationRecord.SETRANGE(Skipped,false);
+      if CRMIntegrationRecord.FINDSET then
+        repeat
+          TempCRMSynchConflictBuffer.SETRANGE("CRM ID",CRMIntegrationRecord."CRM ID");
+          TempCRMSynchConflictBuffer.SETRANGE("Integration ID",CRMIntegrationRecord."Integration ID");
+          TempCRMSynchConflictBuffer.DELETEALL;
+        until CRMIntegrationRecord.NEXT = 0;
+      exit(COUNT);
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

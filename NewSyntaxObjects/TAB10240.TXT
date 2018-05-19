@@ -1,0 +1,35 @@
+OBJECT Table 10240 B10 Adjustment
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=160237.757T;
+    Modified=true;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    CaptionML=ENU=B10 Adjustment;
+  }
+  FIELDS
+  {
+    { 1   ;   ;Date                ;Date          ;CaptionML=ENU=Date;
+                                                   NotBlank=true }
+    { 2   ;   ;Adjustment Amount   ;Decimal       ;CaptionML=ENU=Adjustment Amount;
+                                                   DecimalPlaces=2:5 }
+  }
+  KEYS
+  {
+    {    ;Date                                    ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

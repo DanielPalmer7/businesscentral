@@ -1,0 +1,40 @@
+OBJECT Table 2000000152 NAV App Data Archive
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152802.847T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;App ID              ;GUID           }
+    { 2   ;   ;Table ID            ;Integer        }
+    { 3   ;   ;Company Name        ;Text30         }
+    { 4   ;   ;Version Major       ;Integer        }
+    { 5   ;   ;Version Minor       ;Integer        }
+    { 6   ;   ;Version Build       ;Integer        }
+    { 7   ;   ;Version Revision    ;Integer        }
+    { 8   ;   ;Archive Table Name  ;Text128        }
+    { 9   ;   ;Metadata            ;BLOB           }
+    { 10  ;   ;Table Blob Version  ;Integer        }
+  }
+  KEYS
+  {
+    {    ;"App ID","Table ID","Company Name"      ;Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

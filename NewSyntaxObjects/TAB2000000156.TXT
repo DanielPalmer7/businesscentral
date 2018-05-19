@@ -1,0 +1,41 @@
+OBJECT Table 2000000156 NAV App Published App
+{
+  OBJECT-PROPERTIES
+  {
+    Date=20180425D;
+    Time=152803.3T;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    DataPerCompany=false;
+  }
+  FIELDS
+  {
+    { 1   ;   ;App ID              ;GUID           }
+    { 2   ;   ;Version Major       ;Integer        }
+    { 3   ;   ;Version Minor       ;Integer        }
+    { 4   ;   ;Version Build       ;Integer        }
+    { 5   ;   ;Version Revision    ;Integer        }
+    { 6   ;   ;Package ID          ;GUID           }
+    { 7   ;   ;Name                ;Text250        }
+    { 8   ;   ;Publisher           ;Text250        }
+    { 9   ;   ;Content Hash        ;Text250        }
+    { 10  ;   ;Hash Algorithm      ;Integer        }
+  }
+  KEYS
+  {
+    {    ;"App ID","Version Major","Version Minor","Version Build","Version Revision";
+                                                   Clustered=true }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
