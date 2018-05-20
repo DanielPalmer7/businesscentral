@@ -9,7 +9,9 @@
                                "port":  7049,
                                "tenant":  "Default",
                                "serverInstance":  "NAV",
-                               "authentication":  "Windows"
+                               "authentication":  "Windows",
+                               "startupObjectId":  22,
+                               "startupObjectType":  "Page"
                            }
                        ]
 }
